@@ -183,26 +183,63 @@ def calculate_playoff_stats(processed_df, teams_df):
     
     return pd.DataFrame(playoff_stats)
 
-def create_medal_overview(teams_df):
-    """Create medal overview visualization"""
+def create_medal_table(teams_df):
+    """Create Olympic-style medal table"""
     if teams_df is None:
         return None
     
-    medal_counts = teams_df.groupby(['First Name', 'Medal']).size().unstack(fill_value=0)
+    # Medaillen zählen für jeden Manager
+    medal_counts = []
+    managers = teams_df['First Name'].unique()
     
-    # Ensure all medal types exist
-    for medal in [1, 2, 3]:
-        if medal not in medal_counts.columns:
-            medal_counts[medal] = 0
+    for manager in managers:
+        manager_data = teams_df[teams_df['First Name'] == manager]
+        
+        gold = len(manager_data[manager_data['Final Rank'] == 1])
+        silver = len(manager_data[manager_data['Final Rank'] == 2]) 
+        bronze = len(manager_data[manager_data['Final Rank'] == 3])
+        total = gold + silver + bronze
+        
+        medal_counts.append({
+            'Manager': manager,
+            'Gold': gold,
+            'Silver': silver,
+            'Bronze': bronze,
+            'Total': total
+        })
     
-    medal_counts = medal_counts[[1, 2, 3]]  # Reorder columns
-    medal_counts.columns = ['🥇 Gold', '🥈 Silver', '🥉 Bronze']
+    # DataFrame erstellen
+    medal_df = pd.DataFrame(medal_counts)
     
-    # Calculate total medals for sorting
-    medal_counts['Total'] = medal_counts.sum(axis=1)
-    medal_counts = medal_counts.sort_values('Total', ascending=False)
+    # Olympische Sortierung:
+    # 1. Nach Gold (absteigend)
+    # 2. Nach Silver (absteigend) 
+    # 3. Nach Bronze (absteigend)
+    # 4. Alphabetisch nach Manager Name (aufsteigend)
+    medal_df_sorted = medal_df.sort_values(
+        by=['Gold', 'Silver', 'Bronze', 'Manager'],
+        ascending=[False, False, False, True]
+    ).reset_index(drop=True)
     
-    return medal_counts.drop('Total', axis=1)
+    # Rang hinzufügen (bei Gleichstand gleicher Rang)
+    medal_df_sorted['Rank'] = 1
+    
+    for i in range(1, len(medal_df_sorted)):
+        current = medal_df_sorted.iloc[i]
+        previous = medal_df_sorted.iloc[i-1]
+        
+        # Gleiche Medaillenverteilung = gleicher Rang
+        if (current['Gold'] == previous['Gold'] and 
+            current['Silver'] == previous['Silver'] and 
+            current['Bronze'] == previous['Bronze']):
+            medal_df_sorted.iloc[i, medal_df_sorted.columns.get_loc('Rank')] = medal_df_sorted.iloc[i-1]['Rank']
+        else:
+            medal_df_sorted.iloc[i, medal_df_sorted.columns.get_loc('Rank')] = i + 1
+    
+    # Spalten neu ordnen
+    medal_df_final = medal_df_sorted[['Rank', 'Manager', 'Gold', 'Silver', 'Bronze', 'Total']]
+    
+    return medal_df_final
 
 # Main app
 def main():
