@@ -278,101 +278,111 @@ def main():
     )
     
     # Main content based on selection
-if analysis_type == "🥊 Head-to-Head":
-    st.header("Head-to-Head Analysis")
-    
-    managers = sorted(teams_df['First Name'].unique())
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
-    with col2:
-        manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
-    
-    if manager1 != manager2:
-        h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
+    if analysis_type == "🥊 Head-to-Head":
+        st.header("Head-to-Head Analysis")
         
-        if h2h_stats and h2h_stats['games'] > 0:
-            col1, col2, col3, col4, col5 = st.columns(5)
+        managers = sorted(teams_df['First Name'].unique())
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
+        with col2:
+            manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
+        
+        if manager1 != manager2:
+            h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
             
-            with col1:
-                st.metric("Total Games", h2h_stats['games'])
-            with col2:
-                st.metric(f"{manager1} Wins", h2h_stats['wins'])
-            with col3:
-                st.metric(f"{manager2} Wins", h2h_stats['losses'])
-            with col4:
-                st.metric("Ties", h2h_stats['ties'])
-            with col5:
-                st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
+            if h2h_stats and h2h_stats['games'] > 0:
+                col1, col2, col3, col4, col5 = st.columns(5)
+                
+                with col1:
+                    st.metric("Total Games", h2h_stats['games'])
+                with col2:
+                    st.metric(f"{manager1} Wins", h2h_stats['wins'])
+                with col3:
+                    st.metric(f"{manager2} Wins", h2h_stats['losses'])
+                with col4:
+                    st.metric("Ties", h2h_stats['ties'])
+                with col5:
+                    st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
+                
+                # Visualization
+                fig = go.Figure(data=[
+                    go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']]),
+                    go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']])
+                ])
+                fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info(f"No matchups found between {manager1} and {manager2}")
+        else:
+            st.info("Please select two different managers.")
+
+    elif analysis_type == "🏆 Playoff Performance":
+        st.header("Playoff Performance & Clutch Factor")
+        
+        playoff_stats = calculate_playoff_stats(processed_df, teams_df)
+        
+        if playoff_stats is not None:
+            st.subheader("Clutch Factor Rankings")
+            
+            # Display table
+            display_df = playoff_stats.copy()
+            display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
+            display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
+            
+            st.dataframe(
+                display_df,
+                column_config={
+                    "Manager": "Manager",
+                    "Seasons Played": "Seasons",
+                    "Playoff Seasons": "Playoffs",
+                    "Championships": "🏆 Titles",
+                    "Finals": "Finals",
+                    "Total Medals": "🏅 Medals",
+                    "Playoff Rate": "Playoff %",
+                    "Championship Rate": "Title %"
+                },
+                hide_index=True,
+                use_container_width=True
+            )
             
             # Visualization
-            fig = go.Figure(data=[
-                go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']]),
-                go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']])
-            ])
-            fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
+            fig = px.scatter(
+                playoff_stats,
+                x='Playoff Rate',
+                y='Championship Rate',
+                size='Seasons Played',
+                hover_name='Manager',
+                title='Clutch Factor: Playoff Success vs Championship Success',
+                labels={
+                    'Playoff Rate': 'Playoff Appearance Rate',
+                    'Championship Rate': 'Championship Rate'
+                }
+            )
+            
             st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info(f"No matchups found between {manager1} and {manager2}")
-    else:
-        st.info("Please select two different managers.")
-
-elif analysis_type == "🏆 Playoff Performance":
-    st.header("Playoff Performance & Clutch Factor")
     
-    playoff_stats = calculate_playoff_stats(processed_df, teams_df)
-    
-    if playoff_stats is not None:
-    st.subheader("Clutch Factor Rankings")
-    
-    # Display table
-    display_df = playoff_stats.copy()
-    display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
-    display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
-    
-    st.dataframe(
-        display_df,
-        column_config={
-            "Manager": "Manager",
-            "Seasons Played": "Seasons",
-            "Playoff Seasons": "Playoffs",
-            "Championships": "🏆 Titles",
-            "Finals": "Finals",
-            "Total Medals": "🏅 Medals",
-            "Playoff Rate": "Playoff %",
-            "Championship Rate": "Title %"
-        },
-        hide_index=True,
-        use_container_width=True
-    )
-    
-    # Visualization
-    fig = px.scatter(
-        playoff_stats,
-        x='Playoff Rate',
-        y='Championship Rate',
-        size='Seasons Played',
-        hover_name='Manager',
-        title='Clutch Factor: Playoff Success vs Championship Success',
-        labels={
-            'Playoff Rate': 'Playoff Appearance Rate',
-            'Championship Rate': 'Championship Rate'
-        }
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
     elif analysis_type == "🏅 Medal Overview":
         st.header("Medal Overview")
         
-        medal_overview = create_medal_overview(teams_df)
+        medal_table = create_medal_table(teams_df)
         
-        if medal_overview is not None:
-            st.subheader("All-Time Medal Count")
+        if medal_table is not None:
+            st.subheader("🏆 Medaillenspiegel")
             
             # Display medal table
             st.dataframe(
-                medal_overview,
+                medal_table,
+                column_config={
+                    "Rank": "Rank",
+                    "Manager": "Manager",
+                    "Gold": "🥇 Gold",
+                    "Silver": "🥈 Silver", 
+                    "Bronze": "🥉 Bronze",
+                    "Total": "Total"
+                },
+                hide_index=True,
                 use_container_width=True
             )
             
@@ -381,22 +391,22 @@ elif analysis_type == "🏆 Playoff Performance":
             
             fig.add_trace(go.Bar(
                 name='🥇 Gold',
-                x=medal_overview.index,
-                y=medal_overview['🥇 Gold'],
+                x=medal_table['Manager'],
+                y=medal_table['Gold'],
                 marker_color='#FFD700'
             ))
             
             fig.add_trace(go.Bar(
                 name='🥈 Silver', 
-                x=medal_overview.index,
-                y=medal_overview['🥈 Silver'],
+                x=medal_table['Manager'],
+                y=medal_table['Silver'],
                 marker_color='#C0C0C0'
             ))
             
             fig.add_trace(go.Bar(
                 name='🥉 Bronze',
-                x=medal_overview.index,
-                y=medal_overview['🥉 Bronze'],
+                x=medal_table['Manager'],
+                y=medal_table['Bronze'],
                 marker_color='#CD7F32'
             ))
             
