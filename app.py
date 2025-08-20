@@ -305,50 +305,47 @@ if analysis_type == "🥊 Head-to-Head":
                 st.metric("Ties", h2h_stats['ties'])
             with col5:
                 st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
-                
-                # Visualization
-                fig = go.Figure(data=[
-    go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']]),
-    go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']])
-])
-
-fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
-
-st.plotly_chart(fig, use_container_width=True)
-else:
-                st.info(f"No matchups found between {manager1} and {manager2}")
+            
+            # Visualization
+            fig = go.Figure(data=[
+                go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']]),
+                go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']])
+            ])
+            fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Please select two different managers.")
+            st.info(f"No matchups found between {manager1} and {manager2}")
+    else:
+        st.info("Please select two different managers.")
+
+elif analysis_type == "🏆 Playoff Performance":
+    st.header("Playoff Performance & Clutch Factor")
     
-    elif analysis_type == "🏆 Playoff Performance":
-        st.header("Playoff Performance & Clutch Factor")
+    playoff_stats = calculate_playoff_stats(processed_df, teams_df)
+    
+    if playoff_stats is not None:
+        st.subheader("Clutch Factor Rankings")
         
-        playoff_stats = calculate_playoff_stats(processed_df, teams_df)
+        # Display table
+        display_df = playoff_stats.copy()
+        display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
+        display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
         
-        if playoff_stats is not None:
-            st.subheader("Clutch Factor Rankings")
-            
-            # Display table
-            display_df = playoff_stats.copy()
-            display_df['Playoff_Rate'] = display_df['Playoff_Rate'].apply(lambda x: f"{x:.1%}")
-            display_df['Championship_Rate'] = display_df['Championship_Rate'].apply(lambda x: f"{x:.1%}")
-            
-            st.dataframe(
-                display_df,
-                column_config={
-                    "Manager": "Manager",
-                    "Seasons_Played": "Seasons",
-                    "Playoff_Appearances": "Playoffs",
-                    "Championships": "🏆 Titles",
-                    "Finals": "Finals",
-                    "Total_Medals": "🏅 Medals",
-                    "Playoff_Rate": "Playoff %",
-                    "Championship_Rate": "Title %"
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-            
+        st.dataframe(
+            display_df,
+            column_config={
+                "Manager": "Manager",
+                "Seasons Played": "Seasons",
+                "Playoff Seasons": "Playoffs",
+                "Championships": "🏆 Titles",
+                "Finals": "Finals",
+                "Total Medals": "🏅 Medals",
+                "Playoff Rate": "Playoff %",
+                "Championship Rate": "Title %"
+            },
+            hide_index=True,
+            use_container_width=True
+        )
             # Visualization
             fig = px.scatter(
                 playoff_stats,
