@@ -278,33 +278,33 @@ def main():
     )
     
     # Main content based on selection
-    if analysis_type == "🥊 Head-to-Head":
-        st.header("Head-to-Head Analysis")
+if analysis_type == "🥊 Head-to-Head":
+    st.header("Head-to-Head Analysis")
+    
+    managers = sorted(teams_df['First Name'].unique())
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
+    with col2:
+        manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
+    
+    if manager1 != manager2:
+        h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
         
-        managers = sorted(teams_df['First Name'].unique())
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            manager1 = st.selectbox("Select Manager 1", managers, key="manager1")
-        with col2:
-            manager2 = st.selectbox("Select Manager 2", managers, key="manager2")
-        
-        if manager1 != manager2:
-            h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
+        if h2h_stats and h2h_stats['games'] > 0:
+            col1, col2, col3, col4, col5 = st.columns(5)
             
-            if h2h_stats and h2h_stats['games'] > 0:
-                col1, col2, col3, col4, col5 = st.columns(5)
-                
-                with col1:
-                    st.metric("Total Games", h2h_stats['games'])
-                with col2:
-                    st.metric(f"{manager1} Wins", h2h_stats['wins'])
-                with col3:
-                    st.metric(f"{manager2} Wins", h2h_stats['losses'])
-                with col4:
-                    st.metric("Ties", h2h_stats['ties'])
-                with col5:
-                    st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
+            with col1:
+                st.metric("Total Games", h2h_stats['games'])
+            with col2:
+                st.metric(f"{manager1} Wins", h2h_stats['wins'])
+            with col3:
+                st.metric(f"{manager2} Wins", h2h_stats['losses'])
+            with col4:
+                st.metric("Ties", h2h_stats['ties'])
+            with col5:
+                st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
                 
                 # Visualization
                 fig = go.Figure(data=[
