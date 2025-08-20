@@ -315,7 +315,7 @@ if analysis_type == "🥊 Head-to-Head":
 fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
 
 st.plotly_chart(fig, use_container_width=True)
-            else:
+else:
                 st.info(f"No matchups found between {manager1} and {manager2}")
         else:
             st.info("Please select two different managers.")
