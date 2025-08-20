@@ -136,92 +136,109 @@ def calculate_head_to_head(processed_df, manager1, manager2):
 def calculate_playoff_stats(processed_df, teams_df):
     """Calculate Regular vs Playoff performance per manager"""
     if processed_df is None or teams_df is None:
-        return None
+        return None, None, None
 
     playoff_phases = ["Playoffs", "Halbfinale", "Finale"]
     stats = []
 
+    # Get all managers from teams data
     managers = teams_df['First Name'].unique()
 
     for manager in managers:
-        manager_team_ids = teams_df[teams_df['First Name'] == manager]['TeamID'].unique()
-
-        # Regular Season
-        reg_games = processed_df[
-            (processed_df['Phase'] == "Regular Season") &
-            ((processed_df['Home'].isin(manager_team_ids)) | (processed_df['Away'].isin(manager_team_ids)))
-        ]
-        reg_games_count = len(reg_games)
-        reg_wins_count = sum(reg_games['Winner'].isin(manager_team_ids))
-        reg_win_pct = reg_wins_count / reg_games_count if reg_games_count > 0 else 0
-
-        # Playoffs
-        playoff_games = processed_df[
-            (processed_df['Phase'].isin(playoff_phases)) &
-            ((processed_df['Home'].isin(manager_team_ids)) | (processed_df['Away'].isin(manager_team_ids)))
-        ]
-        playoff_games_count = len(playoff_games)
-        playoff_wins_count = sum(playoff_games['Winner'].isin(manager_team_ids))
-        playoff_win_pct = playoff_wins_count / playoff_games_count if playoff_games_count > 0 else 0
+        # Get all team IDs for this manager across all years
+        manager_teams = teams_df[teams_df['First Name'] == manager]
+        
+        # Regular Season Stats
+        reg_wins = 0
+        reg_total = 0
+        
+        # Playoff Stats  
+        playoff_wins = 0
+        playoff_total = 0
+        
+        # Go through each team/year combination for this manager
+        for _, team_row in manager_teams.iterrows():
+            team_id = team_row['TeamID']
+            year = team_row['Year']
+            
+            # Regular season games for this team/year
+            reg_games = processed_df[
+                (processed_df['Phase'] == "Regular Season") &
+                (processed_df['Season'] == year) &
+                ((processed_df['Home'] == team_id) | (processed_df['Away'] == team_id))
+            ]
+            
+            reg_total += len(reg_games)
+            
+            # Count wins in regular season
+            for _, game in reg_games.iterrows():
+                if (game['Home'] == team_id and game['Winner'] == 'HOME') or \
+                   (game['Away'] == team_id and game['Winner'] == 'AWAY'):
+                    reg_wins += 1
+            
+            # Playoff games for this team/year
+            playoff_games = processed_df[
+                (processed_df['Phase'].isin(playoff_phases)) &
+                (processed_df['Season'] == year) &
+                ((processed_df['Home'] == team_id) | (processed_df['Away'] == team_id))
+            ]
+            
+            playoff_total += len(playoff_games)
+            
+            # Count wins in playoffs
+            for _, game in playoff_games.iterrows():
+                if (game['Home'] == team_id and game['Winner'] == 'HOME') or \
+                   (game['Away'] == team_id and game['Winner'] == 'AWAY'):
+                    playoff_wins += 1
+        
+        # Calculate win percentages
+        reg_win_pct = reg_wins / reg_total if reg_total > 0 else 0.0
+        playoff_win_pct = playoff_wins / playoff_total if playoff_total > 0 else 0.0
 
         stats.append({
             "Manager": manager,
-            "Regular Games": reg_games_count,
-            "Regular Wins": reg_wins_count,
+            "Regular Games": reg_total,
+            "Regular Wins": reg_wins,
             "Regular Win%": round(reg_win_pct, 3),
-            "Playoff Games": playoff_games_count,
-            "Playoff Wins": playoff_wins_count,
+            "Playoff Games": playoff_total,
+            "Playoff Wins": playoff_wins,
             "Playoff Win%": round(playoff_win_pct, 3),
         })
 
     df = pd.DataFrame(stats)
+    
+    # Create ranking tables
+    reg_ranked = df[['Manager', 'Regular Games', 'Regular Wins', 'Regular Win%']].sort_values(
+        by="Regular Win%", ascending=False
+    ).reset_index(drop=True)
+    
+    playoff_ranked = df[['Manager', 'Playoff Games', 'Playoff Wins', 'Playoff Win%']].sort_values(
+        by="Playoff Win%", ascending=False
+    ).reset_index(drop=True)
 
-    # --- Styler für Haupttabelle ---
+    return df, reg_ranked, playoff_ranked
+
+def style_dataframe_with_colors(df, win_pct_columns):
+    """Apply color formatting to dataframe based on win percentage"""
     def highlight_winpct(val):
-        color = ""
+        if pd.isna(val) or not isinstance(val, (int, float)):
+            return ""
         if val > 0.500:
-            color = "background-color: rgba(0, 200, 0, 0.2);"  # leicht grün
+            return "background-color: rgba(0, 200, 0, 0.2);"  # light green
         elif val < 0.500:
-            color = "background-color: rgba(200, 0, 0, 0.2);"  # leicht rot
-        return color
-
-    styled_df = df.style.applymap(highlight_winpct, subset=["Regular Win%", "Playoff Win%"])
-
-    # --- Ranglisten ---
-    reg_ranked = df.sort_values(by="Regular Win%", ascending=False).reset_index(drop=True)
-    playoff_ranked = df.sort_values(by="Playoff Win%", ascending=False).reset_index(drop=True)
-
-    return styled_df, reg_ranked, playoff_ranked
-
-
-# --- Streamlit Darstellung ---
-def show_playoff_stats(processed_df, teams_df):
-    styled_df, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
-
-    st.subheader("Ranglisten: Wer performt wann?")
-    col1, col2 = st.columns(2)
-
-    def highlight_top3(df, column):
-        styled = df.style.set_properties(**{"border": "2px solid green"}, subset=pd.IndexSlice[:2, :])
-        return styled
-
-    with col1:
-        st.markdown("🏀 **Best Regular Season Teams**")
-        st.dataframe(highlight_top3(reg_ranked, "Regular Win%"), use_container_width=True)
-
-    with col2:
-        st.markdown("🔥 **Best Playoff Teams**")
-        st.dataframe(highlight_top3(playoff_ranked, "Playoff Win%"), use_container_width=True)
-
-    st.subheader("Gesamtübersicht: Regular vs Playoff Performance")
-    st.dataframe(styled_df, use_container_width=True)
+            return "background-color: rgba(200, 0, 0, 0.2);"  # light red
+        else:
+            return ""  # exactly 0.500
+    
+    styled_df = df.style.applymap(highlight_winpct, subset=win_pct_columns)
+    return styled_df
 
 def create_medal_table(teams_df):
     """Create Olympic-style medal table"""
     if teams_df is None:
         return None
     
-    # Medaillen zählen für jeden Manager
+    # Count medals for each manager
     medal_counts = []
     managers = teams_df['First Name'].unique()
     
@@ -241,27 +258,27 @@ def create_medal_table(teams_df):
             'Total': total
         })
     
-    # DataFrame erstellen
+    # Create DataFrame
     medal_df = pd.DataFrame(medal_counts)
     
-    # Olympische Sortierung:
-    # 1. Nach Gold (absteigend)
-    # 2. Nach Silver (absteigend) 
-    # 3. Nach Bronze (absteigend)
-    # 4. Alphabetisch nach Manager Name (aufsteigend)
+    # Olympic sorting:
+    # 1. By Gold (descending)
+    # 2. By Silver (descending) 
+    # 3. By Bronze (descending)
+    # 4. Alphabetically by Manager Name (ascending)
     medal_df_sorted = medal_df.sort_values(
         by=['Gold', 'Silver', 'Bronze', 'Manager'],
         ascending=[False, False, False, True]
     ).reset_index(drop=True)
     
-    # Rang hinzufügen (bei Gleichstand gleicher Rang)
+    # Add rank (same rank for ties)
     medal_df_sorted['Rank'] = 1
     
     for i in range(1, len(medal_df_sorted)):
         current = medal_df_sorted.iloc[i]
         previous = medal_df_sorted.iloc[i-1]
         
-        # Gleiche Medaillenverteilung = gleicher Rang
+        # Same medal distribution = same rank
         if (current['Gold'] == previous['Gold'] and 
             current['Silver'] == previous['Silver'] and 
             current['Bronze'] == previous['Bronze']):
@@ -269,7 +286,7 @@ def create_medal_table(teams_df):
         else:
             medal_df_sorted.iloc[i, medal_df_sorted.columns.get_loc('Rank')] = i + 1
     
-    # Spalten neu ordnen
+    # Reorder columns
     medal_df_final = medal_df_sorted[['Rank', 'Manager', 'Gold', 'Silver', 'Bronze', 'Total']]
     
     return medal_df_final
@@ -352,57 +369,38 @@ def main():
             st.info("Please select two different managers.")
 
     elif analysis_type == "🏆 Playoff Performance":
-        st.header("Playoff Performance & Clutch Factor")
+        st.header("Playoff Performance Analysis")
         
-        playoff_stats = calculate_playoff_stats(processed_df, teams_df)
+        # Calculate stats
+        full_stats, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
         
-        if playoff_stats is not None:
-            st.subheader("Clutch Factor Rankings")
-            
-            # Display table
-            display_df = playoff_stats.copy()
-            display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
-            display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
-            
-            st.dataframe(
-                display_df,
-                column_config={
-                    "Manager": "Manager",
-                    "Seasons Played": "Seasons",
-                    "Playoff Seasons": "Playoffs",
-                    "Championships": "🏆 Titles",
-                    "Finals": "Finals",
-                    "Total Medals": "🏅 Medals",
-                    "Playoff Rate": "Playoff %",
-                    "Championship Rate": "Title %"
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-            
-            # Visualization
-            fig = px.scatter(
-                playoff_stats,
-                x='Playoff Rate',
-                y='Championship Rate',
-                size='Seasons Played',
-                hover_name='Manager',
-                title='Clutch Factor: Playoff Success vs Championship Success',
-                labels={
-                    'Playoff Rate': 'Playoff Appearance Rate',
-                    'Championship Rate': 'Championship Rate'
-                }
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-    
+        if full_stats is not None:
+            # Rankings side by side
+            st.subheader("Rankings: Who performs when it matters?")
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**🏀 Best Regular Season Teams**")
+                reg_styled = style_dataframe_with_colors(reg_ranked, ['Regular Win%'])
+                st.dataframe(reg_styled, use_container_width=True, hide_index=True)
+
+            with col2:
+                st.markdown("**🔥 Best Playoff Teams**")
+                playoff_styled = style_dataframe_with_colors(playoff_ranked, ['Playoff Win%'])
+                st.dataframe(playoff_styled, use_container_width=True, hide_index=True)
+
+            # Full overview table
+            st.subheader("Complete Overview: Regular vs Playoff Performance")
+            full_styled = style_dataframe_with_colors(full_stats, ['Regular Win%', 'Playoff Win%'])
+            st.dataframe(full_styled, use_container_width=True, hide_index=True)
+        
     elif analysis_type == "🏅 Medal Overview":
         st.header("Medal Overview")
         
         medal_table = create_medal_table(teams_df)
         
         if medal_table is not None:
-            st.subheader("🏆 Medaillenspiegel")
+            st.subheader("🏆 Medal Table")
             
             # Display medal table
             st.dataframe(
