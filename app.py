@@ -308,19 +308,13 @@ if analysis_type == "🥊 Head-to-Head":
                 
                 # Visualization
                 fig = go.Figure(data=[
-                    go.Bar(name=manager1, x=['Wins'], y=[h2h_stats['wins']], marker_color='#FF6B35'),
-                    go.Bar(name=manager2, x=['Wins'], y=[h2h_stats['losses']], marker_color='#4ECDC4'),
-                    go.Bar(name='Ties', x=['Wins'], y=[h2h_stats['ties']], marker_color='#45B7D1')
-                ])
-                
-                fig.update_layout(
-                    title=f"{manager1} vs {manager2} - Historical Matchup",
-                    xaxis_title="Result",
-                    yaxis_title="Games",
-                    barmode='group'
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
+    go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']]),
+    go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']])
+])
+
+fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
+
+st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info(f"No matchups found between {manager1} and {manager2}")
         else:
