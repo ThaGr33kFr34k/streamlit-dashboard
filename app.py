@@ -138,7 +138,13 @@ def calculate_playoff_stats(processed_df, teams_df):
     if processed_df is None or teams_df is None:
         return None, None, None
 
-    playoff_phases = ["Playoffs", "Halbfinale", "Finale"]
+    # Filter out LOSERS_CONSOLATION_LADDER games from all analysis
+    filtered_df = processed_df[processed_df['Phase'] != 'LOSERS_CONSOLATION_LADDER'].copy()
+
+    # Define phases correctly
+    regular_phases = ["Regular Season"]
+    playoff_phases = ["Finale", "Halbfinale", "WINNERS_BRACKET", "Spiel um Platz 3"]
+    
     stats = []
 
     # Get all managers from teams data
@@ -162,10 +168,10 @@ def calculate_playoff_stats(processed_df, teams_df):
             year = team_row['Year']
             
             # Regular season games for this team/year
-            reg_games = processed_df[
-                (processed_df['Phase'] == "Regular Season") &
-                (processed_df['Season'] == year) &
-                ((processed_df['Home'] == team_id) | (processed_df['Away'] == team_id))
+            reg_games = filtered_df[
+                (filtered_df['Phase'].isin(regular_phases)) &
+                (filtered_df['Season'] == year) &
+                ((filtered_df['Home'] == team_id) | (filtered_df['Away'] == team_id))
             ]
             
             reg_total += len(reg_games)
@@ -177,10 +183,10 @@ def calculate_playoff_stats(processed_df, teams_df):
                     reg_wins += 1
             
             # Playoff games for this team/year
-            playoff_games = processed_df[
-                (processed_df['Phase'].isin(playoff_phases)) &
-                (processed_df['Season'] == year) &
-                ((processed_df['Home'] == team_id) | (processed_df['Away'] == team_id))
+            playoff_games = filtered_df[
+                (filtered_df['Phase'].isin(playoff_phases)) &
+                (filtered_df['Season'] == year) &
+                ((filtered_df['Home'] == team_id) | (filtered_df['Away'] == team_id))
             ]
             
             playoff_total += len(playoff_games)
@@ -219,16 +225,30 @@ def calculate_playoff_stats(processed_df, teams_df):
     return df, reg_ranked, playoff_ranked
 
 def style_dataframe_with_colors(df, win_pct_columns):
-    """Apply color formatting to dataframe based on win percentage"""
+    """Apply color formatting to dataframe based on win percentage with gradient"""
     def highlight_winpct(val):
         if pd.isna(val) or not isinstance(val, (int, float)):
             return ""
-        if val > 0.500:
-            return "background-color: rgba(0, 200, 0, 0.2);"  # light green
-        elif val < 0.500:
-            return "background-color: rgba(200, 0, 0, 0.2);"  # light red
+        
+        # Create gradient colors based on win percentage
+        if val >= 0.750:
+            return "background-color: rgba(0, 150, 0, 0.4);"  # Dark green
+        elif val >= 0.650:
+            return "background-color: rgba(50, 180, 50, 0.3);"  # Medium-dark green
+        elif val >= 0.550:
+            return "background-color: rgba(100, 200, 100, 0.25);"  # Medium green
+        elif val > 0.500:
+            return "background-color: rgba(150, 220, 150, 0.2);"  # Light green
+        elif val == 0.500:
+            return "background-color: rgba(255, 255, 0, 0.1);"  # Very light yellow
+        elif val >= 0.450:
+            return "background-color: rgba(255, 200, 150, 0.2);"  # Light orange
+        elif val >= 0.350:
+            return "background-color: rgba(255, 150, 100, 0.25);"  # Medium orange
+        elif val >= 0.250:
+            return "background-color: rgba(255, 100, 50, 0.3);"  # Medium-dark orange/red
         else:
-            return ""  # exactly 0.500
+            return "background-color: rgba(200, 0, 0, 0.4);"  # Dark red
     
     styled_df = df.style.applymap(highlight_winpct, subset=win_pct_columns)
     return styled_df
