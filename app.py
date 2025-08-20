@@ -354,47 +354,57 @@ def main():
     elif analysis_type == "🏆 Playoff Performance":
         st.header("Playoff Performance & Clutch Factor")
         
-        playoff_stats = calculate_playoff_stats(processed_df, teams_df)
+        df, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
         
-        if playoff_stats is not None:
+        if df is not None:
             st.subheader("Clutch Factor Rankings")
             
-            # Display table
-            df, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
+            # Zuerst die Ranglisten nebeneinander
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**Best Regular Season Teams**")
+                st.dataframe(
+                    reg_ranked.style.background_gradient(
+                        subset=['Regular Win %'], cmap="RdYlGn", vmin=0, vmax=1
+                    ),
+                    use_container_width=True,
+                    hide_index=True
+                )
+            with col2:
+                st.markdown("**Best Playoff Teams**")
+                st.dataframe(
+                    playoff_ranked.style.background_gradient(
+                        subset=['Playoff Win %'], cmap="RdYlGn", vmin=0, vmax=1
+                    ),
+                    use_container_width=True,
+                    hide_index=True
+                )
+            
+            # Dann die Gesamtübersicht
+            st.subheader("Gesamtübersicht")
             display_df = df.copy()
-            display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
-            display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
+            display_df['Regular Win %'] = display_df['Regular Win %'].apply(lambda x: f"{x:.3f}")
+            display_df['Playoff Win %'] = display_df['Playoff Win %'].apply(lambda x: f"{x:.3f}")
             
             st.dataframe(
                 display_df,
-                column_config={
-                    "Manager": "Manager",
-                    "Seasons Played": "Seasons",
-                    "Playoff Seasons": "Playoffs",
-                    "Championships": "🏆 Titles",
-                    "Finals": "Finals",
-                    "Total Medals": "🏅 Medals",
-                    "Playoff Rate": "Playoff %",
-                    "Championship Rate": "Title %"
-                },
                 hide_index=True,
                 use_container_width=True
             )
             
-            # Visualization
+            # Scatter Plot
             fig = px.scatter(
-                playoff_stats,
-                x='Playoff Rate',
-                y='Championship Rate',
-                size='Seasons Played',
+                df,
+                x='Regular Win %',
+                y='Playoff Win %',
+                size='Regular Games',
                 hover_name='Manager',
-                title='Clutch Factor: Playoff Success vs Championship Success',
+                title='Clutch Factor: Regular vs Playoff Performance',
                 labels={
-                    'Playoff Rate': 'Playoff Appearance Rate',
-                    'Championship Rate': 'Championship Rate'
+                    'Regular Win %': 'Regular Season Win %',
+                    'Playoff Win %': 'Playoff Win %'
                 }
             )
-            
             st.plotly_chart(fig, use_container_width=True)
     
     elif analysis_type == "🏅 Medal Overview":
