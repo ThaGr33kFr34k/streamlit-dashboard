@@ -141,9 +141,10 @@ def calculate_playoff_stats(processed_df, teams_df):
     # Filter out LOSERS_CONSOLATION_LADDER games from all analysis
     filtered_df = processed_df[processed_df['Phase'] != 'LOSERS_CONSOLATION_LADDER'].copy()
 
-    # Define phases correctly based on your actual data
+    # Define phases correctly - handle case-insensitive matching
     regular_phases = ["Regular Season"]
-    playoff_phases = ["FINALE", "Halbfinale", "WINNERS_BRACKET", "Spiel um Platz 3"]
+    # Include both uppercase and lowercase variants to handle inconsistent data
+    playoff_phases = ["FINALE", "Finale", "finale", "Halbfinale", "WINNERS_BRACKET", "Spiel um Platz 3"]
     
     stats = []
 
@@ -196,25 +197,6 @@ def calculate_playoff_stats(processed_df, teams_df):
                 if (game['Home'] == team_id and game['Winner'] == 'HOME') or \
                    (game['Away'] == team_id and game['Winner'] == 'AWAY'):
                     playoff_wins += 1
-            
-            # Debug for Joey (TeamID=12) - check if aggregating across years is the issue
-            if team_id == 12:
-                joey_home_playoffs = len(filtered_df[
-                    (filtered_df['Phase'].isin(playoff_phases)) &
-                    (filtered_df['Season'] == year) &
-                    (filtered_df['Home'] == team_id)
-                ])
-                joey_away_playoffs = len(filtered_df[
-                    (filtered_df['Phase'].isin(playoff_phases)) &
-                    (filtered_df['Season'] == year) &
-                    (filtered_df['Away'] == team_id)
-                ])
-                if joey_home_playoffs > 0 or joey_away_playoffs > 0:
-                    st.write(f"DEBUG - Joey (TeamID=12) Year {year}: {joey_home_playoffs} home + {joey_away_playoffs} away = {joey_home_playoffs + joey_away_playoffs} playoff games")
-        
-        # Debug total for Joey
-        if manager == "Joey":
-            st.write(f"DEBUG - Joey total playoff games across all years: {playoff_total}")
         
         # Calculate win percentages
         reg_win_pct = reg_wins / reg_total if reg_total > 0 else 0.0
