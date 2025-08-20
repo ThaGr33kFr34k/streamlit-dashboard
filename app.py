@@ -136,7 +136,7 @@ def calculate_head_to_head(processed_df, manager1, manager2):
 def calculate_playoff_stats(processed_df, teams_df):
     """Calculate Regular vs Playoff performance per manager"""
     if processed_df is None or teams_df is None:
-        return None
+        return None, None, None
 
     playoff_phases = ["Playoffs", "Halbfinale", "Finale"]
     stats = []
@@ -176,7 +176,22 @@ def calculate_playoff_stats(processed_df, teams_df):
 
     df = pd.DataFrame(stats)
 
-    # --- Styler für Haupttabelle ---
+    # --- Ranglisten DataFrames ---
+    reg_ranked = df.sort_values(by="Regular Win%", ascending=False).reset_index(drop=True)
+    playoff_ranked = df.sort_values(by="Playoff Win%", ascending=False).reset_index(drop=True)
+
+    return df, reg_ranked, playoff_ranked
+
+
+# --- Streamlit Darstellung ---
+def show_playoff_stats(processed_df, teams_df):
+    df, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
+
+    if df is None:
+        st.warning("Keine Daten vorhanden")
+        return
+
+    # --- Styler für Übersicht ---
     def highlight_winpct(val):
         color = ""
         if val > 0.500:
@@ -187,31 +202,16 @@ def calculate_playoff_stats(processed_df, teams_df):
 
     styled_df = df.style.applymap(highlight_winpct, subset=["Regular Win%", "Playoff Win%"])
 
-    # --- Ranglisten ---
-    reg_ranked = df.sort_values(by="Regular Win%", ascending=False).reset_index(drop=True)
-    playoff_ranked = df.sort_values(by="Playoff Win%", ascending=False).reset_index(drop=True)
-
-    return styled_df, reg_ranked, playoff_ranked
-
-
-# --- Streamlit Darstellung ---
-def show_playoff_stats(processed_df, teams_df):
-    styled_df, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
-
     st.subheader("Ranglisten: Wer performt wann?")
     col1, col2 = st.columns(2)
 
-    def highlight_top3(df, column):
-        styled = df.style.set_properties(**{"border": "2px solid green"}, subset=pd.IndexSlice[:2, :])
-        return styled
-
     with col1:
         st.markdown("🏀 **Best Regular Season Teams**")
-        st.dataframe(highlight_top3(reg_ranked, "Regular Win%"), use_container_width=True)
+        st.dataframe(reg_ranked, use_container_width=True)
 
     with col2:
         st.markdown("🔥 **Best Playoff Teams**")
-        st.dataframe(highlight_top3(playoff_ranked, "Playoff Win%"), use_container_width=True)
+        st.dataframe(playoff_ranked, use_container_width=True)
 
     st.subheader("Gesamtübersicht: Regular vs Playoff Performance")
     st.dataframe(styled_df, use_container_width=True)
