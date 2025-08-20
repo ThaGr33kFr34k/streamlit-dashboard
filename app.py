@@ -324,44 +324,44 @@ elif analysis_type == "🏆 Playoff Performance":
     playoff_stats = calculate_playoff_stats(processed_df, teams_df)
     
     if playoff_stats is not None:
-        st.subheader("Clutch Factor Rankings")
-        
-        # Display table
-        display_df = playoff_stats.copy()
-        display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
-        display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
-        
-        st.dataframe(
-            display_df,
-            column_config={
-                "Manager": "Manager",
-                "Seasons Played": "Seasons",
-                "Playoff Seasons": "Playoffs",
-                "Championships": "🏆 Titles",
-                "Finals": "Finals",
-                "Total Medals": "🏅 Medals",
-                "Playoff Rate": "Playoff %",
-                "Championship Rate": "Title %"
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-            # Visualization
-            fig = px.scatter(
-                playoff_stats,
-                x='Playoff_Rate',
-                y='Championship_Rate',
-                size='Seasons_Played',
-                hover_name='Manager',
-                title='Clutch Factor: Playoff Success vs Championship Success',
-                labels={
-                    'Playoff_Rate': 'Playoff Appearance Rate',
-                    'Championship_Rate': 'Championship Rate'
-                }
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Clutch Factor Rankings")
     
+    # Display table
+    display_df = playoff_stats.copy()
+    display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
+    display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
+    
+    st.dataframe(
+        display_df,
+        column_config={
+            "Manager": "Manager",
+            "Seasons Played": "Seasons",
+            "Playoff Seasons": "Playoffs",
+            "Championships": "🏆 Titles",
+            "Finals": "Finals",
+            "Total Medals": "🏅 Medals",
+            "Playoff Rate": "Playoff %",
+            "Championship Rate": "Title %"
+        },
+        hide_index=True,
+        use_container_width=True
+    )
+    
+    # Visualization
+    fig = px.scatter(
+        playoff_stats,
+        x='Playoff Rate',
+        y='Championship Rate',
+        size='Seasons Played',
+        hover_name='Manager',
+        title='Clutch Factor: Playoff Success vs Championship Success',
+        labels={
+            'Playoff Rate': 'Playoff Appearance Rate',
+            'Championship Rate': 'Championship Rate'
+        }
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
     elif analysis_type == "🏅 Medal Overview":
         st.header("Medal Overview")
         
