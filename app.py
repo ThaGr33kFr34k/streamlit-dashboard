@@ -360,7 +360,8 @@ def main():
             st.subheader("Clutch Factor Rankings")
             
             # Display table
-            display_df = playoff_stats.copy()
+            df, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
+            display_df = df.copy()
             display_df['Playoff Rate'] = display_df['Playoff Rate'].apply(lambda x: f"{x:.1%}")
             display_df['Championship Rate'] = display_df['Championship Rate'].apply(lambda x: f"{x:.1%}")
             
