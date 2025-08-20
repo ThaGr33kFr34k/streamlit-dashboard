@@ -138,6 +138,10 @@ def calculate_playoff_stats(processed_df, teams_df):
     if processed_df is None or teams_df is None:
         return None
     
+    # TeamID zu First Name Mapping erstellen
+    team_mapping = teams_df.set_index('TeamID')['First Name'].to_dict()
+    
+    # Manager Namen aus processed_df extrahieren (mit TeamID Mapping)
     managers = teams_df['First Name'].unique()
     playoff_stats = []
     
@@ -146,31 +150,38 @@ def calculate_playoff_stats(processed_df, teams_df):
         manager_seasons = teams_df[teams_df['First Name'] == manager]['Year'].unique()
         seasons_played = len(manager_seasons)
         
+        # Get TeamIDs for this manager across all seasons
+        manager_team_ids = teams_df[teams_df['First Name'] == manager]['TeamID'].unique()
+        
         # Count playoff appearances (any non-regular season game)
         playoff_games = processed_df[
             (processed_df['Phase'] != 'NONE') & 
             (processed_df['Phase'] != 'Regular Season') &
-            ((processed_df['Home_Manager'] == manager) | (processed_df['Away_Manager'] == manager))
+            ((processed_df['HOME'].isin(manager_team_ids)) | (processed_df['AWAY'].isin(manager_team_ids)))
         ]
         playoff_seasons = len(playoff_games['Season'].unique()) if len(playoff_games) > 0 else 0
         
-        # Count championships (medals)
-        championships = len(teams_df[(teams_df['First Name'] == manager) & (teams_df['Medal'] == 1)])
-        finals = len(teams_df[(teams_df['First Name'] == manager) & (teams_df['Medal'].isin([1, 2]))])
-        medals_total = len(teams_df[(teams_df['First Name'] == manager) & (teams_df['Medal'].isin([1, 2, 3]))])
+        # Count championships and medals (Final Rank statt Medal)
+        championships = len(teams_df[(teams_df['First Name'] == manager) & (teams_df['Final Rank'] == 1)])
+        finals = len(teams_df[(teams_df['First Name'] == manager) & (teams_df['Final Rank'].isin([1, 2]))])
+        medals_total = len(teams_df[(teams_df['First Name'] == manager) & (teams_df['Final Rank'].isin([1, 2, 3]))])
+        
+        # Calculate rates
+        playoff_rate = playoff_seasons / seasons_played if seasons_played > 0 else 0
+        championship_rate = championships / seasons_played if seasons_played > 0 else 0
         
         playoff_stats.append({
             'Manager': manager,
-            'Seasons_Played': seasons_played,
-            'Playoff_Appearances': playoff_seasons,
+            'Seasons Played': seasons_played,
+            'Playoff Seasons': playoff_seasons,
+            'Playoff Rate': playoff_rate,
             'Championships': championships,
             'Finals': finals,
-            'Total_Medals': medals_total,
-            'Playoff_Rate': playoff_seasons / seasons_played if seasons_played > 0 else 0,
-            'Championship_Rate': championships / seasons_played if seasons_played > 0 else 0
+            'Total Medals': medals_total,
+            'Championship Rate': championship_rate
         })
     
-    return pd.DataFrame(playoff_stats).sort_values('Championships', ascending=False)
+    return pd.DataFrame(playoff_stats)
 
 def create_medal_overview(teams_df):
     """Create medal overview visualization"""
