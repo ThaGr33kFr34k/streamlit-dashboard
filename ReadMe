@@ -1,0 +1,41 @@
+Folgende Auswertungen soll es geben:
+
+Playoffs vs Regular Season
+  Anzahl Playoff-Games und daraus resultierende Win% vs Anzahl Regular Season Games und Win%
+    => Wer performt wenn es drauf ankommt?
+H2H Statistik 
+  -> Top 3 Lieblingsgegner (Highest Win%)
+  -> Top 3 Angstgegner (Lowest Win%)
+Medaillenspiegel -> Alle Teams in einer Tabelle sortiert nach 1st, 2nd, 3rd Place Finish
+  Berechnung analog zu Olympia 
+    1. Goldmedaillen:
+    Das Land mit den meisten Goldmedaillen steht an erster Stelle im Medaillenspiegel. 
+    2. Silbermedaillen:
+    Bei Gleichstand in Goldmedaillen entscheidet die Anzahl der Silbermedaillen. 
+    3. Bronzemedaillen:
+    Bei Gleichstand in Gold- und Silbermedaillen entscheidet die Anzahl der Bronzemedaillen. 
+    4. Gleiche Medaillenanzahl:
+    Wenn zwei oder mehr Länder die gleiche Anzahl an Gold-, Silber- und Bronzemedaillen haben, werden sie alphabetisch sortiert und erhalten den gleichen Rang im Medaillenspiegel
+Drafts
+  Drop Downs pro Jahr und Team: Draft Slot und erste 3 Picks (PlayerIDs aufgelöst)
+  Als Default soll immer ein Team vorausgewählt sein, wenn man die Seite lädt
+  Draft Slot vs Final Rank
+  Over oder Underachieved?
+Kategorien
+  Head-to-Head Category Dominance"-Tabelle über alle Jahre
+    Du gehst jedes Matchup durch, markierst Kategorie-Gewinner (z. B. FG%, 3PM, BLK, …), und führst eine Statistik wie: Team A hat in allen seinen Matchups All-Time 70% die Kategorie Blocks gewonnen (70 von 100 Mal beim Beispiel 100 Matchups)
+  "All-Time Stat Leaders"
+        Du summierst für jedes Team die Rohwerte (Blocks, Rebounds, Assists, etc.) über alle Seasons auf und sortierst absteigend
+        Bei FG% und FT% nimmst du den Annual Average über alle gespielte Jahre als Durchschnitt
+  Career Averages
+    Du summierst für jedes Team die Rohwerte (Blocks, Rebounds, Assists, etc.) über alle Seasons auf und teilst durch die Anzahl gespielter Jahre
+    Bei FG% und FT% nimmst du den Annual Average über alle gespielte Jahre als Durchschnitt
+Team-View
+  Dropdown für jedes Team um alle wichtigsten Daten auf einen Blick zu sehen
+  Als Default soll immer ein Team vorausgewählt sein, wenn man die Seite lädt
+  Team-View zeigt folgende Daten:
+    Anzahl Saisons
+    Wenn Champion dann alle Championships mit einem Bild (tbd) und der Jahreszahl darin
+    Draft Pick in Zeitlinie
+    Final Rank in Zeitlinie
+  
