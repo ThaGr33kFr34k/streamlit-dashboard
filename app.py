@@ -141,9 +141,9 @@ def calculate_playoff_stats(processed_df, teams_df):
     # Filter out LOSERS_CONSOLATION_LADDER games from all analysis
     filtered_df = processed_df[processed_df['Phase'] != 'LOSERS_CONSOLATION_LADDER'].copy()
 
-    # Define phases correctly
+    # Define phases correctly based on your actual data
     regular_phases = ["Regular Season"]
-    playoff_phases = ["Finale", "Halbfinale", "WINNERS_BRACKET", "Spiel um Platz 3"]
+    playoff_phases = ["FINALE", "Halbfinale", "WINNERS_BRACKET", "Spiel um Platz 3"]
     
     stats = []
 
@@ -196,6 +196,25 @@ def calculate_playoff_stats(processed_df, teams_df):
                 if (game['Home'] == team_id and game['Winner'] == 'HOME') or \
                    (game['Away'] == team_id and game['Winner'] == 'AWAY'):
                     playoff_wins += 1
+            
+            # Debug for Joey (TeamID=12) - check if aggregating across years is the issue
+            if team_id == 12:
+                joey_home_playoffs = len(filtered_df[
+                    (filtered_df['Phase'].isin(playoff_phases)) &
+                    (filtered_df['Season'] == year) &
+                    (filtered_df['Home'] == team_id)
+                ])
+                joey_away_playoffs = len(filtered_df[
+                    (filtered_df['Phase'].isin(playoff_phases)) &
+                    (filtered_df['Season'] == year) &
+                    (filtered_df['Away'] == team_id)
+                ])
+                if joey_home_playoffs > 0 or joey_away_playoffs > 0:
+                    st.write(f"DEBUG - Joey (TeamID=12) Year {year}: {joey_home_playoffs} home + {joey_away_playoffs} away = {joey_home_playoffs + joey_away_playoffs} playoff games")
+        
+        # Debug total for Joey
+        if manager == "Joey":
+            st.write(f"DEBUG - Joey total playoff games across all years: {playoff_total}")
         
         # Calculate win percentages
         reg_win_pct = reg_wins / reg_total if reg_total > 0 else 0.0
@@ -250,7 +269,11 @@ def style_dataframe_with_colors(df, win_pct_columns):
         else:
             return "background-color: rgba(200, 0, 0, 0.4);"  # Dark red
     
+    def make_manager_bold(val):
+        return "font-weight: bold;"
+    
     styled_df = df.style.applymap(highlight_winpct, subset=win_pct_columns)
+    styled_df = styled_df.applymap(make_manager_bold, subset=['Manager'])
     return styled_df
 
 def create_medal_table(teams_df):
@@ -340,12 +363,22 @@ def main():
         st.error("Error processing matchup data.")
         return
     
-    # Sidebar
+    # Sidebar with button navigation
     st.sidebar.title("Navigation")
-    analysis_type = st.sidebar.selectbox(
-        "Choose Analysis",
-        ["🥊 Head-to-Head", "🏆 Playoff Performance", "🏅 Medal Overview"]
-    )
+    
+    # Create navigation buttons instead of selectbox
+    if st.sidebar.button("🥊 Head-to-Head", use_container_width=True):
+        st.session_state.analysis_type = "🥊 Head-to-Head"
+    if st.sidebar.button("🏆 Playoff Performance", use_container_width=True):
+        st.session_state.analysis_type = "🏆 Playoff Performance"
+    if st.sidebar.button("🏅 Medal Overview", use_container_width=True):
+        st.session_state.analysis_type = "🏅 Medal Overview"
+    
+    # Initialize session state if not exists
+    if 'analysis_type' not in st.session_state:
+        st.session_state.analysis_type = "🥊 Head-to-Head"
+    
+    analysis_type = st.session_state.analysis_type
     
     # Main content based on selection
     if analysis_type == "🥊 Head-to-Head":
@@ -423,8 +456,9 @@ def main():
             st.subheader("🏆 Medal Table")
             
             # Display medal table
+            medal_styled = medal_table.style.applymap(lambda x: "font-weight: bold;", subset=['Manager'])
             st.dataframe(
-                medal_table,
+                medal_styled,
                 column_config={
                     "Rank": "Rank",
                     "Manager": "Manager",
