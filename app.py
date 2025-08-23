@@ -5,6 +5,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import random
+import ast
+from scipy.stats import pearsonr
 
 # Page configuration
 st.set_page_config(
@@ -62,15 +64,17 @@ def load_data():
         # You'll need to replace these URLs with your actual sheet URLs
         teams_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=648434164&single=true&output=csv"
         matchups_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=652199133&single=true&output=csv"
+        drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"  # Add your mDrafts URL here
         
         # Load the data
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
+        drafts_df = pd.read_csv(drafts_url) if drafts_url != "YOUR_DRAFTS_URL_HERE" else None
         
-        return teams_df, matchups_df
+        return teams_df, matchups_df, drafts_df
     except Exception as e:
         st.error(f"Error loading data: {e}")
-        return None, None
+        return None, None, None
 
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
@@ -308,7 +312,109 @@ def style_dataframe_with_colors(df, win_pct_columns):
     styled_df = styled_df.applymap(make_manager_bold, subset=['Manager'])
     return styled_df
 
-def create_medal_table(teams_df):
+def parse_pick_order(pick_order_str):
+    """Parse the pickOrder string from [10, 2, 3, ...] format"""
+    try:
+        return ast.literal_eval(pick_order_str)
+    except:
+        return None
+
+def process_draft_data(drafts_df, teams_df):
+    """Process draft data and combine with final rankings"""
+    if drafts_df is None or teams_df is None:
+        return None
+    
+    # Get pick order for each season
+    pick_orders = {}
+    
+    # Extract pick order from drafts_df (assuming it's in a column called 'pickOrder')
+    if 'pickOrder' in drafts_df.columns:
+        for season in drafts_df['Season'].unique():
+            season_data = drafts_df[drafts_df['Season'] == season]
+            if not season_data.empty and 'pickOrder' in season_data.columns:
+                pick_order_str = season_data['pickOrder'].iloc[0]
+                if pd.notna(pick_order_str):
+                    pick_orders[season] = parse_pick_order(pick_order_str)
+    
+    # Create draft analysis data
+    draft_analysis = []
+    
+    for season in teams_df['Year'].unique():
+        season_teams = teams_df[teams_df['Year'] == season]
+        
+        if season in pick_orders:
+            pick_order = pick_orders[season]
+            
+            for i, team_id in enumerate(pick_order):
+                draft_position = i + 1  # 1-indexed draft position
+                
+                # Find this team's final rank
+                team_info = season_teams[season_teams['TeamID'] == team_id]
+                if not team_info.empty:
+                    final_rank = team_info['Final Rank'].iloc[0]
+                    manager_name = team_info['First Name'].iloc[0]
+                    
+                    # Calculate over/under (positive = overperformed, negative = underperformed)
+                    over_under = draft_position - final_rank
+                    
+                    draft_analysis.append({
+                        'Season': season,
+                        'TeamID': team_id,
+                        'Manager': manager_name,
+                        'Draft_Position': draft_position,
+                        'Final_Rank': final_rank,
+                        'Over_Under': over_under
+                    })
+    
+    return pd.DataFrame(draft_analysis)
+
+def calculate_draft_value_analysis(draft_analysis_df):
+    """Calculate average final rank by draft position"""
+    if draft_analysis_df is None:
+        return None
+    
+    # Group by draft position and calculate average final rank
+    draft_value = draft_analysis_df.groupby('Draft_Position')['Final_Rank'].agg([
+        'mean', 'std', 'count'
+    ]).round(2)
+    
+    draft_value.columns = ['Avg_Final_Rank', 'Std_Final_Rank', 'Count']
+    draft_value = draft_value.reset_index()
+    
+    return draft_value
+
+def create_draft_heatmap(draft_analysis_df):
+    """Create heatmap showing draft position vs final rank frequency"""
+    if draft_analysis_df is None:
+        return None
+    
+    # Create pivot table for heatmap
+    heatmap_data = draft_analysis_df.pivot_table(
+        values='Season',
+        index='Draft_Position', 
+        columns='Final_Rank',
+        aggfunc='count',
+        fill_value=0
+    )
+    
+    # Create heatmap
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_data.values,
+        x=[f"Rang {i}" for i in heatmap_data.columns],
+        y=[f"Pick {i}" for i in heatmap_data.index],
+        colorscale='RdYlBu_r',
+        hoverongaps=False,
+        hovertemplate='Draft Position: %{y}<br>Final Rank: %{x}<br>Häufigkeit: %{z}<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        title='Draft Position vs Final Rank - Häufigkeitsverteilung',
+        xaxis_title='Final Rank',
+        yaxis_title='Draft Position',
+        height=600
+    )
+    
+    return fig
     """Create Olympic-style medal table"""
     if teams_df is None:
         return None
@@ -409,7 +515,7 @@ def main():
     
     # Load data
     with st.spinner("Loading data..."):
-        teams_df, matchups_df = load_data()
+        teams_df, matchups_df, drafts_df = load_data()
     
     if teams_df is None or matchups_df is None:
         st.error("Please update the Google Sheets URLs in the code with your actual sheet URLs.")
@@ -417,7 +523,7 @@ def main():
         To get your Google Sheets CSV URLs:
         1. Open your Google Sheet
         2. Go to File → Share → Publish to web
-        3. Select the tab (mTeams or mMatchups)
+        3. Select the tab (mTeams, mMatchups, or mDrafts)
         4. Choose CSV format
         5. Copy the generated URL
         6. Replace the URLs in the code
@@ -442,6 +548,8 @@ def main():
         st.session_state.analysis_type = "🏆 Playoff Performance"
     if st.sidebar.button("🏅 Medal Overview", use_container_width=True):
         st.session_state.analysis_type = "🏅 Medal Overview"
+    if st.sidebar.button("🎯 Drafts", use_container_width=True):
+        st.session_state.analysis_type = "🎯 Drafts"
     
     # Initialize session state if not exists
     if 'analysis_type' not in st.session_state:
@@ -620,6 +728,175 @@ def main():
             )
             
             st.plotly_chart(fig, use_container_width=True)
+
+    elif analysis_type == "🎯 Drafts":
+        st.header("Draft Analysis")
+        
+        if drafts_df is None:
+            st.warning("⚠️ Draft-Daten nicht verfügbar. Bitte füge die mDrafts URL hinzu.")
+            return
+        
+        # Process draft data
+        draft_analysis_df = process_draft_data(drafts_df, teams_df)
+        
+        if draft_analysis_df is None or len(draft_analysis_df) == 0:
+            st.error("Fehler beim Verarbeiten der Draft-Daten.")
+            return
+        
+        # Draft Analysis Tabs
+        tab1, tab2 = st.tabs(["📊 Over/Under", "🎯 Draft Value Tracker"])
+        
+        with tab1:
+            st.subheader("Over/Under Performance")
+            st.markdown("*Diskrepanz zwischen Draft-Position und finalem Rang*")
+            
+            # Season filter
+            seasons = sorted(draft_analysis_df['Season'].unique(), reverse=True)
+            selected_season = st.selectbox("Saison auswählen:", ["Alle Saisons"] + list(seasons))
+            
+            if selected_season != "Alle Saisons":
+                filtered_df = draft_analysis_df[draft_analysis_df['Season'] == selected_season]
+            else:
+                filtered_df = draft_analysis_df
+            
+            # Top Over/Underperformers
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("### 🚀 Beste Overperformer")
+                st.markdown("*Höchste positive Abweichung (Draft schlechter als Endrang)*")
+                
+                best_over = filtered_df.nlargest(5, 'Over_Under')
+                for i, (_, row) in enumerate(best_over.iterrows()):
+                    st.markdown(f"""
+                    <div class="favorite-opponent">
+                        <h4>#{i+1} {row['Manager']} ({row['Season']})</h4>
+                        <p><strong>+{row['Over_Under']}</strong> (Pick {row['Draft_Position']} → Rang {row['Final_Rank']})</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("### 😰 Größte Underperformer")  
+                st.markdown("*Höchste negative Abweichung (Draft besser als Endrang)*")
+                
+                worst_under = filtered_df.nsmallest(5, 'Over_Under')
+                for i, (_, row) in enumerate(worst_under.iterrows()):
+                    st.markdown(f"""
+                    <div class="nightmare-opponent">
+                        <h4>#{i+1} {row['Manager']} ({row['Season']})</h4>
+                        <p><strong>{row['Over_Under']}</strong> (Pick {row['Draft_Position']} → Rang {row['Final_Rank']})</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # Over/Under Distribution Chart
+            st.markdown("### Over/Under Verteilung")
+            fig_hist = px.histogram(
+                filtered_df, 
+                x='Over_Under', 
+                nbins=20,
+                title='Verteilung der Over/Under Performance',
+                labels={'Over_Under': 'Over/Under Score', 'count': 'Häufigkeit'},
+                color_discrete_sequence=['#FF6B35']
+            )
+            fig_hist.add_vline(x=0, line_dash="dash", line_color="black", annotation_text="Erwartung")
+            st.plotly_chart(fig_hist, use_container_width=True)
+            
+            # Complete Over/Under Table
+            st.markdown("### Komplette Over/Under Tabelle")
+            display_df = filtered_df.sort_values('Over_Under', ascending=False)
+            st.dataframe(
+                display_df[['Season', 'Manager', 'Draft_Position', 'Final_Rank', 'Over_Under']],
+                column_config={
+                    'Season': 'Saison',
+                    'Manager': 'Manager',
+                    'Draft_Position': 'Draft Position',
+                    'Final_Rank': 'Final Rang',
+                    'Over_Under': 'Over/Under'
+                },
+                use_container_width=True,
+                hide_index=True
+            )
+        
+        with tab2:
+            st.subheader("Draft Value Tracker")
+            st.markdown("*Zusammenhang zwischen Draft-Position und finalem Rang*")
+            
+            # Calculate draft value analysis
+            draft_value_df = calculate_draft_value_analysis(draft_analysis_df)
+            
+            if draft_value_df is not None:
+                # Draft Position Performance Table
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    st.markdown("### Durchschnittlicher Endrang nach Draft-Position")
+                    
+                    # Create line chart
+                    fig_line = go.Figure()
+                    fig_line.add_trace(go.Scatter(
+                        x=draft_value_df['Draft_Position'],
+                        y=draft_value_df['Avg_Final_Rank'],
+                        mode='lines+markers',
+                        name='Durchschnittlicher Endrang',
+                        line=dict(color='#FF6B35', width=3),
+                        marker=dict(size=8)
+                    ))
+                    
+                    # Add ideal line (Draft Position = Final Rank)
+                    fig_line.add_trace(go.Scatter(
+                        x=draft_value_df['Draft_Position'],
+                        y=draft_value_df['Draft_Position'],
+                        mode='lines',
+                        name='Erwartung (Draft = Rang)',
+                        line=dict(color='gray', dash='dash'),
+                        opacity=0.7
+                    ))
+                    
+                    fig_line.update_layout(
+                        title='Draft Position vs Durchschnittlicher Endrang',
+                        xaxis_title='Draft Position',
+                        yaxis_title='Durchschnittlicher Endrang',
+                        yaxis=dict(autorange='reversed')  # Lower ranks at top
+                    )
+                    st.plotly_chart(fig_line, use_container_width=True)
+                
+                with col2:
+                    st.markdown("### Draft Value Tabelle")
+                    st.dataframe(
+                        draft_value_df,
+                        column_config={
+                            'Draft_Position': 'Pick',
+                            'Avg_Final_Rank': 'Ø Endrang',
+                            'Std_Final_Rank': 'Standardabw.',
+                            'Count': 'Anzahl'
+                        },
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                
+                # Heatmap
+                st.markdown("### Draft Position vs Final Rank - Häufigkeitsmatrix")
+                heatmap_fig = create_draft_heatmap(draft_analysis_df)
+                if heatmap_fig:
+                    st.plotly_chart(heatmap_fig, use_container_width=True)
+                
+                # Correlation Analysis
+                st.markdown("### Korrelationsanalyse")
+                correlation, p_value = pearsonr(draft_analysis_df['Draft_Position'], draft_analysis_df['Final_Rank'])
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Korrelation", f"{correlation:.3f}")
+                with col2:
+                    st.metric("P-Wert", f"{p_value:.4f}")
+                with col3:
+                    strength = "stark" if abs(correlation) > 0.7 else "mittel" if abs(correlation) > 0.4 else "schwach"
+                    st.metric("Stärke", strength)
+                
+                if correlation > 0:
+                    st.info(f"📈 Positive Korrelation: Höhere Draft-Positionen führen tendenziell zu schlechteren Endrängen (r={correlation:.3f})")
+                else:
+                    st.info(f"📉 Negative Korrelation: Höhere Draft-Positionen führen tendenziell zu besseren Endrängen (r={correlation:.3f})")
 
 if __name__ == "__main__":
     main()
