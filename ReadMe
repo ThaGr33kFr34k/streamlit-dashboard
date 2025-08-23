@@ -3,7 +3,9 @@ Folgende Auswertungen soll es geben:
 Playoffs vs Regular Season
   Anzahl Playoff-Games und daraus resultierende Win% vs Anzahl Regular Season Games und Win%
     => Wer performt wenn es drauf ankommt?
-H2H Statistik 
+Head-to-Head Nemesis
+  Jeder Spieler hat seinen persönlichen „Angstgegner“ (gegen den er die meisten Spiele verloren hat).  
+  Auch: „Lieblingsgegner“ für die höchste Siegquote.
   -> Top 3 Lieblingsgegner (Highest Win%)
   -> Top 3 Angstgegner (Lowest Win%)
 Medaillenspiegel -> Alle Teams in einer Tabelle sortiert nach 1st, 2nd, 3rd Place Finish
@@ -16,11 +18,22 @@ Medaillenspiegel -> Alle Teams in einer Tabelle sortiert nach 1st, 2nd, 3rd Plac
     Bei Gleichstand in Gold- und Silbermedaillen entscheidet die Anzahl der Bronzemedaillen. 
     4. Gleiche Medaillenanzahl:
     Wenn zwei oder mehr Länder die gleiche Anzahl an Gold-, Silber- und Bronzemedaillen haben, werden sie alphabetisch sortiert und erhalten den gleichen Rang im Medaillenspiegel
+
 Drafts
-  Drop Downs pro Jahr und Team: Draft Slot und erste 3 Picks (PlayerIDs aufgelöst)
-  Als Default soll immer ein Team vorausgewählt sein, wenn man die Seite lädt
-  Draft Slot vs Final Rank
-  Over oder Underachieved?
+  "Choking Index"
+  Differenz zwischen Regular Season Seed und tatsächlichem Endergebnis.
+  Beispiel: 1st Seed → früh in den Playoffs raus = hoher Choke-Faktor
+  Comeback Kings
+    Welche Teams hatten die größte Diskrepanz zwischen schlechtem Draftplatz / Regular Season Rank und finalem Playoff-Rank?
+  "Draft Value Tracker"
+    Wie stark ist der Zusammenhang zwischen Draft-Slot und finalem Endrang?
+  Zeig z. B. eine Heatmap: “Slot 1 landet im Schnitt auf Platz X, Slot 10 auf Platz Y.”
+  Lottery Luck
+    Wer hatte wie oft einen top 3 Pick?
+  Player Analysis
+    Welche Spieler waren am häufigsten in Championship Teams?
+    Welche Spieler waren am häufigsten 1st Round Pick?
+
 Kategorien
   Head-to-Head Category Dominance"-Tabelle über alle Jahre
     Du gehst jedes Matchup durch, markierst Kategorie-Gewinner (z. B. FG%, 3PM, BLK, …), und führst eine Statistik wie: Team A hat in allen seinen Matchups All-Time 70% die Kategorie Blocks gewonnen (70 von 100 Mal beim Beispiel 100 Matchups)
@@ -38,4 +51,36 @@ Team-View
     Wenn Champion dann alle Championships mit einem Bild (tbd) und der Jahreszahl darin
     Draft Pick in Zeitlinie
     Final Rank in Zeitlinie
-  
+    Drop Downs pro Jahr und Team: Draft Slot und erste 3 Picks (PlayerIDs aufgelöst)
+    Als Default soll immer das letzte Jahr vorausgewählt sein, wenn man die Seite lädt
+
+**Zukunft:**
+  „Hall of Fame“ (beste Steals) und „Hall of Shame“ (größte Busts)
+    Value = Draft Position - Endrank
+    Negativ = Steal (später gedraftet, aber höher gerankt).
+    Positiv = Bust (früh gedraftet, aber niedriger gerankt).
+    Beispiel:
+      Jemand pickt Spieler A an Pick 10, der aber in den End-of-Season Fantasy-Rankings auf Platz 3 landet → Steal (+7 Value).
+      Spieler B wird an Pick 5 genommen, landet aber nur auf Platz 70 → Bust (−65 Value).
+  „Draft Consistency Score“
+  👉 Idee: Wer drafted über die Jahre verlässlich gut?
+  Datenbasis:
+Draftposition je Runde (z. B. Runde 1, Runde 2, Runde 3 …).
+Fantasy-Endrank der Spieler (wieder aus ESPN Player Rater oder Season Rank).
+Ansatz:
+Rundenweise Bewertung:
+Runde 1–3: Erwartung ist, dass die Spieler auch Top 30 performen.
+Späte Runden: jeder Treffer ist Bonus.
+
+Metrik bauen:
+Für jeden Spieler → Expected Rank basierend auf Runde.
+Vergleich mit Actual Rank.
+Aggregieren pro Manager über die Jahre.
+
+Beispiel (vereinfacht):
+Runde 1 Pick → erwartet Top 12.
+Wenn der Spieler am Ende Platz 8 ist → erfüllt Erwartung.
+Wenn Platz 40 → schwach.
+Über viele Jahre kannst du so einen Score machen wie:
+Manager A: +20% Value (konstant gute Picks in frühen Runden).
+Manager B: –15% Value (bekannt für schlechte Erstrunden-Picks 😂)
