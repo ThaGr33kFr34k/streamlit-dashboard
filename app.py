@@ -63,7 +63,7 @@ def load_data():
         # You'll need to replace these URLs with your actual sheet URLs
         teams_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=648434164&single=true&output=csv"
         matchups_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=652199133&single=true&output=csv"
-        drafts_url = "YOUR_DRAFTS_URL_HERE"  # Add your mDrafts URL here
+        drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"  # Add your mDrafts URL here
         
         # Load the data
         teams_df = pd.read_csv(teams_url)
