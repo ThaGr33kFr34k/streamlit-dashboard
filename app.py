@@ -1,4 +1,9 @@
-import streamlit as st
+# Scatter Plot instead of Heatmap
+                st.markdown("### Draft Position vs Final Rank - Scatter Plot")
+                scatter_fig = create_draft_scatter_plot(draft_analysis_df)
+                if scatter_fig:
+                    st.plotly_chart(scatter_fig, use_container_width=True)
+                    st.markdown("*Punkte über der schwarzen Linie = Underperformer, Punkte unter der Linie = Overperformer*")import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -453,7 +458,66 @@ def calculate_draft_value_analysis(draft_analysis_df):
     
     return draft_value
 
-def create_draft_heatmap(draft_analysis_df):
+def create_draft_scatter_plot(draft_analysis_df):
+    """Create scatter plot showing draft position vs final rank"""
+    if draft_analysis_df is None:
+        return None
+    
+    # Create scatter plot
+    fig = px.scatter(
+        draft_analysis_df, 
+        x='Draft_Position', 
+        y='Final_Rank',
+        color='Over_Under',
+        size='Season',
+        hover_data=['Manager', 'Season'],
+        title='Draft Position vs Final Rank (alle Saisons)',
+        labels={
+            'Draft_Position': 'Draft Position', 
+            'Final_Rank': 'Final Rank',
+            'Over_Under': 'Over/Under Score'
+        },
+        color_continuous_scale='RdYlGn'  # Red for negative, Green for positive
+    )
+    
+    # Add diagonal line (perfect prediction)
+    max_pos = max(draft_analysis_df['Draft_Position'].max(), draft_analysis_df['Final_Rank'].max())
+    fig.add_trace(go.Scatter(
+        x=[1, max_pos],
+        y=[1, max_pos],
+        mode='lines',
+        name='Perfekte Vorhersage',
+        line=dict(color='black', dash='dash'),
+        opacity=0.5
+    ))
+    
+    fig.update_layout(
+        yaxis=dict(autorange='reversed'),  # Lower ranks at top
+        height=500
+    )
+    
+    return fig
+
+def calculate_cumulative_over_under(draft_analysis_df):
+    """Calculate cumulative over/under scores by manager across all seasons"""
+    if draft_analysis_df is None:
+        return None
+    
+    # Group by manager and sum over/under scores
+    cumulative_df = draft_analysis_df.groupby('Manager').agg({
+        'Over_Under': 'sum',
+        'Season': 'count',  # Number of seasons
+        'Draft_Position': 'mean',  # Average draft position
+        'Final_Rank': 'mean'  # Average final rank
+    }).round(2)
+    
+    cumulative_df.columns = ['Kumulierter_Over_Under', 'Anzahl_Saisons', 'Avg_Draft_Position', 'Avg_Final_Rank']
+    cumulative_df = cumulative_df.reset_index()
+    
+    # Sort by cumulative over/under (best performers first)
+    cumulative_df = cumulative_df.sort_values('Kumulierter_Over_Under', ascending=False)
+    
+    return cumulative_df
     """Create heatmap showing draft position vs final rank frequency"""
     if draft_analysis_df is None:
         return None
@@ -858,34 +922,48 @@ def main():
                     </div>
                     """, unsafe_allow_html=True)
             
-            # Over/Under Distribution Chart
-            st.markdown("### Over/Under Verteilung")
-            fig_hist = px.histogram(
-                filtered_df, 
-                x='Over_Under', 
-                nbins=20,
-                title='Verteilung der Over/Under Performance',
-                labels={'Over_Under': 'Over/Under Score', 'count': 'Häufigkeit'},
-                color_discrete_sequence=['#FF6B35']
-            )
-            fig_hist.add_vline(x=0, line_dash="dash", line_color="black", annotation_text="Erwartung")
-            st.plotly_chart(fig_hist, use_container_width=True)
+            # Over/Under Performance by Manager (better than histogram)
+            st.markdown("### Over/Under Performance je Manager")
             
-            # Complete Over/Under Table
-            st.markdown("### Komplette Over/Under Tabelle")
-            display_df = filtered_df.sort_values('Over_Under', ascending=False)
-            st.dataframe(
-                display_df[['Season', 'Manager', 'Draft_Position', 'Final_Rank', 'Over_Under']],
-                column_config={
-                    'Season': 'Saison',
-                    'Manager': 'Manager',
-                    'Draft_Position': 'Draft Position',
-                    'Final_Rank': 'Final Rang',
-                    'Over_Under': 'Over/Under'
-                },
-                use_container_width=True,
-                hide_index=True
+            # Calculate average over/under by manager for current filter
+            manager_performance = filtered_df.groupby('Manager').agg({
+                'Over_Under': ['mean', 'sum', 'count']
+            }).round(2)
+            manager_performance.columns = ['Avg_Over_Under', 'Total_Over_Under', 'Seasons']
+            manager_performance = manager_performance.reset_index().sort_values('Avg_Over_Under', ascending=False)
+            
+            # Create bar chart
+            fig_bar = px.bar(
+                manager_performance,
+                x='Manager',
+                y='Avg_Over_Under',
+                color='Avg_Over_Under',
+                color_continuous_scale='RdYlGn',
+                title='Durchschnittliche Over/Under Performance pro Manager',
+                labels={'Avg_Over_Under': 'Ø Over/Under Score', 'Manager': 'Manager'},
+                hover_data={'Total_Over_Under': True, 'Seasons': True}
             )
+            fig_bar.add_hline(y=0, line_dash="dash", line_color="black", annotation_text="Erwartung")
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # Cumulative Over/Under Table
+            st.markdown("### Kumulierte Over/Under Tabelle (alle Saisons)")
+            st.markdown("*Gesamte Over/Under Performance über alle Saisons aufsummiert*")
+            
+            cumulative_df = calculate_cumulative_over_under(draft_analysis_df)
+            if cumulative_df is not None:
+                st.dataframe(
+                    cumulative_df,
+                    column_config={
+                        'Manager': 'Manager',
+                        'Kumulierter_Over_Under': 'Kumulierter Over/Under',
+                        'Anzahl_Saisons': 'Anzahl Saisons',
+                        'Avg_Draft_Position': 'Ø Draft Position',
+                        'Avg_Final_Rank': 'Ø Final Rank'
+                    },
+                    use_container_width=True,
+                    hide_index=True
+                )
         
         with tab2:
             st.subheader("Draft Value Tracker")
@@ -944,11 +1022,12 @@ def main():
                         hide_index=True
                     )
                 
-                # Heatmap
-                st.markdown("### Draft Position vs Final Rank - Häufigkeitsmatrix")
-                heatmap_fig = create_draft_heatmap(draft_analysis_df)
-                if heatmap_fig:
-                    st.plotly_chart(heatmap_fig, use_container_width=True)
+                # Scatter Plot instead of Heatmap
+                st.markdown("### Draft Position vs Final Rank - Scatter Plot")
+                scatter_fig = create_draft_scatter_plot(draft_analysis_df)
+                if scatter_fig:
+                    st.plotly_chart(scatter_fig, use_container_width=True)
+                    st.markdown("*Punkte über der schwarzen Linie = Underperformer, Punkte unter der Linie = Overperformer*")
                 
                 # Correlation Analysis
                 st.markdown("### Korrelationsanalyse")
