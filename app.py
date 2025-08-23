@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+import random
 
 # Page configuration
 st.set_page_config(
@@ -33,6 +34,20 @@ st.markdown("""
         display: flex;
         justify-content: space-around;
         margin: 1rem 0;
+    }
+    .favorite-opponent {
+        background-color: #e8f5e8;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid #4CAF50;
+        margin: 0.5rem 0;
+    }
+    .nightmare-opponent {
+        background-color: #fee;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid #f44336;
+        margin: 0.5rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -132,6 +147,41 @@ def calculate_head_to_head(processed_df, manager1, manager2):
         "ties": ties,
         "win_pct": win_pct
     }
+
+def calculate_all_h2h_stats(processed_df, selected_manager, min_games=5):
+    """Calculate H2H stats for selected manager against all other managers"""
+    if processed_df is None:
+        return None, None
+    
+    # Get all unique managers
+    all_managers = set(processed_df['Home_Manager'].unique()) | set(processed_df['Away_Manager'].unique())
+    all_managers.discard(selected_manager)  # Remove selected manager from opponents
+    
+    h2h_results = []
+    
+    for opponent in all_managers:
+        h2h_stats = calculate_head_to_head(processed_df, selected_manager, opponent)
+        
+        if h2h_stats['games'] >= min_games:  # Minimum games filter
+            h2h_results.append({
+                'Opponent': opponent,
+                'Games': h2h_stats['games'],
+                'Wins': h2h_stats['wins'],
+                'Losses': h2h_stats['losses'],
+                'Ties': h2h_stats['ties'],
+                'Win%': h2h_stats['win_pct']
+            })
+    
+    if not h2h_results:
+        return None, None
+    
+    h2h_df = pd.DataFrame(h2h_results)
+    
+    # Sort by win percentage
+    favorites = h2h_df.nlargest(3, 'Win%')  # Top 3 highest win%
+    nightmares = h2h_df.nsmallest(3, 'Win%')  # Top 3 lowest win%
+    
+    return favorites, nightmares
 
 def calculate_playoff_stats(processed_df, teams_df):
     """Calculate Regular vs Playoff performance per manager"""
@@ -316,6 +366,43 @@ def create_medal_table(teams_df):
     
     return medal_df_final
 
+def display_opponent_analysis(favorites, nightmares, selected_manager):
+    """Display the favorite and nightmare opponents analysis"""
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 😍 Lieblingsgegner")
+        st.markdown("*Höchste Siegquote gegen diese Gegner*")
+        
+        if favorites is not None and len(favorites) > 0:
+            for i, (_, opponent) in enumerate(favorites.iterrows()):
+                with st.container():
+                    st.markdown(f"""
+                    <div class="favorite-opponent">
+                        <h4>#{i+1} {opponent['Opponent']}</h4>
+                        <p><strong>{opponent['Win%']:.1%}</strong> Siegquote ({opponent['Wins']}-{opponent['Losses']}-{opponent['Ties']} in {opponent['Games']} Spielen)</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info(f"Keine Lieblingsgegner mit mindestens 5 Spielen für {selected_manager} gefunden.")
+    
+    with col2:
+        st.markdown("### 😰 Angstgegner")
+        st.markdown("*Niedrigste Siegquote gegen diese Gegner*")
+        
+        if nightmares is not None and len(nightmares) > 0:
+            for i, (_, opponent) in enumerate(nightmares.iterrows()):
+                with st.container():
+                    st.markdown(f"""
+                    <div class="nightmare-opponent">
+                        <h4>#{i+1} {opponent['Opponent']}</h4>
+                        <p><strong>{opponent['Win%']:.1%}</strong> Siegquote ({opponent['Wins']}-{opponent['Losses']}-{opponent['Ties']} in {opponent['Games']} Spielen)</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info(f"Keine Angstgegner mit mindestens 5 Spielen für {selected_manager} gefunden.")
+
 # Main app
 def main():
     st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
@@ -368,40 +455,98 @@ def main():
         
         managers = sorted(teams_df['First Name'].unique())
         
-        col1, col2 = st.columns(2)
-        with col1:
-            manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
-        with col2:
-            manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
+        # Initialize random manager if not set
+        if 'random_manager' not in st.session_state:
+            st.session_state.random_manager = random.choice(managers)
         
-        if manager1 != manager2:
-            h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
+        # Tabs for different H2H analyses
+        tab1, tab2 = st.tabs(["💥 Direkter Vergleich", "🎯 Lieblings- & Angstgegner"])
+        
+        with tab1:
+            st.subheader("Direkter Manager Vergleich")
             
-            if h2h_stats and h2h_stats['games'] > 0:
-                col1, col2, col3, col4, col5 = st.columns(5)
+            col1, col2 = st.columns(2)
+            with col1:
+                manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
+            with col2:
+                manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
+            
+            if manager1 != manager2:
+                h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
                 
-                with col1:
-                    st.metric("Total Games", h2h_stats['games'])
-                with col2:
-                    st.metric(f"{manager1} Wins", h2h_stats['wins'])
-                with col3:
-                    st.metric(f"{manager2} Wins", h2h_stats['losses'])
-                with col4:
-                    st.metric("Ties", h2h_stats['ties'])
-                with col5:
-                    st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
-                
-                # Visualization
-                fig = go.Figure(data=[
-                    go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']]),
-                    go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']])
-                ])
-                fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
-                st.plotly_chart(fig, use_container_width=True)
+                if h2h_stats and h2h_stats['games'] > 0:
+                    col1, col2, col3, col4, col5 = st.columns(5)
+                    
+                    with col1:
+                        st.metric("Total Games", h2h_stats['games'])
+                    with col2:
+                        st.metric(f"{manager1} Wins", h2h_stats['wins'])
+                    with col3:
+                        st.metric(f"{manager2} Wins", h2h_stats['losses'])
+                    with col4:
+                        st.metric("Ties", h2h_stats['ties'])
+                    with col5:
+                        st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
+                    
+                    # Visualization
+                    fig = go.Figure(data=[
+                        go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']], marker_color='#1f77b4'),
+                        go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']], marker_color='#ff7f0e')
+                    ])
+                    fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info(f"No matchups found between {manager1} and {manager2}")
             else:
-                st.info(f"No matchups found between {manager1} and {manager2}")
-        else:
-            st.info("Please select two different managers.")
+                st.info("Please select two different managers.")
+        
+        with tab2:
+            st.subheader("Lieblings- & Angstgegner Analyse")
+            st.markdown("*Mindestanzahl: 5 Spiele gegeneinander*")
+            
+            # Manager selection with random button
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                selected_manager = st.selectbox(
+                    "Wähle Manager für Analyse:", 
+                    managers, 
+                    index=managers.index(st.session_state.random_manager) if st.session_state.random_manager in managers else 0,
+                    key="opponent_analysis_manager"
+                )
+            with col2:
+                if st.button("🎲 Zufällig", key="random_manager_btn"):
+                    st.session_state.random_manager = random.choice([m for m in managers if m != selected_manager])
+                    st.experimental_rerun()
+            
+            # Calculate and display opponent analysis
+            favorites, nightmares = calculate_all_h2h_stats(processed_df, selected_manager, min_games=5)
+            
+            st.markdown(f"### Analyse für **{selected_manager}**")
+            display_opponent_analysis(favorites, nightmares, selected_manager)
+            
+            # Optional: Show all H2H stats table
+            if st.checkbox("Zeige alle Head-to-Head Statistiken", key="show_all_h2h"):
+                all_opponents = []
+                all_managers_set = set(processed_df['Home_Manager'].unique()) | set(processed_df['Away_Manager'].unique())
+                all_managers_set.discard(selected_manager)
+                
+                for opponent in all_managers_set:
+                    h2h_stats = calculate_head_to_head(processed_df, selected_manager, opponent)
+                    if h2h_stats['games'] >= 5:
+                        all_opponents.append({
+                            'Gegner': opponent,
+                            'Spiele': h2h_stats['games'],
+                            'Siege': h2h_stats['wins'],
+                            'Niederlagen': h2h_stats['losses'],
+                            'Unentschieden': h2h_stats['ties'],
+                            'Siegquote': f"{h2h_stats['win_pct']:.1%}"
+                        })
+                
+                if all_opponents:
+                    all_h2h_df = pd.DataFrame(all_opponents).sort_values('Siegquote', ascending=False)
+                    st.dataframe(all_h2h_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Keine Gegner mit mindestens 5 Spielen gefunden.")
 
     elif analysis_type == "🏆 Playoff Performance":
         st.header("Playoff Performance Analysis")
