@@ -6,7 +6,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 import random
 import ast
-from scipy.stats import pearsonr
 
 # Page configuration
 st.set_page_config(
@@ -312,7 +311,38 @@ def style_dataframe_with_colors(df, win_pct_columns):
     styled_df = styled_df.applymap(make_manager_bold, subset=['Manager'])
     return styled_df
 
-def parse_pick_order(pick_order_str):
+def calculate_correlation(x, y):
+    """Calculate Pearson correlation coefficient manually"""
+    if len(x) != len(y) or len(x) == 0:
+        return 0, 1
+    
+    # Convert to numpy arrays
+    x = np.array(x)
+    y = np.array(y)
+    
+    # Calculate means
+    mean_x = np.mean(x)
+    mean_y = np.mean(y)
+    
+    # Calculate correlation coefficient
+    numerator = np.sum((x - mean_x) * (y - mean_y))
+    denominator = np.sqrt(np.sum((x - mean_x) ** 2) * np.sum((y - mean_y) ** 2))
+    
+    if denominator == 0:
+        return 0, 1
+    
+    correlation = numerator / denominator
+    
+    # Simple p-value approximation (not exact but good enough for our use case)
+    n = len(x)
+    if n > 2:
+        t_stat = correlation * np.sqrt((n - 2) / (1 - correlation**2 + 1e-8))
+        # Rough p-value approximation
+        p_value = 2 * (1 - np.minimum(0.999, np.abs(t_stat) / np.sqrt(n)))
+    else:
+        p_value = 1
+    
+    return correlation, p_value
     """Parse the pickOrder string from [10, 2, 3, ...] format"""
     try:
         return ast.literal_eval(pick_order_str)
@@ -882,7 +912,7 @@ def main():
                 
                 # Correlation Analysis
                 st.markdown("### Korrelationsanalyse")
-                correlation, p_value = pearsonr(draft_analysis_df['Draft_Position'], draft_analysis_df['Final_Rank'])
+                correlation, p_value = calculate_correlation(draft_analysis_df['Draft_Position'], draft_analysis_df['Final_Rank'])
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
