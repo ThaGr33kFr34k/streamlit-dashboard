@@ -455,10 +455,6 @@ def main():
         
         managers = sorted(teams_df['First Name'].unique())
         
-        # Initialize random manager if not set
-        if 'random_manager' not in st.session_state:
-            st.session_state.random_manager = random.choice(managers)
-        
         # Tabs for different H2H analyses
         tab1, tab2 = st.tabs(["💥 Direkter Vergleich", "🎯 Lieblings- & Angstgegner"])
         
@@ -504,19 +500,12 @@ def main():
             st.subheader("Lieblings- & Angstgegner Analyse")
             st.markdown("*Mindestanzahl: 5 Spiele gegeneinander*")
             
-            # Manager selection with random button
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                selected_manager = st.selectbox(
-                    "Wähle Manager für Analyse:", 
-                    managers, 
-                    index=managers.index(st.session_state.random_manager) if st.session_state.random_manager in managers else 0,
-                    key="opponent_analysis_manager"
-                )
-            with col2:
-                if st.button("🎲 Zufällig", key="random_manager_btn"):
-                    st.session_state.random_manager = random.choice([m for m in managers if m != selected_manager])
-                    st.experimental_rerun()
+            # Manager selection
+            selected_manager = st.selectbox(
+                "Wähle Manager für Analyse:", 
+                managers, 
+                key="opponent_analysis_manager"
+            )
             
             # Calculate and display opponent analysis
             favorites, nightmares = calculate_all_h2h_stats(processed_df, selected_manager, min_games=5)
@@ -524,29 +513,29 @@ def main():
             st.markdown(f"### Analyse für **{selected_manager}**")
             display_opponent_analysis(favorites, nightmares, selected_manager)
             
-            # Optional: Show all H2H stats table
-            if st.checkbox("Zeige alle Head-to-Head Statistiken", key="show_all_h2h"):
-                all_opponents = []
-                all_managers_set = set(processed_df['Home_Manager'].unique()) | set(processed_df['Away_Manager'].unique())
-                all_managers_set.discard(selected_manager)
-                
-                for opponent in all_managers_set:
-                    h2h_stats = calculate_head_to_head(processed_df, selected_manager, opponent)
-                    if h2h_stats['games'] >= 5:
-                        all_opponents.append({
-                            'Gegner': opponent,
-                            'Spiele': h2h_stats['games'],
-                            'Siege': h2h_stats['wins'],
-                            'Niederlagen': h2h_stats['losses'],
-                            'Unentschieden': h2h_stats['ties'],
-                            'Siegquote': f"{h2h_stats['win_pct']:.1%}"
-                        })
-                
-                if all_opponents:
-                    all_h2h_df = pd.DataFrame(all_opponents).sort_values('Siegquote', ascending=False)
-                    st.dataframe(all_h2h_df, use_container_width=True, hide_index=True)
-                else:
-                    st.info("Keine Gegner mit mindestens 5 Spielen gefunden.")
+            # Show all H2H stats table
+            st.markdown("### Alle Head-to-Head Statistiken")
+            all_opponents = []
+            all_managers_set = set(processed_df['Home_Manager'].unique()) | set(processed_df['Away_Manager'].unique())
+            all_managers_set.discard(selected_manager)
+            
+            for opponent in all_managers_set:
+                h2h_stats = calculate_head_to_head(processed_df, selected_manager, opponent)
+                if h2h_stats['games'] >= 5:
+                    all_opponents.append({
+                        'Gegner': opponent,
+                        'Spiele': h2h_stats['games'],
+                        'Siege': h2h_stats['wins'],
+                        'Niederlagen': h2h_stats['losses'],
+                        'Unentschieden': h2h_stats['ties'],
+                        'Siegquote': f"{h2h_stats['win_pct']:.1%}"
+                    })
+            
+            if all_opponents:
+                all_h2h_df = pd.DataFrame(all_opponents).sort_values('Spiele', ascending=False)
+                st.dataframe(all_h2h_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("Keine Gegner mit mindestens 5 Spielen gefunden.")
 
     elif analysis_type == "🏆 Playoff Performance":
         st.header("Playoff Performance Analysis")
