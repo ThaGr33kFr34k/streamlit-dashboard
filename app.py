@@ -861,18 +861,23 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
                 
-                # Over/Under Distribution Chart
-                st.markdown("### Over/Under Verteilung")
-                fig_hist = px.histogram(
-                    filtered_df, 
-                    x='Over_Under', 
-                    nbins=20,
-                    title='Verteilung der Over/Under Performance',
-                    labels={'Over_Under': 'Over/Under Score', 'count': 'Häufigkeit'},
-                    color_discrete_sequence=['#FF6B35']
-                )
-                fig_hist.add_vline(x=0, line_dash="dash", line_color="black", annotation_text="Erwartung")
-                st.plotly_chart(fig_hist, use_container_width=True)
+                    # Simple bar chart showing the best and worst performers
+                    st.markdown("### 📊 Performance Übersicht")
+                    
+                    # Create a simple bar chart showing cumulative over/under performance
+                    fig_simple = px.bar(
+                        filtered_df.groupby('Manager')['Over_Under'].sum().reset_index().sort_values('Over_Under', ascending=True),
+                        x='Over_Under',
+                        y='Manager',
+                        orientation='h',
+                        title=f'Kumulative Over/Under Performance ({selected_season})',
+                        labels={'Over_Under': 'Kumulierte Over/Under Performance', 'Manager': 'Manager'},
+                        color='Over_Under',
+                        color_continuous_scale='RdYlGn'
+                    )
+                    fig_simple.update_layout(height=400, showlegend=False)
+                    fig_simple.add_vline(x=0, line_dash="dash", line_color="black")
+                    st.plotly_chart(fig_simple, use_container_width=True)
             
             with tab4:
                 st.subheader("Draft Position vs Final Rank")
@@ -912,6 +917,11 @@ def main():
                 if cumulative_df is not None:
                     st.markdown("**Over/Under Performance (Positive = Overperformed)**")
                     
+                    # Round the average columns to whole numbers
+                    display_cumulative = cumulative_df.copy()
+                    display_cumulative['Avg_Draft_Position'] = display_cumulative['Avg_Draft_Position'].round(0).astype(int)
+                    display_cumulative['Avg_Final_Rank'] = display_cumulative['Avg_Final_Rank'].round(0).astype(int)
+                    
                     # Color coding for over/under performance
                     def highlight_over_under(val):
                         if pd.isna(val):
@@ -931,7 +941,7 @@ def main():
                         else:
                             return "background-color: rgba(200, 0, 0, 0.4);"  # Dark red
                     
-                    styled_cumulative = cumulative_df.style.applymap(
+                    styled_cumulative = display_cumulative.style.applymap(
                         highlight_over_under, 
                         subset=['Kumulierter_Over_Under']
                     )
@@ -969,13 +979,16 @@ def main():
                 
                 if draft_value_df is not None:
                     st.markdown("**Average Final Rank by Draft Position**")
+                    
+                    # Round the average final rank to whole numbers and remove unnecessary columns
+                    display_df = draft_value_df[['Draft_Position', 'Avg_Final_Rank']].copy()
+                    display_df['Avg_Final_Rank'] = display_df['Avg_Final_Rank'].round(0).astype(int)
+                    
                     st.dataframe(
-                        draft_value_df,
+                        display_df,
                         column_config={
                             "Draft_Position": "Draft Position",
-                            "Avg_Final_Rank": "Ø Final Rank",
-                            "Std_Final_Rank": "Std Deviation",
-                            "Count": "Sample Size"
+                            "Avg_Final_Rank": "Ø Final Rank"
                         },
                         hide_index=True,
                         use_container_width=True
