@@ -690,4 +690,78 @@ def main():
             all_managers_set.discard(selected_manager)
             
             for opponent in all_managers_set:
-                h2h_stats = calculate_head_to_head(processed_df, selecte
+                h2h_stats = calculate_head_to_head(processed_df, selected_manager, opponent)
+                if h2h_stats['games'] >= 5:
+                    all_opponents.append({
+                        'Gegner': opponent,
+                        'Spiele': h2h_stats['games'],
+                        'Siege': h2h_stats['wins'],
+                        'Niederlagen': h2h_stats['losses'],
+                        'Unentschieden': h2h_stats['ties'],
+                        'Siegquote': f"{h2h_stats['win_pct']:.1%}"
+                    })
+            
+            if all_opponents:
+                all_h2h_df = pd.DataFrame(all_opponents).sort_values('Spiele', ascending=False)
+                st.dataframe(all_h2h_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("Keine Gegner mit mindestens 5 Spielen gefunden.")
+
+    elif analysis_type == "🏆 Playoff Performance":
+        st.header("Playoff Performance Analysis")
+        
+        # Calculate stats
+        full_stats, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
+        
+        if full_stats is not None:
+            # Rankings side by side
+            st.subheader("Rankings: Who performs when it matters?")
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**🏀 Best Regular Season Teams**")
+                reg_styled = style_dataframe_with_colors(reg_ranked, ['Regular Win%'])
+                st.dataframe(reg_styled, use_container_width=True, hide_index=True)
+
+            with col2:
+                st.markdown("**🔥 Best Playoff Teams**")
+                playoff_styled = style_dataframe_with_colors(playoff_ranked, ['Playoff Win%'])
+                st.dataframe(playoff_styled, use_container_width=True, hide_index=True)
+
+            # Full overview table
+            st.subheader("Complete Overview: Regular vs Playoff Performance")
+            full_styled = style_dataframe_with_colors(full_stats, ['Regular Win%', 'Playoff Win%'])
+            st.dataframe(full_styled, use_container_width=True, hide_index=True)
+        
+    elif analysis_type == "🏅 Medal Overview":
+        st.header("Medal Overview")
+        
+        medal_table = create_medal_table(teams_df)
+        
+        if medal_table is not None:
+            st.subheader("🏆 Medal Table")
+            
+            # Display medal table
+            medal_styled = medal_table.style.applymap(lambda x: "font-weight: bold;", subset=['Manager'])
+            st.dataframe(
+                medal_styled,
+                column_config={
+                    "Rank": "Rank",
+                    "Manager": "Manager",
+                    "Gold": "🥇 Gold",
+                    "Silver": "🥈 Silver", 
+                    "Bronze": "🥉 Bronze",
+                    "Total": "Total"
+                },
+                hide_index=True,
+                use_container_width=True
+            )
+            
+            # Medal visualization
+            fig = go.Figure()
+            
+            fig.add_trace(go.Bar(
+                name='🥇 Gold',
+                x=medal_table['Manager'],
+                y=medal_table['Gold'],
+                marker_color='#FFD70
