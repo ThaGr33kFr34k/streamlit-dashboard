@@ -818,7 +818,7 @@ def main():
         
         if draft_analysis_df is not None and not draft_analysis_df.empty:
             # Tabs for different draft analyses
-            tab1, tab2, tab3, tab4 = st.tabs(["🚀 Over/Under Performance", "📊 Draft vs Final Position", "🎯 Manager Performance", "📈 Draft Value Analysis"])
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Over/Under Performance", "📊 Draft vs Final Position", "🍀 Lottery Luck", "🎯 Manager Performance", "📈 Draft Value Analysis"])
             
             with tab1:
                 st.subheader("Over/Under Performance")
@@ -947,7 +947,7 @@ def main():
                 fig_lottery.add_hline(y=33.3, line_dash="dash", line_color="gray", annotation_text="Erwartungswert (33.3%)")
                 st.plotly_chart(fig_lottery, use_container_width=True)
             
-            with tab4:
+            with tab5:
                 st.subheader("Draft Position vs Final Rank")
                 
                 # Scatter plot
