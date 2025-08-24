@@ -626,47 +626,9 @@ def main():
         managers = sorted(teams_df['First Name'].unique())
         
         # Tabs for different H2H analyses
-        tab1, tab2 = st.tabs(["💥 Direkter Vergleich", "🎯 Lieblings- & Angstgegner"])
+        tab1, tab2 = st.tabs(["🎯 Lieblings- & Angstgegner", "💥 Direkter Vergleich"])
         
         with tab1:
-            st.subheader("Direkter Manager Vergleich")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
-            with col2:
-                manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
-            
-            if manager1 != manager2:
-                h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
-                
-                if h2h_stats and h2h_stats['games'] > 0:
-                    col1, col2, col3, col4, col5 = st.columns(5)
-                    
-                    with col1:
-                        st.metric("Total Games", h2h_stats['games'])
-                    with col2:
-                        st.metric(f"{manager1} Wins", h2h_stats['wins'])
-                    with col3:
-                        st.metric(f"{manager2} Wins", h2h_stats['losses'])
-                    with col4:
-                        st.metric("Ties", h2h_stats['ties'])
-                    with col5:
-                        st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
-                    
-                    # Visualization
-                    fig = go.Figure(data=[
-                        go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']], marker_color='#1f77b4'),
-                        go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']], marker_color='#ff7f0e')
-                    ])
-                    fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info(f"No matchups found between {manager1} and {manager2}")
-            else:
-                st.info("Please select two different managers.")
-        
-        with tab2:
             st.subheader("Lieblings- & Angstgegner Analyse")
             st.markdown("*Mindestanzahl: 5 Spiele gegeneinander*")
             
@@ -706,6 +668,44 @@ def main():
                 st.dataframe(all_h2h_df, use_container_width=True, hide_index=True)
             else:
                 st.info("Keine Gegner mit mindestens 5 Spielen gefunden.")
+        
+        with tab2:
+            st.subheader("Direkter Manager Vergleich")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                manager1 = st.selectbox("Select Manager 1", managers, index=0, key="manager1")
+            with col2:
+                manager2 = st.selectbox("Select Manager 2", managers, index=1 if len(managers) > 1 else 0, key="manager2")
+            
+            if manager1 != manager2:
+                h2h_stats = calculate_head_to_head(processed_df, manager1, manager2)
+                
+                if h2h_stats and h2h_stats['games'] > 0:
+                    col1, col2, col3, col4, col5 = st.columns(5)
+                    
+                    with col1:
+                        st.metric("Total Games", h2h_stats['games'])
+                    with col2:
+                        st.metric(f"{manager1} Wins", h2h_stats['wins'])
+                    with col3:
+                        st.metric(f"{manager2} Wins", h2h_stats['losses'])
+                    with col4:
+                        st.metric("Ties", h2h_stats['ties'])
+                    with col5:
+                        st.metric(f"{manager1} Win %", f"{h2h_stats['win_pct']:.1%}")
+                    
+                    # Visualization
+                    fig = go.Figure(data=[
+                        go.Bar(name=manager1, x=[manager1], y=[h2h_stats['wins']], marker_color='#1f77b4'),
+                        go.Bar(name=manager2, x=[manager2], y=[h2h_stats['losses']], marker_color='#ff7f0e')
+                    ])
+                    fig.update_layout(title=f"{manager1} vs {manager2} - Head to Head")
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info(f"No matchups found between {manager1} and {manager2}")
+            else:
+                st.info("Please select two different managers.")
 
     elif analysis_type == "🏆 Playoff Performance":
         st.header("Playoff Performance Analysis")
@@ -818,9 +818,63 @@ def main():
         
         if draft_analysis_df is not None and not draft_analysis_df.empty:
             # Tabs for different draft analyses
-            tab1, tab2, tab3 = st.tabs(["📊 Draft vs Final Position", "🎯 Manager Performance", "📈 Draft Value Analysis"])
+            tab1, tab2, tab3, tab4 = st.tabs(["🚀 Over/Under Performance", "📊 Draft vs Final Position", "🎯 Manager Performance", "📈 Draft Value Analysis"])
             
             with tab1:
+                st.subheader("Over/Under Performance")
+                st.markdown("*Diskrepanz zwischen Draft-Position und finalem Rang*")
+                
+                # Season filter
+                seasons = sorted(draft_analysis_df['Season'].unique(), reverse=True)
+                selected_season = st.selectbox("Saison auswählen:", ["Alle Saisons"] + list(seasons))
+                if selected_season != "Alle Saisons":
+                    filtered_df = draft_analysis_df[draft_analysis_df['Season'] == selected_season]
+                else:
+                    filtered_df = draft_analysis_df
+                
+                # Top Over/Underperformers
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("### 🚀 Beste Overperformer")
+                    st.markdown("*Höchste positive Abweichung (Draft schlechter als Endrang)*")
+                    best_over = filtered_df.nlargest(5, 'Over_Under')
+                    
+                    for i, (_, row) in enumerate(best_over.iterrows()):
+                        st.markdown(f"""
+                        <div class="favorite-opponent">
+                            <h4>#{i+1} {row['Manager']} ({row['Season']})</h4>
+                            <p><strong>+{row['Over_Under']}</strong> (Pick {row['Draft_Position']} → Rang {row['Final_Rank']})</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown("### 😰 Größte Underperformer")  
+                    st.markdown("*Höchste negative Abweichung (Draft besser als Endrang)*")
+                    worst_under = filtered_df.nsmallest(5, 'Over_Under')
+                    
+                    for i, (_, row) in enumerate(worst_under.iterrows()):
+                        st.markdown(f"""
+                        <div class="nightmare-opponent">
+                            <h4>#{i+1} {row['Manager']} ({row['Season']})</h4>
+                            <p><strong>{row['Over_Under']}</strong> (Pick {row['Draft_Position']} → Rang {row['Final_Rank']})</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Over/Under Distribution Chart
+                st.markdown("### Over/Under Verteilung")
+                fig_hist = px.histogram(
+                    filtered_df, 
+                    x='Over_Under', 
+                    nbins=20,
+                    title='Verteilung der Over/Under Performance',
+                    labels={'Over_Under': 'Over/Under Score', 'count': 'Häufigkeit'},
+                    color_discrete_sequence=['#FF6B35']
+                )
+                fig_hist.add_vline(x=0, line_dash="dash", line_color="black", annotation_text="Erwartung")
+                st.plotly_chart(fig_hist, use_container_width=True)
+            
+            with tab4:
                 st.subheader("Draft Position vs Final Rank")
                 
                 # Scatter plot
