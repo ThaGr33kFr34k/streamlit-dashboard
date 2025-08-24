@@ -861,23 +861,91 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
                 
-                    # Simple bar chart showing the best and worst performers
-                    st.markdown("### 📊 Performance Übersicht")
+                # Lottery Luck Analysis
+                st.markdown("### 🍀 Lottery Luck")
+                st.markdown("*Welcher Manager hatte in wie viel Prozent seiner Saisons einen Top 3 Pick?*")
+                
+                # Calculate lottery luck for each manager
+                lottery_stats = []
+                managers = draft_analysis_df['Manager'].unique()
+                
+                for manager in managers:
+                    manager_data = draft_analysis_df[draft_analysis_df['Manager'] == manager]
+                    total_seasons = len(manager_data)
+                    top3_picks = len(manager_data[manager_data['Draft_Position'] <= 3])
+                    top3_percentage = (top3_picks / total_seasons * 100) if total_seasons > 0 else 0
                     
-                    # Create a simple bar chart showing cumulative over/under performance
-                    fig_simple = px.bar(
-                        filtered_df.groupby('Manager')['Over_Under'].sum().reset_index().sort_values('Over_Under', ascending=True),
-                        x='Over_Under',
-                        y='Manager',
-                        orientation='h',
-                        title=f'Kumulative Over/Under Performance ({selected_season})',
-                        labels={'Over_Under': 'Kumulierte Over/Under Performance', 'Manager': 'Manager'},
-                        color='Over_Under',
-                        color_continuous_scale='RdYlGn'
+                    lottery_stats.append({
+                        'Manager': manager,
+                        'Total_Seasons': total_seasons,
+                        'Top3_Picks': top3_picks,
+                        'Top3_Percentage': round(top3_percentage, 1)
+                    })
+                
+                # Create DataFrame and sort by percentage
+                lottery_df = pd.DataFrame(lottery_stats).sort_values('Top3_Percentage', ascending=False)
+                
+                # Display lottery luck table
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    # Color coding for lottery luck
+                    def highlight_lottery_luck(val):
+                        if pd.isna(val):
+                            return ""
+                        if val >= 40:
+                            return "background-color: rgba(0, 150, 0, 0.4);"  # Very lucky - Dark green
+                        elif val >= 30:
+                            return "background-color: rgba(50, 180, 50, 0.3);"  # Lucky - Medium green
+                        elif val >= 20:
+                            return "background-color: rgba(150, 220, 150, 0.2);"  # Above average - Light green
+                        elif val >= 10:
+                            return "background-color: rgba(255, 255, 0, 0.1);"  # Average - Light yellow
+                        else:
+                            return "background-color: rgba(255, 150, 100, 0.3);"  # Unlucky - Orange
+                    
+                    styled_lottery = lottery_df.style.applymap(
+                        highlight_lottery_luck, 
+                        subset=['Top3_Percentage']
                     )
-                    fig_simple.update_layout(height=400, showlegend=False)
-                    fig_simple.add_vline(x=0, line_dash="dash", line_color="black")
-                    st.plotly_chart(fig_simple, use_container_width=True)
+                    
+                    st.dataframe(
+                        styled_lottery,
+                        column_config={
+                            "Manager": "Manager",
+                            "Total_Seasons": "Gespielte Saisons",
+                            "Top3_Picks": "Top 3 Picks",
+                            "Top3_Percentage": "Top 3 Pick %"
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    # Show top 3 most and least lucky managers
+                    st.markdown("**🍀 Glückspilze**")
+                    top_lucky = lottery_df.head(3)
+                    for i, (_, row) in enumerate(top_lucky.iterrows()):
+                        st.markdown(f"**{i+1}.** {row['Manager']} ({row['Top3_Percentage']}%)")
+                    
+                    st.markdown("**😔 Pechvögel**")
+                    bottom_lucky = lottery_df.tail(3).iloc[::-1]  # Reverse order
+                    for i, (_, row) in enumerate(bottom_lucky.iterrows()):
+                        st.markdown(f"**{i+1}.** {row['Manager']} ({row['Top3_Percentage']}%)")
+                
+                # Visualization
+                fig_lottery = px.bar(
+                    lottery_df,
+                    x='Manager',
+                    y='Top3_Percentage',
+                    title='Lottery Luck: Top 3 Pick Percentage by Manager',
+                    labels={'Top3_Percentage': 'Top 3 Pick %', 'Manager': 'Manager'},
+                    color='Top3_Percentage',
+                    color_continuous_scale='RdYlGn'
+                )
+                fig_lottery.update_layout(height=400, showlegend=False)
+                fig_lottery.add_hline(y=33.3, line_dash="dash", line_color="gray", annotation_text="Erwartungswert (33.3%)")
+                st.plotly_chart(fig_lottery, use_container_width=True)
             
             with tab4:
                 st.subheader("Draft Position vs Final Rank")
