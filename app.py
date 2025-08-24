@@ -764,4 +764,201 @@ def main():
                 name='🥇 Gold',
                 x=medal_table['Manager'],
                 y=medal_table['Gold'],
-                marker_color='#FFD70
+                marker_color='#FFD700'  # Gold color
+            ))
+            
+            fig.add_trace(go.Bar(
+                name='🥈 Silver',
+                x=medal_table['Manager'],
+                y=medal_table['Silver'],
+                marker_color='#C0C0C0'  # Silver color
+            ))
+            
+            fig.add_trace(go.Bar(
+                name='🥉 Bronze',
+                x=medal_table['Manager'],
+                y=medal_table['Bronze'],
+                marker_color='#CD7F32'  # Bronze color
+            ))
+            
+            fig.update_layout(
+                title='Medal Distribution by Manager',
+                xaxis_title='Manager',
+                yaxis_title='Number of Medals',
+                barmode='stack',
+                height=500
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Medal statistics
+            st.subheader("📊 Medal Statistics")
+            
+            total_seasons = len(teams_df['Year'].unique())
+            total_possible_medals = total_seasons * 3  # 3 medals per season
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Seasons", total_seasons)
+            with col2:
+                st.metric("Total Gold Medals", medal_table['Gold'].sum())
+            with col3:
+                st.metric("Total Silver Medals", medal_table['Silver'].sum())
+            with col4:
+                st.metric("Total Bronze Medals", medal_table['Bronze'].sum())
+        else:
+            st.error("Could not create medal table.")
+    
+    elif analysis_type == "🎯 Drafts":
+        st.header("Draft Analysis")
+        
+        # Process draft data
+        draft_analysis_df = process_draft_data(drafts_df, teams_df)
+        
+        if draft_analysis_df is not None and not draft_analysis_df.empty:
+            # Tabs for different draft analyses
+            tab1, tab2, tab3 = st.tabs(["📊 Draft vs Final Position", "🎯 Manager Performance", "📈 Draft Value Analysis"])
+            
+            with tab1:
+                st.subheader("Draft Position vs Final Rank")
+                
+                # Scatter plot
+                fig = create_draft_scatter_plot(draft_analysis_df)
+                if fig:
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # Correlation analysis
+                correlation, p_value = calculate_correlation(
+                    draft_analysis_df['Draft_Position'], 
+                    draft_analysis_df['Final_Rank']
+                )
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Correlation", f"{correlation:.3f}")
+                with col2:
+                    st.metric("P-Value", f"{p_value:.3f}")
+                with col3:
+                    significance = "Significant" if p_value < 0.05 else "Not Significant"
+                    st.metric("Statistical Significance", significance)
+                
+                st.markdown(f"""
+                **Interpretation:**
+                - Correlation of {correlation:.3f} indicates {"a strong" if abs(correlation) > 0.7 else "a moderate" if abs(correlation) > 0.3 else "a weak"} relationship
+                - {"Draft position is a good predictor of final rank" if abs(correlation) > 0.5 else "Draft position has limited predictive power"}
+                """)
+            
+            with tab2:
+                st.subheader("Manager Draft Performance")
+                
+                # Cumulative over/under analysis
+                cumulative_df = calculate_cumulative_over_under(draft_analysis_df)
+                
+                if cumulative_df is not None:
+                    st.markdown("**Over/Under Performance (Positive = Overperformed)**")
+                    
+                    # Color coding for over/under performance
+                    def highlight_over_under(val):
+                        if pd.isna(val):
+                            return ""
+                        if val > 5:
+                            return "background-color: rgba(0, 150, 0, 0.4);"  # Dark green
+                        elif val > 2:
+                            return "background-color: rgba(50, 180, 50, 0.3);"  # Medium green
+                        elif val > 0:
+                            return "background-color: rgba(150, 220, 150, 0.2);"  # Light green
+                        elif val == 0:
+                            return "background-color: rgba(255, 255, 0, 0.1);"  # Light yellow
+                        elif val > -2:
+                            return "background-color: rgba(255, 200, 150, 0.2);"  # Light orange
+                        elif val > -5:
+                            return "background-color: rgba(255, 150, 100, 0.3);"  # Medium orange
+                        else:
+                            return "background-color: rgba(200, 0, 0, 0.4);"  # Dark red
+                    
+                    styled_cumulative = cumulative_df.style.applymap(
+                        highlight_over_under, 
+                        subset=['Kumulierter_Over_Under']
+                    )
+                    
+                    st.dataframe(
+                        styled_cumulative,
+                        column_config={
+                            "Manager": "Manager",
+                            "Kumulierter_Over_Under": "Kumulierter Over/Under",
+                            "Anzahl_Saisons": "Anzahl Saisons",
+                            "Avg_Draft_Position": "Ø Draft Position",
+                            "Avg_Final_Rank": "Ø Final Rank"
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                    
+                    # Bar chart of cumulative performance
+                    fig = px.bar(
+                        cumulative_df,
+                        x='Manager',
+                        y='Kumulierter_Over_Under',
+                        title='Kumulative Over/Under Performance by Manager',
+                        color='Kumulierter_Over_Under',
+                        color_continuous_scale='RdYlGn'
+                    )
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+            
+            with tab3:
+                st.subheader("Draft Value Analysis")
+                
+                # Calculate draft value
+                draft_value_df = calculate_draft_value_analysis(draft_analysis_df)
+                
+                if draft_value_df is not None:
+                    st.markdown("**Average Final Rank by Draft Position**")
+                    st.dataframe(
+                        draft_value_df,
+                        column_config={
+                            "Draft_Position": "Draft Position",
+                            "Avg_Final_Rank": "Ø Final Rank",
+                            "Std_Final_Rank": "Std Deviation",
+                            "Count": "Sample Size"
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                    
+                    # Line chart showing expected vs actual performance
+                    fig = go.Figure()
+                    
+                    fig.add_trace(go.Scatter(
+                        x=draft_value_df['Draft_Position'],
+                        y=draft_value_df['Avg_Final_Rank'],
+                        mode='lines+markers',
+                        name='Actual Performance',
+                        line=dict(color='blue')
+                    ))
+                    
+                    # Perfect prediction line
+                    fig.add_trace(go.Scatter(
+                        x=draft_value_df['Draft_Position'],
+                        y=draft_value_df['Draft_Position'],
+                        mode='lines',
+                        name='Perfect Prediction',
+                        line=dict(color='red', dash='dash')
+                    ))
+                    
+                    fig.update_layout(
+                        title='Draft Position vs Average Final Rank',
+                        xaxis_title='Draft Position',
+                        yaxis_title='Average Final Rank',
+                        yaxis=dict(autorange='reversed'),
+                        height=400
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+        
+        else:
+            st.info("Draft data not available or could not be processed. Please check your mDrafts sheet URL and data format.")
+
+if __name__ == "__main__":
+    main()
