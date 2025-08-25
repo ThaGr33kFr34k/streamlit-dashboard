@@ -1,14 +1,16 @@
 Folgende Auswertungen soll es geben:
 
-Playoffs vs Regular Season
+* Playoffs
   Anzahl Playoff-Games und daraus resultierende Win% vs Anzahl Regular Season Games und Win%
     => Wer performt wenn es drauf ankommt?
-Head-to-Head Nemesis
+
+* Head-to-Head 
   Jeder Spieler hat seinen persönlichen „Angstgegner“ (gegen den er die meisten Spiele verloren hat).  
   Auch: „Lieblingsgegner“ für die höchste Siegquote.
   -> Top 3 Lieblingsgegner (Highest Win%)
   -> Top 3 Angstgegner (Lowest Win%)
-Medaillenspiegel -> Alle Teams in einer Tabelle sortiert nach 1st, 2nd, 3rd Place Finish
+
+* Medaillenspiegel -> Alle Teams in einer Tabelle sortiert nach 1st, 2nd, 3rd Place Finish
   Berechnung analog zu Olympia 
     1. Goldmedaillen:
     Das Land mit den meisten Goldmedaillen steht an erster Stelle im Medaillenspiegel. 
@@ -19,7 +21,7 @@ Medaillenspiegel -> Alle Teams in einer Tabelle sortiert nach 1st, 2nd, 3rd Plac
     4. Gleiche Medaillenanzahl:
     Wenn zwei oder mehr Länder die gleiche Anzahl an Gold-, Silber- und Bronzemedaillen haben, werden sie alphabetisch sortiert und erhalten den gleichen Rang im Medaillenspiegel
 
-Drafts
+* Drafts
   "Choking Index"
   Differenz zwischen Regular Season Seed und tatsächlichem Endergebnis.
   Beispiel: 1st Seed → früh in den Playoffs raus = hoher Choke-Faktor
@@ -28,13 +30,40 @@ Drafts
   "Draft Value Tracker"
     Wie stark ist der Zusammenhang zwischen Draft-Slot und finalem Endrang?
   Zeig z. B. eine Heatmap: “Slot 1 landet im Schnitt auf Platz X, Slot 10 auf Platz Y.”
-  Lottery Luck
-    Wer hatte wie oft einen top 3 Pick?
-  Player Analysis
-    Welche Spieler waren am häufigsten in Championship Teams?
-    Welche Spieler waren am häufigsten 1st Round Pick?
 
-Kategorien
+* Lottery Luck
+    Wer hatte wie oft einen top 3 Pick?
+
+* Player Analysis
+🏆 Championship DNA
+Frage: Welche Spieler standen am häufigsten in Championship-Teams?
+Zähle, wie oft ein Spieler im Kader des Meisters war.
+Ergänzung: auch wie oft in Finals-Teams (Runner-Up).
+👉 Ergebnis: „Championship Players“ – vielleicht taucht da ein Rollenspieler auf, den jeder unterschätzt, der aber immer irgendwie in Siegerteams landet 😅.
+🎯 Draft Pedigree (1st Round Players)
+Frage: Welche Spieler wurden am häufigsten in Runde 1 gedraftet?
+Zähle pro Spieler, wie oft er in den letzten 11 Jahren First Round Pick war.
+Ergänzung: Durchschnitts-Draftposition über alle Jahre.
+👉 Ergebnis: Liste der „Fantasy-Superstars“ über die Jahre (LeBron, Harden, Giannis, Jokic etc.).
+📈 Career Arc / Hype-Curve
+Frage: Wie hat sich der Draftstatus eines Spielers über die Jahre entwickelt?
+Zeige pro Spieler den Verlauf seiner Draftposition über die Jahre.
+👉 Ergebnis: Manche Spieler steigen von Runde 8 → Runde 1 (Breakouts), andere fallen (Aging Stars).
+💰 Most Expensive Benchwarmers
+Frage: Wer wurde oft früh gedraftet, war aber in Championship-Teams nur Bankwärmer?
+Verknüpfe Draft Round mit Championship-Teilnahme → zeigt Manager-Fehlentscheidungen auf Team-Ebene.
+🔥 Playoff Heroes
+Frage: Welche Spieler waren überproportional oft in Playoff-Teams (auch wenn sie nicht 1st Round Picks waren)?
+👉 Kann dir so eine „Clutch-Player“-Liste liefern.
+📊 Manager–Player Loyalty Tracker
+Frage: Wer draftet immer wieder denselben Spieler?
+Baue eine Statistik: „Manager X hat LeBron 7× gedraftet“.
+👉 Witzig, um Running-Gags sichtbar zu machen („Der gehört einfach zu mir“).
+🥶 All-Time Bust List
+Frage: Welche Spieler wurden besonders oft früh genommen, tauchen aber NIE in Championship Teams auf?
+👉 „All-Time Fantasy Busts“ – perfekte „Hall of Shame“ Kategorie.
+
+* Kategorien
   Head-to-Head Category Dominance"-Tabelle über alle Jahre
     Du gehst jedes Matchup durch, markierst Kategorie-Gewinner (z. B. FG%, 3PM, BLK, …), und führst eine Statistik wie: Team A hat in allen seinen Matchups All-Time 70% die Kategorie Blocks gewonnen (70 von 100 Mal beim Beispiel 100 Matchups)
   "All-Time Stat Leaders"
