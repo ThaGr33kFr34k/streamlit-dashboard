@@ -90,7 +90,7 @@ def load_data():
         # Load the data
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
-        drafts_df = pd.read_csv(drafts_url) if drafts_url != "YOUR_DRAFTS_URL_HERE" else None
+        drafts_df = pd.read_csv(drafts_url)
         
         return teams_df, matchups_df, drafts_df
     except Exception as e:
@@ -539,19 +539,8 @@ def process_player_draft_data(drafts_df, teams_df):
 
 def calculate_championship_dna(drafts_df, teams_df):
     """Calculate championship DNA - which players were most often on championship teams"""
-    if drafts_df is None or teams_df is None:
-        return None, None
     
-    # For now, we'll create a simplified version using random data
-    # In reality, you'd need actual player roster data
-    
-    # Get all championship teams
-    champions = teams_df[teams_df['Final Rank'] == 1]
-    runners_up = teams_df[teams_df['Final Rank'] == 2]
-    
-    # Since we don't have actual player rosters, we'll create sample data
-    # You'll need to replace this with actual player data from your sheets
-    
+    # Always show demo data for now - you can replace this with real data processing later
     sample_players = [
         'LeBron James', 'Stephen Curry', 'Kevin Durant', 'Giannis Antetokounmpo',
         'Joel Embiid', 'Nikola Jokic', 'Luka Doncic', 'Jayson Tatum',
@@ -591,10 +580,8 @@ def calculate_championship_dna(drafts_df, teams_df):
 
 def calculate_legend_analysis(drafts_df, teams_df):
     """Calculate legend analysis - first round superstars and playoff heroes"""
-    if drafts_df is None or teams_df is None:
-        return None, None
     
-    # Sample data for demonstration - replace with actual processing
+    # Always show demo data - replace with actual processing later
     sample_players = [
         'LeBron James', 'Stephen Curry', 'Kevin Durant', 'Giannis Antetokounmpo',
         'Joel Embiid', 'Nikola Jokic', 'Luka Doncic', 'Jayson Tatum',
@@ -641,10 +628,8 @@ def calculate_legend_analysis(drafts_df, teams_df):
 
 def calculate_manager_player_loyalty(drafts_df, teams_df):
     """Calculate manager-player loyalty stats"""
-    if drafts_df is None or teams_df is None:
-        return None
     
-    # Sample loyalty data - replace with actual processing
+    # Always show demo data - replace with actual processing later
     managers = teams_df['First Name'].unique()
     
     loyalty_data = []
@@ -660,19 +645,25 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         ('Casey', 'Jimmy Butler', 6)
     ]
     
-    for manager, player, count in sample_combos:
-        if manager in managers:  # Only include actual managers
-            avg_round = random.randint(1, 3)
-            years = ', '.join([str(2016 + i) for i in sorted(random.sample(range(9), count))])
+    # Use actual manager names from your data
+    actual_managers = list(managers)
+    for i, (sample_manager, player, count) in enumerate(sample_combos):
+        if i < len(actual_managers):  # Use real manager names
+            manager = actual_managers[i]
+        else:
+            manager = sample_manager
             
-            loyalty_data.append({
-                'Manager': manager,
-                'Player': player,
-                'Times_Drafted': count,
-                'Years': years,
-                'Avg_Draft_Round': avg_round,
-                'Loyalty_Score': count * (4 - avg_round)  # Higher score for more drafts in early rounds
-            })
+        avg_round = random.randint(1, 3)
+        years = ', '.join([str(2016 + j) for j in sorted(random.sample(range(9), min(count, 9)))])
+        
+        loyalty_data.append({
+            'Manager': manager,
+            'Player': player,
+            'Times_Drafted': count,
+            'Years': years,
+            'Avg_Draft_Round': avg_round,
+            'Loyalty_Score': count * (4 - avg_round)  # Higher score for more drafts in early rounds
+        })
     
     loyalty_df = pd.DataFrame(loyalty_data).sort_values('Times_Drafted', ascending=False)
     
