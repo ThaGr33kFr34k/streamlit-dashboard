@@ -723,9 +723,26 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
             team_mapping = {}
             
         st.write("DEBUG - Team Mapping:")
-        st.write(team_mapping)
+        for team_id, name in sorted(team_mapping.items()):
+            st.write(f"TeamID {team_id}: {name}")
+        
+        # Spezielle Überprüfung für TeamID 10
+        if 10 in team_mapping:
+            st.write(f"DEBUG - TeamID 10 Details:")
+            team_10_data = teams_df[teams_df['TeamID'] == 10]
+            st.dataframe(team_10_data)
         
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID'].map(team_mapping)
+        
+        # Manuelle Korrektur für TeamID 10 falls nötig
+        if loyalty_combinations['Manager'].isna().any():
+            st.write("DEBUG - NaN Manager gefunden, versuche Fallback...")
+            # Zeige welche TeamIDs problematisch sind
+            nan_teams = loyalty_combinations[loyalty_combinations['Manager'].isna()]['TeamID'].unique()
+            st.write(f"Problematische TeamIDs: {nan_teams}")
+        
+    else:
+        loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     else:
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     
