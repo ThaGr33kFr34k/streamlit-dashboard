@@ -615,6 +615,42 @@ def calculate_legend_analysis(drafts_df, teams_df):
     
     return first_round_df, playoff_heroes_df
 
+def calculate_manager_player_loyalty(drafts_df, teams_df):
+    """Calculate manager-player loyalty stats from actual draft data"""
+    
+    player_data = process_player_draft_data(drafts_df, teams_df)
+    
+    if player_data is None or player_data.empty:
+        st.info("Keine Spielerdaten für Loyalty Analysis verfügbar.")
+        return None
+    
+    # Calculate loyalty combinations
+    loyalty_combinations = player_data.groupby(['Manager', 'Player']).agg({
+        'Season': ['count', 'nunique', lambda x: ', '.join(map(str, sorted(x)))],
+        'Draft_Position': 'mean'
+    }).round(1)
+    
+    # Flatten column names
+    loyalty_combinations.columns = ['Times_Drafted', 'Unique_Seasons', 'Years', 'Avg_Draft_Position']
+    loyalty_combinations = loyalty_combinations.reset_index()
+    
+    # Filter for players drafted multiple times by same manager
+    loyalty_df = loyalty_combinations[loyalty_combinations['Times_Drafted'] >= 2].copy()
+    
+    if loyalty_df.empty:
+        st.info("Keine Manager-Spieler Loyalty Patterns gefunden (mindestens 2 Drafts erforderlich).")
+        return None
+    
+    # Calculate loyalty score
+    loyalty_df['Avg_Draft_Round'] = (loyalty_df['Avg_Draft_Position'] / 10).round(0).astype(int).clip(1, 3)
+    loyalty_df['Loyalty_Score'] = loyalty_df['Times_Drafted'] * (4 - loyalty_df['Avg_Draft_Round'])
+    
+    # Sort by times drafted and loyalty score
+    loyalty_df = loyalty_df.sort_values(['Times_Drafted', 'Loyalty_Score'], ascending=False)
+    
+    return loyalty_df
+
+
 def style_dataframe_with_colors(df, win_pct_columns):
     """Apply color formatting to dataframe based on win percentage with gradient"""
     def highlight_winpct(val):
