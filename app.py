@@ -1522,7 +1522,7 @@ def main():
                     for i, (_, pair) in enumerate(loyalty_df.head(10).iterrows()):
                         st.markdown(f"""
                         <div class="loyalty-player">
-                            <h4>#{i+1} {pair['Manager']} ❤️ {pair['Player']}</h4>
+                            <h4>#{i+1} {pair['TeamID']} ❤️ {pair['PlayerName']}</h4>
                             <p><strong>{pair['Times_Drafted']}x</strong> gedraftet in Jahren: {pair['Years']}</p>
                             <p>Ø Runde {pair['Avg_Draft_Round']} | Loyalty Score: {pair['Loyalty_Score']}</p>
                         </div>
@@ -1570,8 +1570,8 @@ def main():
                 st.dataframe(
                     styled_loyalty,
                     column_config={
-                        "Manager": "Manager",
-                        "Player": "Player",
+                        "TeamID": "Manager",
+                        "PlayerID": "Spieler",
                         "Times_Drafted": "Anzahl Drafts",
                         "Years": "Jahre",
                         "Avg_Draft_Round": "Ø Draft Runde",
@@ -1584,7 +1584,7 @@ def main():
                 # Loyalty visualization
                 fig = px.treemap(
                     loyalty_df.head(20),
-                    path=['Manager', 'Player'],
+                    path=['TeamID', 'PlayerName'],
                     values='Times_Drafted',
                     color='Loyalty_Score',
                     color_continuous_scale='Viridis',
