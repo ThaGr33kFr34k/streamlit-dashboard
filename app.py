@@ -704,44 +704,101 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     loyalty_combinations.columns = new_columns
     loyalty_combinations = loyalty_combinations.reset_index()
     
-    # Mappe TeamID zu Manager Namen
+    # Mappe TeamID zu Manager Namen (jahr-spezifisch)
     if teams_df is not None and not teams_df.empty:
         # DEBUG: Zeige teams_df Struktur
         st.write("DEBUG - teams_df Spalten:", teams_df.columns.tolist())
         st.write("DEBUG - teams_df erste 5 Zeilen:")
         st.dataframe(teams_df.head())
         
-        # Erstelle Team-Mapping (TeamID -> Manager Name)
+        # Erstelle jahr-spezifisches Team-Mapping
+        manager_col = None
         if 'First Name' in teams_df.columns:
-            team_mapping = teams_df.set_index('TeamID')['First Name'].to_dict()
+            manager_col = 'First Name'
         elif 'Manager' in teams_df.columns:
-            team_mapping = teams_df.set_index('TeamID')['Manager'].to_dict()
+            manager_col = 'Manager'
         elif 'Name' in teams_df.columns:
-            team_mapping = teams_df.set_index('TeamID')['Name'].to_dict()
+            manager_col = 'Name'
         else:
             st.error(f"Keine Manager-Name Spalte in teams_df gefunden. Verfügbare Spalten: {teams_df.columns.tolist()}")
-            team_mapping = {}
-            
-        st.write("DEBUG - Team Mapping:")
-        for team_id, name in sorted(team_mapping.items()):
-            st.write(f"TeamID {team_id}: {name}")
+            return None
         
-        # Spezielle Überprüfung für TeamID 10
-        if 10 in team_mapping:
-            st.write(f"DEBUG - TeamID 10 Details:")
-            team_10_data = teams_df[teams_df['TeamID'] == 10]
-            st.dataframe(team_10_data)
+        # Merge drafts_df mit teams_df basierend auf TeamID UND Season/Year
+        teams_season_col = None
+        for col in ['Season', 'Year', 'season', 'year']:
+            if col in teams_df.columns:
+                teams_season_col = col
+                break
         
-        loyalty_combinations['Manager'] = loyalty_combinations['TeamID'].map(team_mapping)
+        if teams_season_col is None:
+            st.error("Keine Season/Year Spalte in teams_df gefunden für jahr-spezifisches Mapping!")
+            return None
         
-        # Manuelle Korrektur für TeamID 10 falls nötig
-        if loyalty_combinations['Manager'].isna().any():
-            st.write("DEBUG - NaN Manager gefunden, versuche Fallback...")
-            # Zeige welche TeamIDs problematisch sind
-            nan_teams = loyalty_combinations[loyalty_combinations['Manager'].isna()]['TeamID'].unique()
-            st.write(f"Problematische TeamIDs: {nan_teams}")
-            loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
+        st.write(f"DEBUG - Verwende {season_col} aus drafts_df und {teams_season_col} aus teams_df für Mapping")
         
+        # Merge um Manager-Namen für jede Draft-Zeile zu bekommen
+        drafts_with_managers = drafts_df.merge(
+            teams_df[['TeamID', teams_season_col, manager_col]], 
+            left_on=['TeamID', season_col], 
+            right_on=['TeamID', teams_season_col], 
+            how='left'
+        )
+        
+        st.write("DEBUG - Nach Manager-Merge:")
+        st.write(f"Ursprünglich {len(drafts_df)} Zeilen, nach Merge {len(drafts_with_managers)} Zeilen")
+        
+        # Überprüfe auf fehlende Manager-Zuordnungen
+        missing_managers = drafts_with_managers[manager_col].isna().sum()
+        if missing_managers > 0:
+            st.warning(f"DEBUG - {missing_managers} Drafts konnten keinem Manager zugeordnet werden")
+            st.write("Beispiel-Zeilen ohne Manager:")
+            st.dataframe(drafts_with_managers[drafts_with_managers[manager_col].isna()][['TeamID', season_col, 'PlayerName']].head())
+        
+        # Jetzt gruppieren wir nach dem echten Manager-Namen und PlayerID
+        agg_dict_new = {
+            season_col: [
+                'count',  # Wie oft gedraftet
+                'nunique',  # In wie vielen verschiedenen Seasons
+                lambda x: ', '.join(map(str, sorted(x.unique())))  # Welche Jahre
+            ]
+        }
+        
+        # Füge Draft Position hinzu wenn verfügbar
+        if draft_pos_col:
+            agg_dict_new[draft_pos_col] = 'mean'
+        
+        # Füge Round hinzu wenn verfügbar
+        if round_col:
+            agg_dict_new[round_col] = 'mean'
+        
+        # Neue Gruppierung nach echtem Manager-Namen
+        loyalty_combinations = drafts_with_managers.groupby([manager_col, 'PlayerID']).agg(agg_dict_new).round(1)
+        
+        # Flatten column names
+        new_columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
+        
+        if draft_pos_col:
+            new_columns.append('Avg_Draft_Position')
+        if round_col:
+            new_columns.append('Avg_Draft_Round')
+        
+        loyalty_combinations.columns = new_columns
+        loyalty_combinations = loyalty_combinations.reset_index()
+        
+        # Benenne die Manager-Spalte um
+        loyalty_combinations = loyalty_combinations.rename(columns={manager_col: 'Manager'})
+        
+    else:
+        # Fallback wenn kein teams_df vorhanden
+        loyalty_combinations = drafts_df.groupby(['TeamID', 'PlayerID']).agg(agg_dict).round(1)
+        new_columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
+        if draft_pos_col:
+            new_columns.append('Avg_Draft_Position')
+        if round_col:
+            new_columns.append('Avg_Draft_Round')
+        loyalty_combinations.columns = new_columns
+        loyalty_combinations = loyalty_combinations.reset_index()
+        loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     else:
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     
