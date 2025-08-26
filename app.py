@@ -616,7 +616,7 @@ def calculate_legend_analysis(drafts_df, teams_df):
     return first_round_df, playoff_heroes_df
 
 def calculate_manager_player_loyalty(drafts_df, teams_df):
-    """Calculate manager-player loyalty stats from actual draft data with debugging"""
+    """Calculate manager-player loyalty stats from actual draft data"""
     
     player_data = process_player_draft_data(drafts_df, teams_df)
     
@@ -624,26 +624,10 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         st.info("Keine Spielerdaten für Loyalty Analysis verfügbar.")
         return None
     
-    # DEBUG: Zeige Spalten und ein paar Beispiel-Zeilen
+    # DEBUG: Überprüfe verfügbare Spalten
     st.write("DEBUG - Verfügbare Spalten:", player_data.columns.tolist())
-    st.write("DEBUG - Erste 5 Zeilen:")
-    st.dataframe(player_data.head())
     
-    # DEBUG: Analysiere Draft_Position Werte
-    if 'Draft_Position' in player_data.columns:
-        st.write("DEBUG - Draft_Position Statistiken:")
-        st.write(f"Min: {player_data['Draft_Position'].min()}")
-        st.write(f"Max: {player_data['Draft_Position'].max()}")
-        st.write(f"Mean: {player_data['Draft_Position'].mean():.2f}")
-        st.write(f"Unique values (first 20): {sorted(player_data['Draft_Position'].unique())[:20]}")
-        
-        # Zeige Zeilen mit sehr hohen Draft_Position Werten
-        high_positions = player_data[player_data['Draft_Position'] > 200]
-        if not high_positions.empty:
-            st.write("DEBUG - Zeilen mit Draft_Position > 200:")
-            st.dataframe(high_positions[['Manager', 'Player', 'Season', 'Draft_Position']].head(10))
-    
-    # DEBUG: Analysiere Season/Year Spalte
+    # Finde die richtige Season-Spalte
     season_col = None
     possible_season_cols = ['Season', 'Year', 'season', 'year']
     for col in possible_season_cols:
@@ -651,70 +635,54 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
             season_col = col
             break
     
-    if season_col:
-        st.write(f"DEBUG - {season_col} Werte:", sorted(player_data[season_col].unique()))
-    else:
+    if season_col is None:
         st.error("Keine Season/Year Spalte gefunden!")
         return None
     
-    # Bereinige Draft_Position Werte (entferne unrealistische Werte)
-    if 'Draft_Position' in player_data.columns:
-        original_count = len(player_data)
-        # Entferne Zeilen mit unrealistischen Draft Positionen (> 500 oder < 1)
-        player_data_clean = player_data[
-            (player_data['Draft_Position'] >= 1) & 
-            (player_data['Draft_Position'] <= 500)
-        ].copy()
-        removed_count = original_count - len(player_data_clean)
-        if removed_count > 0:
-            st.warning(f"DEBUG - {removed_count} Zeilen mit unrealistischen Draft_Position Werten entfernt")
-    else:
-        player_data_clean = player_data.copy()
+    # Überprüfe ob Pick und Round Spalten vorhanden sind
+    required_cols = ['Manager', 'Player', 'Pick', 'Round']
+    missing_cols = [col for col in required_cols if col not in player_data.columns]
+    
+    if missing_cols:
+        st.error(f"Fehlende Spalten: {missing_cols}")
+        st.write("Verfügbare Spalten:", player_data.columns.tolist())
+        return None
+    
+    # DEBUG: Zeige Draft-Daten Statistiken
+    st.write("DEBUG - Pick Statistiken:")
+    st.write(f"Pick Min: {player_data['Pick'].min()}, Max: {player_data['Pick'].max()}")
+    st.write("DEBUG - Round Statistiken:")
+    st.write(f"Round Min: {player_data['Round'].min()}, Max: {player_data['Round'].max()}")
+    st.write(f"Unique Rounds: {sorted(player_data['Round'].unique())}")
     
     # Calculate loyalty combinations
-    agg_dict = {
-        season_col: ['count', 'nunique', lambda x: ', '.join(map(str, sorted(x.unique())))]
-    }
-    
-    # Füge Draft_Position nur hinzu wenn die Spalte existiert
-    if 'Draft_Position' in player_data_clean.columns:
-        agg_dict['Draft_Position'] = 'mean'
-    
-    loyalty_combinations = player_data_clean.groupby(['Manager', 'Player']).agg(agg_dict).round(1)
+    loyalty_combinations = player_data.groupby(['Manager', 'Player']).agg({
+        season_col: ['count', 'nunique', lambda x: ', '.join(map(str, sorted(x.unique())))],
+        'Pick': 'mean',      # Durchschnittliche Draft Position (Pick)
+        'Round': 'mean'      # Durchschnittliche Draft Runde
+    }).round(1)
     
     # Flatten column names
-    if 'Draft_Position' in player_data_clean.columns:
-        loyalty_combinations.columns = ['Times_Drafted', 'Unique_Seasons', 'Years', 'Avg_Draft_Position']
-    else:
-        loyalty_combinations.columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
-        loyalty_combinations['Avg_Draft_Position'] = None
-    
+    loyalty_combinations.columns = ['Times_Drafted', 'Unique_Seasons', 'Years', 'Avg_Draft_Position', 'Avg_Draft_Round']
     loyalty_combinations = loyalty_combinations.reset_index()
     
-    # Calculate draft rounds from positions (assuming 10-12 teams, ~12 picks per round)
-    if 'Avg_Draft_Position' in loyalty_combinations.columns and loyalty_combinations['Avg_Draft_Position'].notna().any():
-        # Annahme: 12 Teams = 12 Picks pro Runde
-        loyalty_combinations['Avg_Draft_Round'] = ((loyalty_combinations['Avg_Draft_Position'] - 1) // 12 + 1).round(1)
-    else:
-        # Fallback: Verwende eine andere Logik oder setze auf None
-        loyalty_combinations['Avg_Draft_Round'] = None
-    
     # Calculate loyalty score
+    # Basis: Anzahl Drafts + Season Diversität + Bonus für frühe Runden
     loyalty_combinations['Loyalty_Score'] = (
-        loyalty_combinations['Times_Drafted'] * 3 +  # Base score
-        loyalty_combinations['Unique_Seasons'] * 2   # Season diversity bonus
+        loyalty_combinations['Times_Drafted'] * 3 +           # Base score für Anzahl Drafts
+        loyalty_combinations['Unique_Seasons'] * 2 +          # Bonus für verschiedene Seasons
+        (15 - loyalty_combinations['Avg_Draft_Round']) * 0.5  # Bonus für frühe Runden (Runde 1 = +7, Runde 14 = +0.5)
     ).round(2)
     
-    # Füge Runden-Bonus hinzu wenn verfügbar
-    if loyalty_combinations['Avg_Draft_Round'].notna().any():
-        round_bonus = (13 - loyalty_combinations['Avg_Draft_Round'].fillna(7)) / 12 * 5
-        loyalty_combinations['Loyalty_Score'] += round_bonus.round(2)
-    
-    # Sort by loyalty score
+    # Sort by loyalty score (höchste zuerst)
     loyalty_combinations = loyalty_combinations.sort_values('Loyalty_Score', ascending=False)
     
-    # Filter for meaningful loyalties (drafted multiple times)
+    # Filter for meaningful loyalties (mehr als 1x gedraftet)
     loyalty_combinations = loyalty_combinations[loyalty_combinations['Times_Drafted'] > 1]
+    
+    # DEBUG: Zeige Top 5 Ergebnisse
+    st.write("DEBUG - Top 5 Loyalty Kombinationen:")
+    st.dataframe(loyalty_combinations.head())
     
     return loyalty_combinations
 
