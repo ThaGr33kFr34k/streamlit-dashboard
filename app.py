@@ -75,12 +75,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
-import pandas as pd
-import urllib.error
-
-@st.cache_data(ttl=3600)
-def load_data():
+def load_data():  # Note: NO @st.cache_data decorator
     import urllib.request
     import urllib.error
     
@@ -88,6 +83,8 @@ def load_data():
     matchups_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=652199133&single=true&output=csv"
     drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"
 
+    st.write("🔍 **Debugging Data Loading...**")
+    
     # Test each URL individually
     urls = {
         "Teams": teams_url,
@@ -99,44 +96,37 @@ def load_data():
         try:
             st.write(f"Testing {name} URL...")
             response = urllib.request.urlopen(url)
-            st.write(f"✅ {name}: HTTP {response.status} - {response.reason}")
+            st.success(f"✅ {name}: HTTP {response.status} - {response.reason}")
             
-            # Try to read a few lines to check content
-            content = response.read().decode('utf-8')
-            lines = content.split('\n')[:3]  # First 3 lines
-            st.write(f"First few lines of {name}:")
-            for i, line in enumerate(lines):
-                st.write(f"Line {i+1}: {line[:100]}...")  # First 100 chars
-                
         except urllib.error.HTTPError as e:
             st.error(f"❌ {name}: HTTP Error {e.code} - {e.reason}")
-            st.write(f"URL: {url}")
+            st.write(f"Failed URL: {url}")
+            return None, None, None
         except Exception as e:
             st.error(f"❌ {name}: {type(e).__name__}: {e}")
+            return None, None, None
     
     # Now try loading with pandas
     try:
-        st.write("Attempting to load with pandas...")
+        st.write("📊 **Loading data with pandas...**")
+        
         teams_df = pd.read_csv(teams_url)
-        st.write(f"✅ Teams loaded: {teams_df.shape} rows/cols")
-        st.write("Teams columns:", list(teams_df.columns))
+        st.success(f"✅ Teams loaded: {teams_df.shape[0]} rows, {teams_df.shape[1]} columns")
+        st.write("Teams columns:", list(teams_df.columns)[:10])  # Show first 10 columns
         
         matchups_df = pd.read_csv(matchups_url)
-        st.write(f"✅ Matchups loaded: {matchups_df.shape} rows/cols")
-        st.write("Matchups columns:", list(matchups_df.columns))
+        st.success(f"✅ Matchups loaded: {matchups_df.shape[0]} rows, {matchups_df.shape[1]} columns")
+        st.write("Matchups columns:", list(matchups_df.columns)[:10])
         
         drafts_df = pd.read_csv(drafts_url)
-        st.write(f"✅ Drafts loaded: {drafts_df.shape} rows/cols")
-        st.write("Drafts columns:", list(drafts_df.columns))
+        st.success(f"✅ Drafts loaded: {drafts_df.shape[0]} rows, {drafts_df.shape[1]} columns")
+        st.write("Drafts columns:", list(drafts_df.columns)[:10])
 
         return teams_df, matchups_df, drafts_df
 
-    except urllib.error.HTTPError as e:
-        st.error(f"Pandas HTTP Error {e.code}: {e.reason}")
-        raise RuntimeError(f"HTTP Error {e.code}: {e.reason}. Check sharing settings and GID.")
     except Exception as e:
-        st.error(f"Pandas Error: {type(e).__name__}: {e}")
-        raise RuntimeError(f"Error loading data: {e}")
+        st.error(f"❌ Pandas loading failed: {type(e).__name__}: {e}")
+        return None, None, None
 
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
