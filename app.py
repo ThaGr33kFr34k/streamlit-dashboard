@@ -458,71 +458,53 @@ def calculate_playoff_stats(processed_df, teams_df):
 
     return df, reg_ranked, playoff_ranked
 
-# NEW PLAYER ANALYSIS FUNCTIONS
+ UPDATED PLAYER ANALYSIS FUNCTIONS - NOW BASED ON mDrafts DATA
 def process_player_draft_data(drafts_df, teams_df):
-    """Process player draft data and team information"""
+    """Process player draft data from mDrafts sheet and team information"""
     if drafts_df is None or teams_df is None:
         return None
     
-    # Check if drafts_df has player columns (this depends on your sheet structure)
-    # We'll assume there are columns like 'Player1', 'Player2', etc. for each draft pick
-    # Or potentially a different structure - you may need to adapt this
-    
     player_data = []
     
-    # Get all column names that might contain player names
-    player_columns = [col for col in drafts_df.columns if col.lower().startswith('player') or col.lower().startswith('pick')]
+    # Debug: Show available columns
+    st.write("Debug - Available columns in mDrafts:", drafts_df.columns.tolist())
     
-    # If no player columns found, return empty
-    if not player_columns:
-        # Alternative: check if there's a structure with rounds/picks
-        # You might need to adapt this based on your actual data structure
-        st.info("No player data found in draft sheet. Please ensure player names are included in the draft data.")
+    # Check if we have PlayerID and PlayerName columns as specified
+    if 'PlayerID' not in drafts_df.columns or 'PlayerName' not in drafts_df.columns:
+        st.error("mDrafts sheet must have 'PlayerID' and 'PlayerName' columns")
         return None
     
-    for _, row in drafts_df.iterrows():
-        season = row['Season']
+    # Group by season and process each draft
+    for season in drafts_df['Season'].unique():
+        season_drafts = drafts_df[drafts_df['Season'] == season]
         
-        # Get pick order for this season
-        pick_order = parse_pick_order(row.get('pickOrder', '[]'))
-        if not pick_order:
-            continue
-        
-        # Process each pick
-        for pick_num, team_id in enumerate(pick_order, 1):
-            # Find manager name
-            manager_info = teams_df[(teams_df['TeamID'] == team_id) & (teams_df['Year'] == season)]
-            if manager_info.empty:
+        for _, draft_row in season_drafts.iterrows():
+            team_id = draft_row['TeamID']
+            player_id = draft_row['PlayerID']
+            player_name = draft_row['PlayerName']
+            
+            if pd.isna(player_name) or pd.isna(team_id):
                 continue
+                
+            # Find manager and team performance for this season/team
+            team_info = teams_df[(teams_df['TeamID'] == team_id) & (teams_df['Year'] == season)]
             
-            manager_name = manager_info['First Name'].iloc[0]
-            final_rank = manager_info['Final Rank'].iloc[0]
-            
-            # Get player name for this pick (you'll need to adapt based on your data structure)
-            player_name = None
-            
-            # Method 1: If there's a column for each pick position
-            pick_col = f'Pick{pick_num}'
-            if pick_col in row.index and pd.notna(row[pick_col]):
-                player_name = row[pick_col]
-            
-            # Method 2: If there's a general player column structure
-            if not player_name:
-                for col in player_columns:
-                    if pd.notna(row[col]) and row[col]:
-                        # This is a simplified approach - you might need more logic here
-                        player_name = row[col]
-                        break
-            
-            if player_name:
+            if not team_info.empty:
+                manager_name = team_info['First Name'].iloc[0]
+                final_rank = team_info['Final Rank'].iloc[0]
+                
+                # Determine draft position (you may need to add this logic based on your data structure)
+                # For now, we'll use row index as draft position approximation
+                draft_position = len(player_data) + 1  # Simple increment
+                
                 player_data.append({
                     'Season': season,
                     'Player': player_name,
+                    'PlayerID': player_id,
                     'Manager': manager_name,
                     'TeamID': team_id,
-                    'Draft_Position': pick_num,
+                    'Draft_Position': draft_position,
                     'Final_Rank': final_rank,
-                    'Is_First_Round': pick_num <= len(pick_order) // 3,  # Rough first round estimation
                     'Made_Playoffs': final_rank <= 6,  # Assuming top 6 make playoffs
                     'Won_Championship': final_rank == 1,
                     'Made_Finals': final_rank <= 2
@@ -532,142 +514,162 @@ def process_player_draft_data(drafts_df, teams_df):
 
 def calculate_championship_dna(drafts_df, teams_df):
     """Calculate championship DNA - which players were most often on championship teams"""
-    if drafts_df is None or teams_df is None:
+    
+    # Process player data from actual draft data
+    player_data = process_player_draft_data(drafts_df, teams_df)
+    
+    if player_data is None or player_data.empty:
+        st.info("Keine Spielerdaten im mDrafts Sheet gefunden. Überprüfe bitte die Spalten PlayerID und PlayerName.")
         return None, None
     
-    # For now, we'll create a simplified version using random data
-    # In reality, you'd need actual player roster data
+    # Calculate championship players
+    championship_players = player_data[player_data['Won_Championship'] == True]
+    champ_counts = championship_players['Player'].value_counts().reset_index()
+    champ_counts.columns = ['Player', 'Championships']
     
-    # Get all championship teams
-    champions = teams_df[teams_df['Final Rank'] == 1]
-    runners_up = teams_df[teams_df['Final Rank'] == 2]
+    # Add championship years
+    champ_data = []
+    for _, player_row in champ_counts.iterrows():
+        player_name = player_row['Player']
+        championships = player_row['Championships']
+        
+        # Get years when this player won championships
+        champ_years = championship_players[championship_players['Player'] == player_name]['Season'].tolist()
+        champ_years_str = ', '.join(map(str, sorted(champ_years)))
+        
+        champ_data.append({
+            'Player': player_name,
+            'Championships': championships,
+            'Championship_Years': champ_years_str
+        })
     
-    # Since we don't have actual player rosters, we'll create sample data
-    # You'll need to replace this with actual player data from your sheets
+    champ_df = pd.DataFrame(champ_data).sort_values('Championships', ascending=False) if champ_data else None
     
-    sample_players = [
-        'LeBron James', 'Stephen Curry', 'Kevin Durant', 'Giannis Antetokounmpo',
-        'Joel Embiid', 'Nikola Jokic', 'Luka Doncic', 'Jayson Tatum',
-        'Jimmy Butler', 'Kawhi Leonard', 'Paul George', 'Damian Lillard',
-        'Anthony Davis', 'Russell Westbrook', 'Chris Paul', 'James Harden',
-        'Devin Booker', 'Donovan Mitchell', 'Zion Williamson', 'Ja Morant'
-    ]
+    # Calculate finals appearances
+    finals_players = player_data[player_data['Made_Finals'] == True]
+    finals_counts = finals_players['Player'].value_counts().reset_index()
+    finals_counts.columns = ['Player', 'Finals_Appearances']
     
-    championship_data = []
     finals_data = []
-    
-    # Simulate championship appearances for sample data
-    # Replace this with actual data processing
-    for player in sample_players:
-        championships = random.randint(0, 4)
-        finals_appearances = championships + random.randint(0, 3)
+    for _, player_row in finals_counts.iterrows():
+        player_name = player_row['Player']
+        finals_apps = player_row['Finals_Appearances']
         
-        if championships > 0:
-            championship_data.append({
-                'Player': player,
-                'Championships': championships,
-                'Championship_Years': ', '.join([str(2014 + i) for i in range(championships)])
-            })
+        # Get championships for this player
+        player_champs = len(championship_players[championship_players['Player'] == player_name])
+        finals_win_rate = player_champs / finals_apps if finals_apps > 0 else 0
         
-        if finals_appearances > 0:
-            finals_data.append({
-                'Player': player,
-                'Finals_Appearances': finals_appearances,
-                'Championships': championships,
-                'Finals_Win_Rate': championships / finals_appearances if finals_appearances > 0 else 0
-            })
+        finals_data.append({
+            'Player': player_name,
+            'Finals_Appearances': finals_apps,
+            'Championships': player_champs,
+            'Finals_Win_Rate': finals_win_rate
+        })
     
-    champ_df = pd.DataFrame(championship_data).sort_values('Championships', ascending=False) if championship_data else None
     finals_df = pd.DataFrame(finals_data).sort_values(['Finals_Appearances', 'Championships'], ascending=False) if finals_data else None
     
     return champ_df, finals_df
 
 def calculate_legend_analysis(drafts_df, teams_df):
     """Calculate legend analysis - first round superstars and playoff heroes"""
-    if drafts_df is None or teams_df is None:
+    
+    player_data = process_player_draft_data(drafts_df, teams_df)
+    
+    if player_data is None or player_data.empty:
+        st.info("Keine Spielerdaten für Legend Analysis verfügbar.")
         return None, None
     
-    # Sample data for demonstration - replace with actual processing
-    sample_players = [
-        'LeBron James', 'Stephen Curry', 'Kevin Durant', 'Giannis Antetokounmpo',
-        'Joel Embiid', 'Nikola Jokic', 'Luka Doncic', 'Jayson Tatum',
-        'Jimmy Butler', 'Kawhi Leonard', 'Paul George', 'Damian Lillard'
-    ]
+    # First Round Superstars (assuming first 10 picks are "first round")
+    first_round_players = player_data[player_data['Draft_Position'] <= 10]
+    first_round_counts = first_round_players['Player'].value_counts().reset_index()
+    first_round_counts.columns = ['Player', 'First_Round_Picks']
     
-    # First Round Superstars
+    # Calculate average draft position for first round players
     first_round_data = []
-    for player in sample_players:
-        first_round_picks = random.randint(2, 8)
-        avg_draft_pos = random.uniform(1.2, 5.8)
+    for _, player_row in first_round_counts.iterrows():
+        player_name = player_row['Player']
+        first_round_picks = player_row['First_Round_Picks']
+        
+        player_draft_positions = first_round_players[first_round_players['Player'] == player_name]['Draft_Position']
+        avg_draft_pos = player_draft_positions.mean()
+        
+        # Get years range
+        player_seasons = first_round_players[first_round_players['Player'] == player_name]['Season']
+        min_year = player_seasons.min()
+        max_year = player_seasons.max()
+        years_range = f"{min_year}-{max_year}" if min_year != max_year else str(min_year)
         
         first_round_data.append({
-            'Player': player,
+            'Player': player_name,
             'First_Round_Picks': first_round_picks,
             'Avg_Draft_Position': round(avg_draft_pos, 1),
-            'Years_as_Superstar': f"{2014 + random.randint(0, 3)}-{2024}"
+            'Years_as_Superstar': years_range
         })
     
-    # Playoff Heroes (players often in playoff teams despite not being 1st round picks)
+    first_round_df = pd.DataFrame(first_round_data).sort_values('First_Round_Picks', ascending=False) if first_round_data else None
+    
+    # Playoff Heroes (players often in playoff teams despite not being early picks)
+    playoff_players = player_data[player_data['Made_Playoffs'] == True]
+    
     playoff_heroes_data = []
-    role_players = [
-        'Draymond Green', 'Marcus Smart', 'Robert Williams', 'Derrick White',
-        'Jrue Holiday', 'Al Horford', 'Kyle Lowry', 'Fred VanVleet'
-    ]
-    
-    for player in role_players:
-        playoff_appearances = random.randint(4, 9)
-        avg_draft_pos = random.uniform(6.2, 12.5)
-        playoff_rate = random.uniform(0.6, 0.9)
+    for player in player_data['Player'].unique():
+        player_records = player_data[player_data['Player'] == player]
+        playoff_records = playoff_players[playoff_players['Player'] == player]
         
-        playoff_heroes_data.append({
-            'Player': player,
-            'Playoff_Appearances': playoff_appearances,
-            'Avg_Draft_Position': round(avg_draft_pos, 1),
-            'Playoff_Rate': round(playoff_rate, 2),
-            'Hidden_Gem_Score': round((playoff_rate * playoff_appearances) / avg_draft_pos, 2)
-        })
+        total_seasons = len(player_records)
+        playoff_seasons = len(playoff_records)
+        
+        if total_seasons >= 3 and playoff_seasons >= 2:  # Minimum thresholds
+            avg_draft_pos = player_records['Draft_Position'].mean()
+            playoff_rate = playoff_seasons / total_seasons
+            
+            # Hidden gem score: higher for later picks who make playoffs often
+            hidden_gem_score = (playoff_rate * playoff_seasons) / (avg_draft_pos / 10)
+            
+            playoff_heroes_data.append({
+                'Player': player,
+                'Playoff_Appearances': playoff_seasons,
+                'Avg_Draft_Position': round(avg_draft_pos, 1),
+                'Playoff_Rate': round(playoff_rate, 2),
+                'Hidden_Gem_Score': round(hidden_gem_score, 2)
+            })
     
-    first_round_df = pd.DataFrame(first_round_data).sort_values('First_Round_Picks', ascending=False)
-    playoff_heroes_df = pd.DataFrame(playoff_heroes_data).sort_values('Hidden_Gem_Score', ascending=False)
+    playoff_heroes_df = pd.DataFrame(playoff_heroes_data).sort_values('Hidden_Gem_Score', ascending=False) if playoff_heroes_data else None
     
     return first_round_df, playoff_heroes_df
 
 def calculate_manager_player_loyalty(drafts_df, teams_df):
-    """Calculate manager-player loyalty stats"""
-    if drafts_df is None or teams_df is None:
+    """Calculate manager-player loyalty stats from actual draft data"""
+    
+    player_data = process_player_draft_data(drafts_df, teams_df)
+    
+    if player_data is None or player_data.empty:
+        st.info("Keine Spielerdaten für Loyalty Analysis verfügbar.")
         return None
     
-    # Sample loyalty data - replace with actual processing
-    managers = teams_df['First Name'].unique()
+    # Calculate loyalty combinations
+    loyalty_combinations = player_data.groupby(['Manager', 'Player']).agg({
+        'Season': ['count', 'nunique', lambda x: ', '.join(map(str, sorted(x)))],
+        'Draft_Position': 'mean'
+    }).round(1)
     
-    loyalty_data = []
+    # Flatten column names
+    loyalty_combinations.columns = ['Times_Drafted', 'Unique_Seasons', 'Years', 'Avg_Draft_Position']
+    loyalty_combinations = loyalty_combinations.reset_index()
     
-    sample_combos = [
-        ('Alex', 'LeBron James', 6),
-        ('Max', 'Stephen Curry', 5), 
-        ('Chris', 'Kevin Durant', 4),
-        ('Jordan', 'Giannis Antetokounmpo', 7),
-        ('Sam', 'Joel Embiid', 3),
-        ('Taylor', 'Luka Doncic', 4),
-        ('Morgan', 'Jayson Tatum', 5),
-        ('Casey', 'Jimmy Butler', 6)
-    ]
+    # Filter for players drafted multiple times by same manager
+    loyalty_df = loyalty_combinations[loyalty_combinations['Times_Drafted'] >= 2].copy()
     
-    for manager, player, count in sample_combos:
-        if manager in managers:  # Only include actual managers
-            avg_round = random.randint(1, 3)
-            years = ', '.join([str(2016 + i) for i in sorted(random.sample(range(9), count))])
-            
-            loyalty_data.append({
-                'Manager': manager,
-                'Player': player,
-                'Times_Drafted': count,
-                'Years': years,
-                'Avg_Draft_Round': avg_round,
-                'Loyalty_Score': count * (4 - avg_round)  # Higher score for more drafts in early rounds
-            })
+    if loyalty_df.empty:
+        st.info("Keine Manager-Spieler Loyalty Patterns gefunden (mindestens 2 Drafts erforderlich).")
+        return None
     
-    loyalty_df = pd.DataFrame(loyalty_data).sort_values('Times_Drafted', ascending=False)
+    # Calculate loyalty score
+    loyalty_df['Avg_Draft_Round'] = (loyalty_df['Avg_Draft_Position'] / 10).round(0).astype(int).clip(1, 3)
+    loyalty_df['Loyalty_Score'] = loyalty_df['Times_Drafted'] * (4 - loyalty_df['Avg_Draft_Round'])
+    
+    # Sort by times drafted and loyalty score
+    loyalty_df = loyalty_df.sort_values(['Times_Drafted', 'Loyalty_Score'], ascending=False)
     
     return loyalty_df
 
