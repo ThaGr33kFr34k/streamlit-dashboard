@@ -1549,7 +1549,7 @@ def main():
                     for i, (_, pair) in enumerate(loyalty_df.head(10).iterrows()):
                         st.markdown(f"""
                         <div class="loyalty-player">
-                            <h4>#{i+1} {pair['TeamID']} ❤️ {pair['PlayerName']}</h4>
+                            <h4>#{i+1} {pair['Manager']} ❤️ {pair['Player']}</h4>
                             <p><strong>{pair['Times_Drafted']}x</strong> gedraftet in Jahren: {pair['Years']}</p>
                             <p>Ø Runde {pair['Avg_Draft_Round']} | Loyalty Score: {pair['Loyalty_Score']}</p>
                         </div>
