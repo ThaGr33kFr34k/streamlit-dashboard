@@ -799,8 +799,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         loyalty_combinations.columns = new_columns
         loyalty_combinations = loyalty_combinations.reset_index()
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
-    else:
-        loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     
     # Mappe PlayerID zu Spieler Namen aus drafts_df
     # Erstelle Player-Mapping aus den ersten Vorkommen jeder PlayerID
