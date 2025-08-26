@@ -691,7 +691,7 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         agg_dict[round_col] = 'mean'
     
     # Berechne Loyalty-Kombinationen
-    loyalty_combinations = drafts_df.groupby(['Manager', 'Player']).agg(agg_dict).round(1)
+    loyalty_combinations = drafts_df.groupby(['TeamID', 'PlayerID']).agg(agg_dict).round(1)
     
     # Flatten column names
     new_columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
