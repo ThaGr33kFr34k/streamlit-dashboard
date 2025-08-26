@@ -79,25 +79,64 @@ st.markdown("""
 import pandas as pd
 import urllib.error
 
+@st.cache_data(ttl=3600)
 def load_data():
+    import urllib.request
+    import urllib.error
+    
+    teams_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=648434164&single=true&output=csv"
+    matchups_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=652199133&single=true&output=csv"
+    drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"
+
+    # Test each URL individually
+    urls = {
+        "Teams": teams_url,
+        "Matchups": matchups_url,
+        "Drafts": drafts_url
+    }
+    
+    for name, url in urls.items():
+        try:
+            st.write(f"Testing {name} URL...")
+            response = urllib.request.urlopen(url)
+            st.write(f"✅ {name}: HTTP {response.status} - {response.reason}")
+            
+            # Try to read a few lines to check content
+            content = response.read().decode('utf-8')
+            lines = content.split('\n')[:3]  # First 3 lines
+            st.write(f"First few lines of {name}:")
+            for i, line in enumerate(lines):
+                st.write(f"Line {i+1}: {line[:100]}...")  # First 100 chars
+                
+        except urllib.error.HTTPError as e:
+            st.error(f"❌ {name}: HTTP Error {e.code} - {e.reason}")
+            st.write(f"URL: {url}")
+        except Exception as e:
+            st.error(f"❌ {name}: {type(e).__name__}: {e}")
+    
+    # Now try loading with pandas
     try:
-        teams_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=648434164&single=true&output=csv"
-        matchups_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=652199133&single=true&output=csv"
-        drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"
-
+        st.write("Attempting to load with pandas...")
         teams_df = pd.read_csv(teams_url)
+        st.write(f"✅ Teams loaded: {teams_df.shape} rows/cols")
+        st.write("Teams columns:", list(teams_df.columns))
+        
         matchups_df = pd.read_csv(matchups_url)
-
-        drafts_df = None
-        if drafts_url and "YOUR_DRAFTS_URL_HERE" not in drafts_url:
-            drafts_df = pd.read_csv(drafts_url)
+        st.write(f"✅ Matchups loaded: {matchups_df.shape} rows/cols")
+        st.write("Matchups columns:", list(matchups_df.columns))
+        
+        drafts_df = pd.read_csv(drafts_url)
+        st.write(f"✅ Drafts loaded: {drafts_df.shape} rows/cols")
+        st.write("Drafts columns:", list(drafts_df.columns))
 
         return teams_df, matchups_df, drafts_df
 
     except urllib.error.HTTPError as e:
-        raise RuntimeError(f"HTTP Error {e.code}: {e.reason}. Prüfe die Freigabeeinstellungen und ob die GID stimmt.")
+        st.error(f"Pandas HTTP Error {e.code}: {e.reason}")
+        raise RuntimeError(f"HTTP Error {e.code}: {e.reason}. Check sharing settings and GID.")
     except Exception as e:
-        raise RuntimeError(f"Fehler beim Laden der Daten: {e}")
+        st.error(f"Pandas Error: {type(e).__name__}: {e}")
+        raise RuntimeError(f"Error loading data: {e}")
 
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
