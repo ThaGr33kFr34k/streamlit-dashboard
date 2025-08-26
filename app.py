@@ -740,9 +740,8 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
             # Zeige welche TeamIDs problematisch sind
             nan_teams = loyalty_combinations[loyalty_combinations['Manager'].isna()]['TeamID'].unique()
             st.write(f"Problematische TeamIDs: {nan_teams}")
+            loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
         
-    else:
-        loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     else:
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
     
