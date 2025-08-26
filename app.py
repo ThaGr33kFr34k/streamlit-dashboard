@@ -1346,7 +1346,7 @@ def main():
                         <div class="legend-player">
                             <h4>#{i+1} {player['Player']}</h4>
                             <p><strong>{player['First_Round_Picks']}</strong> First Round Picks</p>
-                            <p>Ø Pick {player['Avg_Draft_Position']} | {player['Years_as_Superstar']}</p>
+                            <p>Ø Pick {player['Avg_Pick_in_Round1']} | {player['Years_as_Superstar']}</p>
                         </div>
                         """, unsafe_allow_html=True)
                 
