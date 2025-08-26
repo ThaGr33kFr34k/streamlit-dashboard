@@ -76,26 +76,28 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
+import pandas as pd
+import urllib.error
+
 def load_data():
-    """Load data from Google Sheets"""
     try:
-        # Replace with your actual Google Sheets URLs (CSV export format)
-        # Format: https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=TAB_ID
-        
-        # You'll need to replace these URLs with your actual sheet URLs
         teams_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=648434164&single=true&output=csv"
         matchups_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=652199133&single=true&output=csv"
-        drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"  # Add your mDrafts URL here
-        
-        # Load the data
+        drafts_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=2084485780&single=true&output=csv"
+
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
-        drafts_df = pd.read_csv(drafts_url) if drafts_url != "YOUR_DRAFTS_URL_HERE" else None
-        
+
+        drafts_df = None
+        if drafts_url and "YOUR_DRAFTS_URL_HERE" not in drafts_url:
+            drafts_df = pd.read_csv(drafts_url)
+
         return teams_df, matchups_df, drafts_df
+
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP Error {e.code}: {e.reason}. Prüfe die Freigabeeinstellungen und ob die GID stimmt.")
     except Exception as e:
-        st.error(f"Error loading data: {e}")
-        return None, None, None
+        raise RuntimeError(f"Fehler beim Laden der Daten: {e}")
 
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
