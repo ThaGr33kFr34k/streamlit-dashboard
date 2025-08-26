@@ -1625,8 +1625,8 @@ def main():
                 st.dataframe(
                     styled_loyalty,
                     column_config={
-                        "TeamID": "Manager",
-                        "PlayerID": "Spieler",
+                        "Manager": "Manager",
+                        "Player": "Player",
                         "Times_Drafted": "Anzahl Drafts",
                         "Years": "Jahre",
                         "Avg_Draft_Round": "Ø Draft Runde",
@@ -1639,7 +1639,7 @@ def main():
                 # Loyalty visualization
                 fig = px.treemap(
                     loyalty_df.head(20),
-                    path=['TeamID', 'PlayerName'],
+                    path=['Manager', 'Player'],
                     values='Times_Drafted',
                     color='Loyalty_Score',
                     color_continuous_scale='Viridis',
