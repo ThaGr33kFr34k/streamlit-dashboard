@@ -706,8 +706,25 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     
     # Mappe TeamID zu Manager Namen
     if teams_df is not None and not teams_df.empty:
+        # DEBUG: Zeige teams_df Struktur
+        st.write("DEBUG - teams_df Spalten:", teams_df.columns.tolist())
+        st.write("DEBUG - teams_df erste 5 Zeilen:")
+        st.dataframe(teams_df.head())
+        
         # Erstelle Team-Mapping (TeamID -> Manager Name)
-        team_mapping = teams_df.set_index('TeamID')['First Name'].to_dict()
+        if 'First Name' in teams_df.columns:
+            team_mapping = teams_df.set_index('TeamID')['First Name'].to_dict()
+        elif 'Manager' in teams_df.columns:
+            team_mapping = teams_df.set_index('TeamID')['Manager'].to_dict()
+        elif 'Name' in teams_df.columns:
+            team_mapping = teams_df.set_index('TeamID')['Name'].to_dict()
+        else:
+            st.error(f"Keine Manager-Name Spalte in teams_df gefunden. Verfügbare Spalten: {teams_df.columns.tolist()}")
+            team_mapping = {}
+            
+        st.write("DEBUG - Team Mapping:")
+        st.write(team_mapping)
+        
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID'].map(team_mapping)
     else:
         loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
@@ -742,6 +759,9 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     # Filter: nur Manager-Spieler mit mehr als 1 Draft
     loyalty_combinations = loyalty_combinations[loyalty_combinations['Times_Drafted'] > 1]
     
+    # Bereinige NaN/None Werte für Treemap
+    loyalty_combinations = loyalty_combinations.dropna(subset=['Manager', 'Player'])
+    
     # DEBUG: Zeige finale Ergebnisse mit Manager und Player Namen
     st.write("DEBUG - Top 5 Loyalty Ergebnisse:")
     display_cols = ['Manager', 'Player', 'Times_Drafted', 'Unique_Seasons', 'Years']
@@ -753,7 +773,15 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     
     st.dataframe(loyalty_combinations[display_cols].head())
     
+    # Prüfe auf problematische Werte für Treemap
+    st.write("DEBUG - Treemap Daten Check:")
+    st.write(f"Manager NaN count: {loyalty_combinations['Manager'].isna().sum()}")
+    st.write(f"Player NaN count: {loyalty_combinations['Player'].isna().sum()}")
+    st.write(f"Times_Drafted NaN count: {loyalty_combinations['Times_Drafted'].isna().sum()}")
+    st.write(f"Loyalty_Score NaN count: {loyalty_combinations['Loyalty_Score'].isna().sum()}")
+    
     return loyalty_combinations
+    
 def style_dataframe_with_colors(df, win_pct_columns):
     """Apply color formatting to dataframe based on win percentage with gradient"""
     def highlight_winpct(val):
