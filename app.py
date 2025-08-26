@@ -628,7 +628,7 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     st.dataframe(drafts_df.head(3))
     
     # Überprüfe notwendige Spalten
-    required_cols = ['TeamID', 'PlayerID']
+    required_cols = ['Manager', 'Player']
     missing_cols = [col for col in required_cols if col not in drafts_df.columns]
     
     if missing_cols:
@@ -704,6 +704,27 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     loyalty_combinations.columns = new_columns
     loyalty_combinations = loyalty_combinations.reset_index()
     
+    # Mappe TeamID zu Manager Namen
+    if teams_df is not None and not teams_df.empty:
+        # Erstelle Team-Mapping (TeamID -> Manager Name)
+        team_mapping = teams_df.set_index('TeamID')['First Name'].to_dict()
+        loyalty_combinations['Manager'] = loyalty_combinations['TeamID'].map(team_mapping)
+    else:
+        loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
+    
+    # Mappe PlayerID zu Spieler Namen aus drafts_df
+    # Erstelle Player-Mapping aus den ersten Vorkommen jeder PlayerID
+    player_mapping = drafts_df.groupby('PlayerID')['PlayerName'].first().to_dict()
+    loyalty_combinations['Player'] = loyalty_combinations['PlayerID'].map(player_mapping)
+    
+    # DEBUG: Zeige Mapping-Ergebnisse
+    st.write("DEBUG - Team Mapping (erste 5):")
+    if teams_df is not None:
+        st.write(dict(list(team_mapping.items())[:5]) if 'team_mapping' in locals() else "Kein Team-Mapping verfügbar")
+    
+    st.write("DEBUG - Player Mapping (erste 5):")
+    st.write(dict(list(player_mapping.items())[:5]))
+    
     # Calculate loyalty score
     loyalty_score = loyalty_combinations['Times_Drafted'] * 3 + loyalty_combinations['Unique_Seasons'] * 2
     
@@ -721,12 +742,18 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     # Filter: nur Manager-Spieler mit mehr als 1 Draft
     loyalty_combinations = loyalty_combinations[loyalty_combinations['Times_Drafted'] > 1]
     
-    # DEBUG: Zeige finale Ergebnisse
+    # DEBUG: Zeige finale Ergebnisse mit Manager und Player Namen
     st.write("DEBUG - Top 5 Loyalty Ergebnisse:")
-    st.dataframe(loyalty_combinations.head())
+    display_cols = ['Manager', 'Player', 'Times_Drafted', 'Unique_Seasons', 'Years']
+    if 'Avg_Draft_Position' in loyalty_combinations.columns:
+        display_cols.append('Avg_Draft_Position')
+    if 'Avg_Draft_Round' in loyalty_combinations.columns:
+        display_cols.append('Avg_Draft_Round')
+    display_cols.append('Loyalty_Score')
+    
+    st.dataframe(loyalty_combinations[display_cols].head())
     
     return loyalty_combinations
-
 def style_dataframe_with_colors(df, win_pct_columns):
     """Apply color formatting to dataframe based on win percentage with gradient"""
     def highlight_winpct(val):
