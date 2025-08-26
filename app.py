@@ -1357,7 +1357,7 @@ def main():
                         x='Player',
                         y='First_Round_Picks',
                         title='Top 10 First Round Superstars',
-                        color='Avg_Draft_Position',
+                        color='Avg_Pick_in_Round1',
                         color_continuous_scale='Blues_r'
                     )
                     fig1.update_layout(height=350, xaxis_tickangle=-45)
