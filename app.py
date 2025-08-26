@@ -627,8 +627,8 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     st.write("DEBUG - Erste 3 Zeilen aus mDrafts:")
     st.dataframe(drafts_df.head(3))
     
-    # Überprüfe notwendige Spalten
-    required_cols = ['Manager', 'Player']
+    # Überprüfe notwendige Spalten (die tatsächlich in mDrafts vorhanden sind)
+    required_cols = ['TeamID', 'PlayerID', 'PlayerName']
     missing_cols = [col for col in required_cols if col not in drafts_df.columns]
     
     if missing_cols:
