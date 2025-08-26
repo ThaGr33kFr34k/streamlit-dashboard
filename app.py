@@ -466,9 +466,6 @@ def process_player_draft_data(drafts_df, teams_df):
     
     player_data = []
     
-    # Debug: Show available columns
-    st.write("Debug - Available columns in mDrafts:", drafts_df.columns.tolist())
-    
     # Check if we have PlayerID and PlayerName columns as specified
     if 'PlayerID' not in drafts_df.columns or 'PlayerName' not in drafts_df.columns:
         st.error("mDrafts sheet must have 'PlayerID' and 'PlayerName' columns")
