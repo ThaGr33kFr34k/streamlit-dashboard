@@ -8,8 +8,6 @@ import random
 import ast
 from collections import Counter
 
-st.write("🚨 FILE UPDATED - TIMESTAMP: 2025-08-26 14:30")
-
 # Page configuration
 st.set_page_config(
     page_title="Fantasy Basketball Analytics",
@@ -77,58 +75,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def load_data():  # Note: NO @st.cache_data decorator
-    import urllib.request
-    import urllib.error
-    
-    teams_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=648434164"
-    matchups_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=652199133"
-    drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
-
-    st.write("🔍 **Debugging Data Loading...**")
-    
-    # Test each URL individually
-    urls = {
-        "Teams": teams_url,
-        "Matchups": matchups_url,
-        "Drafts": drafts_url
-    }
-    
-    for name, url in urls.items():
-        try:
-            st.write(f"Testing {name} URL...")
-            response = urllib.request.urlopen(url)
-            st.success(f"✅ {name}: HTTP {response.status} - {response.reason}")
-            
-        except urllib.error.HTTPError as e:
-            st.error(f"❌ {name}: HTTP Error {e.code} - {e.reason}")
-            st.write(f"Failed URL: {url}")
-            return None, None, None
-        except Exception as e:
-            st.error(f"❌ {name}: {type(e).__name__}: {e}")
-            return None, None, None
-    
-    # Now try loading with pandas
+@st.cache_data(ttl=3600)  # Re-add caching
+def load_data():
     try:
-        st.write("📊 **Loading data with pandas...**")
+        teams_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=648434164"
+        matchups_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=652199133"
+        drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
         
         teams_df = pd.read_csv(teams_url)
-        st.success(f"✅ Teams loaded: {teams_df.shape[0]} rows, {teams_df.shape[1]} columns")
-        st.write("Teams columns:", list(teams_df.columns)[:10])  # Show first 10 columns
-        
         matchups_df = pd.read_csv(matchups_url)
-        st.success(f"✅ Matchups loaded: {matchups_df.shape[0]} rows, {matchups_df.shape[1]} columns")
-        st.write("Matchups columns:", list(matchups_df.columns)[:10])
-        
         drafts_df = pd.read_csv(drafts_url)
-        st.success(f"✅ Drafts loaded: {drafts_df.shape[0]} rows, {drafts_df.shape[1]} columns")
-        st.write("Drafts columns:", list(drafts_df.columns)[:10])
-
+        
         return teams_df, matchups_df, drafts_df
-
     except Exception as e:
-        st.error(f"❌ Pandas loading failed: {type(e).__name__}: {e}")
-        return None, None, None
+        raise RuntimeError(f"Error loading data: {e}")
 
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
