@@ -639,8 +639,8 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         st.error("Keine Season/Year Spalte gefunden!")
         return None
     
-    # Überprüfe ob Pick und Round Spalten vorhanden sind
-    required_cols = ['Manager', 'Player', 'Pick', 'Round']
+    # Überprüfe ob Draft_Position Spalte vorhanden ist
+    required_cols = ['Manager', 'Player', 'Draft_Position']
     missing_cols = [col for col in required_cols if col not in player_data.columns]
     
     if missing_cols:
@@ -649,17 +649,24 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         return None
     
     # DEBUG: Zeige Draft-Daten Statistiken
-    st.write("DEBUG - Pick Statistiken:")
-    st.write(f"Pick Min: {player_data['Pick'].min()}, Max: {player_data['Pick'].max()}")
-    st.write("DEBUG - Round Statistiken:")
-    st.write(f"Round Min: {player_data['Round'].min()}, Max: {player_data['Round'].max()}")
-    st.write(f"Unique Rounds: {sorted(player_data['Round'].unique())}")
+    st.write("DEBUG - Draft_Position Statistiken:")
+    st.write(f"Draft_Position Min: {player_data['Draft_Position'].min()}, Max: {player_data['Draft_Position'].max()}")
+    st.write(f"Unique Draft_Positions (erste 20): {sorted(player_data['Draft_Position'].unique())[:20]}")
+    
+    # Berechne Round aus Draft_Position (angenommen 12 Teams = 12 Picks pro Runde)
+    # Du kannst die Anzahl Teams anpassen wenn nötig
+    teams_count = 12  # Ändere dies auf deine Liga-Größe
+    player_data['Calculated_Round'] = ((player_data['Draft_Position'] - 1) // teams_count + 1)
+    
+    st.write("DEBUG - Berechnete Rounds:")
+    st.write(f"Calculated_Round Min: {player_data['Calculated_Round'].min()}, Max: {player_data['Calculated_Round'].max()}")
+    st.write(f"Unique Calculated_Rounds: {sorted(player_data['Calculated_Round'].unique())}")
     
     # Calculate loyalty combinations
     loyalty_combinations = player_data.groupby(['Manager', 'Player']).agg({
         season_col: ['count', 'nunique', lambda x: ', '.join(map(str, sorted(x.unique())))],
-        'Pick': 'mean',      # Durchschnittliche Draft Position (Pick)
-        'Round': 'mean'      # Durchschnittliche Draft Runde
+        'Draft_Position': 'mean',      # Durchschnittliche Draft Position
+        'Calculated_Round': 'mean'     # Durchschnittliche Draft Runde
     }).round(1)
     
     # Flatten column names
