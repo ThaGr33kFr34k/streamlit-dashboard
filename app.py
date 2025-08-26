@@ -628,7 +628,7 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     st.dataframe(drafts_df.head(3))
     
     # Überprüfe notwendige Spalten
-    required_cols = ['Manager', 'Player']
+    required_cols = ['TeamID', 'PlayerID']
     missing_cols = [col for col in required_cols if col not in drafts_df.columns]
     
     if missing_cols:
