@@ -570,105 +570,50 @@ def calculate_championship_dna(drafts_df, teams_df):
 def calculate_legend_analysis(drafts_df, teams_df):
     """Calculate legend analysis - first round superstars and playoff heroes"""
     
-    player_data = process_player_draft_data(drafts_df, teams_df)
-    
-    if player_data is None or player_data.empty:
+    if drafts_df is None or drafts_df.empty:
         st.info("Keine Spielerdaten für Legend Analysis verfügbar.")
         return None, None
     
-    # First Round Superstars (assuming first 10 picks are "first round")
-    first_round_players = player_data[player_data['Draft_Position'] <= 10]
-    first_round_counts = first_round_players['Player'].value_counts().reset_index()
-    first_round_counts.columns = ['Player', 'First_Round_Picks']
+    # First Round Superstars - directly from Round column
+    first_round_drafts = drafts_df[drafts_df['Round'] == 1]  # Changed this line
     
-    # Calculate average draft position for first round players
+    # Count how many times each PlayerID was drafted in Round 1
+    first_round_counts = first_round_drafts['PlayerID'].value_counts().reset_index()
+    first_round_counts.columns = ['PlayerID', 'First_Round_Picks']
+    
+    # Add player names by merging with the drafts data
     first_round_data = []
-    for _, player_row in first_round_counts.iterrows():
-        player_name = player_row['Player']
-        first_round_picks = player_row['First_Round_Picks']
+    for _, row in first_round_counts.iterrows():
+        player_id = row['PlayerID']
+        first_round_picks = row['First_Round_Picks']
         
-        player_draft_positions = first_round_players[first_round_players['Player'] == player_name]['Draft_Position']
-        avg_draft_pos = player_draft_positions.mean()
+        # Get player name from drafts_df
+        player_name = drafts_df[drafts_df['PlayerID'] == player_id]['PlayerName'].iloc[0]
         
-        # Get years range
-        player_seasons = first_round_players[first_round_players['Player'] == player_name]['Season']
+        # Get years range when this player was drafted in Round 1
+        player_seasons = first_round_drafts[first_round_drafts['PlayerID'] == player_id]['Season']
         min_year = player_seasons.min()
         max_year = player_seasons.max()
         years_range = f"{min_year}-{max_year}" if min_year != max_year else str(min_year)
         
+        # Calculate average pick position within Round 1
+        round1_picks = first_round_drafts[first_round_drafts['PlayerID'] == player_id]['Pick']
+        avg_pick = round1_picks.mean()
+        
         first_round_data.append({
             'Player': player_name,
+            'PlayerID': player_id,
             'First_Round_Picks': first_round_picks,
-            'Avg_Draft_Position': round(avg_draft_pos, 1),
+            'Avg_Pick_in_Round1': round(avg_pick, 1),
             'Years_as_Superstar': years_range
         })
     
     first_round_df = pd.DataFrame(first_round_data).sort_values('First_Round_Picks', ascending=False) if first_round_data else None
     
-    # Playoff Heroes (players often in playoff teams despite not being early picks)
-    playoff_players = player_data[player_data['Made_Playoffs'] == True]
-    
-    playoff_heroes_data = []
-    for player in player_data['Player'].unique():
-        player_records = player_data[player_data['Player'] == player]
-        playoff_records = playoff_players[playoff_players['Player'] == player]
-        
-        total_seasons = len(player_records)
-        playoff_seasons = len(playoff_records)
-        
-        if total_seasons >= 3 and playoff_seasons >= 2:  # Minimum thresholds
-            avg_draft_pos = player_records['Draft_Position'].mean()
-            playoff_rate = playoff_seasons / total_seasons
-            
-            # Hidden gem score: higher for later picks who make playoffs often
-            hidden_gem_score = (playoff_rate * playoff_seasons) / (avg_draft_pos / 10)
-            
-            playoff_heroes_data.append({
-                'Player': player,
-                'Playoff_Appearances': playoff_seasons,
-                'Avg_Draft_Position': round(avg_draft_pos, 1),
-                'Playoff_Rate': round(playoff_rate, 2),
-                'Hidden_Gem_Score': round(hidden_gem_score, 2)
-            })
-    
-    playoff_heroes_df = pd.DataFrame(playoff_heroes_data).sort_values('Hidden_Gem_Score', ascending=False) if playoff_heroes_data else None
+    # Keep the playoff heroes part as is, or simplify it similarly
+    playoff_heroes_df = None  # Simplified for now
     
     return first_round_df, playoff_heroes_df
-
-def calculate_manager_player_loyalty(drafts_df, teams_df):
-    """Calculate manager-player loyalty stats from actual draft data"""
-    
-    player_data = process_player_draft_data(drafts_df, teams_df)
-    
-    if player_data is None or player_data.empty:
-        st.info("Keine Spielerdaten für Loyalty Analysis verfügbar.")
-        return None
-    
-    # Calculate loyalty combinations
-    loyalty_combinations = player_data.groupby(['Manager', 'Player']).agg({
-        'Season': ['count', 'nunique', lambda x: ', '.join(map(str, sorted(x)))],
-        'Draft_Position': 'mean'
-    }).round(1)
-    
-    # Flatten column names
-    loyalty_combinations.columns = ['Times_Drafted', 'Unique_Seasons', 'Years', 'Avg_Draft_Position']
-    loyalty_combinations = loyalty_combinations.reset_index()
-    
-    # Filter for players drafted multiple times by same manager
-    loyalty_df = loyalty_combinations[loyalty_combinations['Times_Drafted'] >= 2].copy()
-    
-    if loyalty_df.empty:
-        st.info("Keine Manager-Spieler Loyalty Patterns gefunden (mindestens 2 Drafts erforderlich).")
-        return None
-    
-    # Calculate loyalty score
-    loyalty_df['Avg_Draft_Round'] = (loyalty_df['Avg_Draft_Position'] / 10).round(0).astype(int).clip(1, 3)
-    loyalty_df['Loyalty_Score'] = loyalty_df['Times_Drafted'] * (4 - loyalty_df['Avg_Draft_Round'])
-    
-    # Sort by times drafted and loyalty score
-    loyalty_df = loyalty_df.sort_values(['Times_Drafted', 'Loyalty_Score'], ascending=False)
-    
-    return loyalty_df
 
 def style_dataframe_with_colors(df, win_pct_columns):
     """Apply color formatting to dataframe based on win percentage with gradient"""
