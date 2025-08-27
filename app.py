@@ -1633,16 +1633,16 @@ def main():
 
                     # Style the loyalty table
                     def highlight_loyalty_score(val):
-                    if pd.isna(val):
-                        return ""
-                    if val >= 15:
-                        return "background-color: rgba(138, 43, 226, 0.4);"  # Purple for high loyalty
-                    elif val >= 10:
-                        return "background-color: rgba(138, 43, 226, 0.25);"
-                    elif val >= 5:
-                        return "background-color: rgba(138, 43, 226, 0.15);"
-                    else:
-                        return "background-color: rgba(138, 43, 226, 0.05);"
+                        if pd.isna(val):
+                            return ""
+                        if val >= 15:
+                            return "background-color: rgba(138, 43, 226, 0.4);"  # Purple for high loyalty
+                        elif val >= 10:
+                            return "background-color: rgba(138, 43, 226, 0.25);"
+                        elif val >= 5:
+                            return "background-color: rgba(138, 43, 226, 0.15);"
+                        else:
+                            return "background-color: rgba(138, 43, 226, 0.05);"
 
                     styled_loyalty = loyalty_display.style.applymap(
                     highlight_loyalty_score, 
