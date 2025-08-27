@@ -81,14 +81,18 @@ def load_data():
         teams_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=648434164"
         matchups_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=652199133"
         drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
+        categories_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=987718515"
         
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
         drafts_df = pd.read_csv(drafts_url)
+        categories_df = pd.read_csv(categories_url)
         
-        return teams_df, matchups_df, drafts_df
-    except Exception as e:
-        raise RuntimeError(f"Error loading data: {e}")
+        return teams_df, matchups_df, drafts_df, categories_df
+    
+    except (URLError, HTTPError) as e:
+        st.error(f"Fehler beim Laden der Daten: {e.reason}")
+        return None, None, None, None
 
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
@@ -971,6 +975,8 @@ def main():
         st.session_state.analysis_type = "🎯 Drafts"
     if st.sidebar.button("👨‍💼 Player Analysis", use_container_width=True):
         st.session_state.analysis_type = "👨‍💼 Player Analysis"
+    if st.sidebar.button("📊 Categories", use_container_width=True):
+        st.session_state.analysis_type = "📊 Categories"
     
     # Initialize session state if not exists
     if 'analysis_type' not in st.session_state:
@@ -1677,6 +1683,61 @@ def main():
                 
                 Sobald diese Daten verfügbar sind, werden hier automatisch echte Insights angezeigt!
                 """)
+
+    elif analysis_type == "📊 Categories":
+    st.header("Statistik-Kategorien")
+    
+    # Überprüfe, ob die Daten geladen wurden
+    if categories_df is not None and not categories_df.empty:
+        
+        # Tabs für die zwei Ansichten erstellen
+        tab1, tab2 = st.tabs(["🥇 All-Time Stat Leaders", "📈 Career Averages"])
+        
+        # Statistische Berechnungen
+        # Definiere die Spalten für Rohdaten und Prozentwerte
+        raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', 'Turnovers']
+        percentage_stats = ['FG%', 'FT%']
+        all_stats = raw_stats + percentage_stats
+
+        with tab1:
+            st.subheader("All-Time Stat Leaders")
+            st.markdown("Summierte Statistiken über alle Saisons, absteigend sortiert nach Punkten.")
+            
+            # Berechne die Summe der Rohwerte
+            agg_funcs = {stat: 'sum' for stat in raw_stats}
+            # Berechne den Durchschnitt der Prozentwerte
+            agg_funcs.update({stat: 'mean' for stat in percentage_stats})
+            
+            # Berechne die Gesamtstatistiken und sortiere
+            all_time_stats = categories_df.groupby('Team').agg(agg_funcs).sort_values(by='Points', ascending=False)
+            
+            # Zeige die Tabelle an
+            st.dataframe(all_time_stats, use_container_width=True)
+
+        with tab2:
+            st.subheader("Career Averages")
+            st.markdown("Durchschnittliche Statistiken pro Jahr, absteigend sortiert nach Punkten.")
+
+            # Zähle die Anzahl der gespielten Jahre pro Team
+            years_played = categories_df.groupby('Team')['Saison'].nunique().rename("Years Played")
+
+            # Berechne die Summen der Rohwerte
+            raw_stats_sums = categories_df.groupby('Team')[raw_stats].sum()
+
+            # Berechne die Durchschnittswerte pro Jahr, indem du die Summen durch die Anzahl der Jahre teilst
+            career_averages = raw_stats_sums.div(years_played, axis=0)
+
+            # Füge die Prozentwerte hinzu (die Berechnung ist dieselbe wie im ersten Tab)
+            percentage_averages = categories_df.groupby('Team')[percentage_stats].mean()
+            career_averages = pd.concat([career_averages, percentage_averages], axis=1)
+
+            # Sortiere und zeige die Tabelle an
+            career_averages = career_averages.sort_values(by='Points', ascending=False)
+            st.dataframe(career_averages, use_container_width=True)
+            
+    else:
+        st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
+        st.info("Bitte überprüfen Sie die Datenquelle und die URL in der `load_categories_data`-Funktion.")
 
 if __name__ == "__main__":
     main()
