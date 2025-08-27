@@ -622,11 +622,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         st.info("Keine Draft-Daten verfügbar.")
         return None
     
-    # DEBUG: Zeige verfügbare Spalten aus mDrafts
-    st.write("DEBUG - Verfügbare Spalten in mDrafts:", drafts_df.columns.tolist())
-    st.write("DEBUG - Erste 3 Zeilen aus mDrafts:")
-    st.dataframe(drafts_df.head(3))
-    
     # Überprüfe notwendige Spalten (die tatsächlich in mDrafts vorhanden sind)
     required_cols = ['TeamID', 'PlayerID', 'PlayerName']
     missing_cols = [col for col in required_cols if col not in drafts_df.columns]
@@ -634,17 +629,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     if missing_cols:
         st.error(f"Fehlende Spalten in mDrafts: {missing_cols}")
         return None
-    
-    # DEBUG: Analysiere Pick und Round Spalten
-    if 'Pick' in drafts_df.columns:
-        st.write("DEBUG - Pick Statistiken:")
-        st.write(f"Pick Min: {drafts_df['Pick'].min()}, Max: {drafts_df['Pick'].max()}")
-        st.write(f"Pick unique values (erste 20): {sorted(drafts_df['Pick'].unique())[:20]}")
-    
-    if 'Round' in drafts_df.columns:
-        st.write("DEBUG - Round Statistiken:")
-        st.write(f"Round Min: {drafts_df['Round'].min()}, Max: {drafts_df['Round'].max()}")
-        st.write(f"Round unique values: {sorted(drafts_df['Round'].unique())}")
     
     # Finde Season/Year Spalte
     season_col = None
@@ -805,14 +789,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     player_mapping = drafts_df.groupby('PlayerID')['PlayerName'].first().to_dict()
     loyalty_combinations['Player'] = loyalty_combinations['PlayerID'].map(player_mapping)
     
-    # DEBUG: Zeige Mapping-Ergebnisse
-    st.write("DEBUG - Team Mapping (erste 5):")
-    if teams_df is not None:
-        st.write(dict(list(team_mapping.items())[:5]) if 'team_mapping' in locals() else "Kein Team-Mapping verfügbar")
-    
-    st.write("DEBUG - Player Mapping (erste 5):")
-    st.write(dict(list(player_mapping.items())[:5]))
-    
     # Calculate loyalty score
     loyalty_score = loyalty_combinations['Times_Drafted'] * 3 + loyalty_combinations['Unique_Seasons'] * 2
     
@@ -832,17 +808,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     
     # Bereinige NaN/None Werte für Treemap
     loyalty_combinations = loyalty_combinations.dropna(subset=['Manager', 'Player'])
-    
-    # DEBUG: Zeige finale Ergebnisse mit Manager und Player Namen
-    st.write("DEBUG - Top 5 Loyalty Ergebnisse:")
-    display_cols = ['Manager', 'Player', 'Times_Drafted', 'Unique_Seasons', 'Years']
-    if 'Avg_Draft_Position' in loyalty_combinations.columns:
-        display_cols.append('Avg_Draft_Position')
-    if 'Avg_Draft_Round' in loyalty_combinations.columns:
-        display_cols.append('Avg_Draft_Round')
-    display_cols.append('Loyalty_Score')
-    
-    st.dataframe(loyalty_combinations[display_cols].head())
     
     # Prüfe auf problematische Werte für Treemap
     st.write("DEBUG - Treemap Daten Check:")
