@@ -1619,11 +1619,20 @@ def main():
                     avg_loyalty = loyalty_df['Times_Drafted'].mean()
                     st.metric("Ø Loyalty", f"{avg_loyalty:.1f} Drafts")
                 
-                # Full loyalty table
-                st.markdown("### 📋 Vollständige Loyalty-Tabelle")
-                
-                # Style the loyalty table
-                def highlight_loyalty_score(val):
+                    # Bereite die Loyalty-Tabelle für Anzeige vor
+                    loyalty_display = loyalty_df.copy()
+
+                    # Runde Werte auf eine Dezimalstelle
+                    loyalty_display['Avg_Draft_Position'] = loyalty_display['Avg_Draft_Position'].round(1)
+                    loyalty_display['Avg_Draft_Round'] = loyalty_display['Avg_Draft_Round'].round(1)
+                    loyalty_display['Loyalty_Score'] = loyalty_display['Loyalty_Score'].round(1)
+
+                    # Wähle und ordne Spalten in gewünschter Reihenfolge
+                    display_columns = ['Manager', 'Player', 'Times_Drafted', 'Years', 'Avg_Draft_Position', 'Avg_Draft_Round', 'Loyalty_Score']
+                    loyalty_display = loyalty_display[display_columns]
+
+                    # Style the loyalty table
+                    def highlight_loyalty_score(val):
                     if pd.isna(val):
                         return ""
                     if val >= 15:
@@ -1634,25 +1643,26 @@ def main():
                         return "background-color: rgba(138, 43, 226, 0.15);"
                     else:
                         return "background-color: rgba(138, 43, 226, 0.05);"
-                
-                styled_loyalty = loyalty_df.style.applymap(
+
+                    styled_loyalty = loyalty_display.style.applymap(
                     highlight_loyalty_score, 
                     subset=['Loyalty_Score']
-                )
-                
-                st.dataframe(
+                    )
+
+                    st.dataframe(
                     styled_loyalty,
                     column_config={
                         "Manager": "Manager",
-                        "Player": "Player",
+                        "Player": "Player", 
                         "Times_Drafted": "Anzahl Drafts",
                         "Years": "Jahre",
+                        "Avg_Draft_Position": "Ø Draft Position",
                         "Avg_Draft_Round": "Ø Draft Runde",
                         "Loyalty_Score": "Loyalty Score"
-                    },
-                    hide_index=True,
+                            },
+                        hide_index=True,
                     use_container_width=True
-                )
+                        )
                 
                 # Loyalty visualization
                 fig = px.treemap(
