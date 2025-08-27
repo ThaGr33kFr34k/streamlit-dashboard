@@ -1582,9 +1582,32 @@ def main():
             st.markdown("*Wer draftet immer wieder denselben Spieler?*")
             
             # Calculate loyalty
-loyalty_df = calculate_manager_player_loyalty(drafts_df, teams_df)
+# Calculate loyalty mit Debug-Wrapper
+try:
+    st.write("DEBUG - Starte Loyalty-Berechnung...")
+    st.write(f"DEBUG - drafts_df ist None: {drafts_df is None}")
+    st.write(f"DEBUG - teams_df ist None: {teams_df is None}")
+    
+    if drafts_df is not None:
+        st.write(f"DEBUG - drafts_df Anzahl Zeilen: {len(drafts_df)}")
+        st.write(f"DEBUG - drafts_df Spalten: {drafts_df.columns.tolist()}")
+    
+    if teams_df is not None:
+        st.write(f"DEBUG - teams_df Anzahl Zeilen: {len(teams_df)}")
+        st.write(f"DEBUG - teams_df Spalten: {teams_df.columns.tolist()}")
+    
+    loyalty_df = calculate_manager_player_loyalty(drafts_df, teams_df)
+    st.write("DEBUG - Loyalty-Berechnung erfolgreich!")
+    
+except Exception as e:
+    st.error(f"Fehler bei Loyalty-Berechnung: {str(e)}")
+    st.write(f"Fehlertyp: {type(e).__name__}")
+    import traceback
+    st.text(traceback.format_exc())
+    loyalty_df = None
 
 if loyalty_df is not None and len(loyalty_df) > 0:
+    
     # Top loyalty combinations
     st.markdown("### 💕 Stärkste Manager-Spieler Bindungen")
     
