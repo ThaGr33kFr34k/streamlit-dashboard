@@ -1582,131 +1582,91 @@ def main():
             st.markdown("*Wer draftet immer wieder denselben Spieler?*")
             
             # Calculate loyalty
-# Calculate loyalty mit Debug-Wrapper
-try:
-    st.write("DEBUG - Starte Loyalty-Berechnung...")
-    st.write(f"DEBUG - drafts_df ist None: {drafts_df is None}")
-    st.write(f"DEBUG - teams_df ist None: {teams_df is None}")
-    
-    if drafts_df is not None:
-        st.write(f"DEBUG - drafts_df Anzahl Zeilen: {len(drafts_df)}")
-        st.write(f"DEBUG - drafts_df Spalten: {drafts_df.columns.tolist()}")
-    
-    if teams_df is not None:
-        st.write(f"DEBUG - teams_df Anzahl Zeilen: {len(teams_df)}")
-        st.write(f"DEBUG - teams_df Spalten: {teams_df.columns.tolist()}")
-    
-    loyalty_df = calculate_manager_player_loyalty(drafts_df, teams_df)
-    st.write("DEBUG - Loyalty-Berechnung erfolgreich!")
-    
-except Exception as e:
-    st.error(f"Fehler bei Loyalty-Berechnung: {str(e)}")
-    st.write(f"Fehlertyp: {type(e).__name__}")
-    import traceback
-    st.text(traceback.format_exc())
-    loyalty_df = None
-
-if loyalty_df is not None and len(loyalty_df) > 0:
-    
-    # Top loyalty combinations
-    st.markdown("### 💕 Stärkste Manager-Spieler Bindungen")
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Display top loyalty pairs
-        for i, (_, pair) in enumerate(loyalty_df.head(10).iterrows()):
-            st.markdown(f"""
-            <div class="loyalty-player">
-                <h4>#{i+1} {pair['Manager']} ❤️ {pair['Player']}</h4>
-                <p><strong>{pair['Times_Drafted']}x</strong> gedraftet in Jahren: {pair['Years']}</p>
-                <p>Ø Runde {pair['Avg_Draft_Round']:.1f} | Loyalty Score: {pair['Loyalty_Score']:.1f}</p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    with col2:
-        # Summary stats
-        st.markdown("### 📊 Loyalty Stats")
-        
-        # Most loyal manager
-        manager_loyalty = loyalty_df.groupby('Manager')['Times_Drafted'].sum().sort_values(ascending=False)
-        if len(manager_loyalty) > 0:
-            st.metric("Loyalster Manager", manager_loyalty.index[0], f"{manager_loyalty.iloc[0]} Total Drafts")
-        
-        # Most drafted player
-        player_popularity = loyalty_df.groupby('Player')['Times_Drafted'].sum().sort_values(ascending=False)
-        if len(player_popularity) > 0:
-            st.metric("Beliebtester Spieler", player_popularity.index[0], f"{player_popularity.iloc[0]}x gedraftet")
-        
-        # Average loyalty
-        avg_loyalty = loyalty_df['Times_Drafted'].mean()
-        st.metric("Ø Loyalty", f"{avg_loyalty:.1f} Drafts")
-    
-    # Full loyalty table (NACH den Spalten, nicht drin!)
-    st.markdown("### 📋 Vollständige Loyalty-Tabelle")
-    
-    # Bereite die Loyalty-Tabelle für Anzeige vor
-    loyalty_display = loyalty_df.copy()
-
-    # Erzwinge Dezimalrundung mit expliziter Formatierung
-    loyalty_display['Avg_Draft_Position'] = loyalty_display['Avg_Draft_Position'].astype(float).round(1)
-    loyalty_display['Avg_Draft_Round'] = loyalty_display['Avg_Draft_Round'].astype(float).round(1) 
-    loyalty_display['Loyalty_Score'] = loyalty_display['Loyalty_Score'].astype(float).round(1)
-
-    # Wähle und ordne Spalten in gewünschter Reihenfolge
-    display_columns = ['Manager', 'Player', 'Times_Drafted', 'Years', 'Avg_Draft_Position', 'Avg_Draft_Round', 'Loyalty_Score']
-    loyalty_display = loyalty_display[display_columns]
-
-    # Style the loyalty table
-    def highlight_loyalty_score(val):
-        if pd.isna(val):
-            return ""
-        if val >= 15:
-            return "background-color: rgba(138, 43, 226, 0.4);"  # Purple for high loyalty
-        elif val >= 10:
-            return "background-color: rgba(138, 43, 226, 0.25);"
-        elif val >= 5:
-            return "background-color: rgba(138, 43, 226, 0.15);"
-        else:
-            return "background-color: rgba(138, 43, 226, 0.05);"
-
-    styled_loyalty = loyalty_display.style.applymap(
-        highlight_loyalty_score, 
-        subset=['Loyalty_Score']
-    ).format({
-        'Avg_Draft_Position': '{:.1f}',
-        'Avg_Draft_Round': '{:.1f}',
-        'Loyalty_Score': '{:.1f}'
-    })
-
-    st.dataframe(
-        styled_loyalty,
-        column_config={
-            "Manager": "Manager",
-            "Player": "Player", 
-            "Times_Drafted": "Anzahl Drafts",
-            "Years": "Jahre",
-            "Avg_Draft_Position": "Ø Draft Position",
-            "Avg_Draft_Round": "Ø Draft Runde",
-            "Loyalty_Score": "Loyalty Score"
-        },
-        hide_index=True,
-        use_container_width=True
-    )
-    
-    # Loyalty visualization
-    fig = px.treemap(
-        loyalty_df.head(20),
-        path=['Manager', 'Player'],
-        values='Times_Drafted',
-        color='Loyalty_Score',
-        color_continuous_scale='Viridis',
-        title='Manager-Player Loyalty Map (Top 20)'
-    )
-    fig.update_layout(height=500)
-    st.plotly_chart(fig, use_container_width=True)
+            loyalty_df = calculate_manager_player_loyalty(drafts_df, teams_df)
+            
+            if loyalty_df is not None and len(loyalty_df) > 0:
+                # Top loyalty combinations
+                st.markdown("### 💕 Stärkste Manager-Spieler Bindungen")
                 
-else:
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    # Display top loyalty pairs
+                    for i, (_, pair) in enumerate(loyalty_df.head(10).iterrows()):
+                        st.markdown(f"""
+                        <div class="loyalty-player">
+                            <h4>#{i+1} {pair['Manager']} ❤️ {pair['Player']}</h4>
+                            <p><strong>{pair['Times_Drafted']}x</strong> gedraftet in Jahren: {pair['Years']}</p>
+                            <p>Ø Runde {pair['Avg_Draft_Round']} | Loyalty Score: {pair['Loyalty_Score']}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                with col2:
+                    # Summary stats
+                    st.markdown("### 📊 Loyalty Stats")
+                    
+                    # Most loyal manager
+                    manager_loyalty = loyalty_df.groupby('Manager')['Times_Drafted'].sum().sort_values(ascending=False)
+                    if len(manager_loyalty) > 0:
+                        st.metric("Loyalster Manager", manager_loyalty.index[0], f"{manager_loyalty.iloc[0]} Total Drafts")
+                    
+                    # Most drafted player
+                    player_popularity = loyalty_df.groupby('Player')['Times_Drafted'].sum().sort_values(ascending=False)
+                    if len(player_popularity) > 0:
+                        st.metric("Beliebtester Spieler", player_popularity.index[0], f"{player_popularity.iloc[0]}x gedraftet")
+                    
+                    # Average loyalty
+                    avg_loyalty = loyalty_df['Times_Drafted'].mean()
+                    st.metric("Ø Loyalty", f"{avg_loyalty:.1f} Drafts")
+                
+                # Full loyalty table
+                st.markdown("### 📋 Vollständige Loyalty-Tabelle")
+                
+                # Style the loyalty table
+                def highlight_loyalty_score(val):
+                    if pd.isna(val):
+                        return ""
+                    if val >= 15:
+                        return "background-color: rgba(138, 43, 226, 0.4);"  # Purple for high loyalty
+                    elif val >= 10:
+                        return "background-color: rgba(138, 43, 226, 0.25);"
+                    elif val >= 5:
+                        return "background-color: rgba(138, 43, 226, 0.15);"
+                    else:
+                        return "background-color: rgba(138, 43, 226, 0.05);"
+                
+                styled_loyalty = loyalty_df.style.applymap(
+                    highlight_loyalty_score, 
+                    subset=['Loyalty_Score']
+                )
+                
+                st.dataframe(
+                    styled_loyalty,
+                    column_config={
+                        "Manager": "Manager",
+                        "Player": "Player",
+                        "Times_Drafted": "Anzahl Drafts",
+                        "Years": "Jahre",
+                        "Avg_Draft_Round": "Ø Draft Runde",
+                        "Loyalty_Score": "Loyalty Score"
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
+                
+                # Loyalty visualization
+                fig = px.treemap(
+                    loyalty_df.head(20),
+                    path=['Manager', 'Player'],
+                    values='Times_Drafted',
+                    color='Loyalty_Score',
+                    color_continuous_scale='Viridis',
+                    title='Manager-Player Loyalty Map (Top 20)'
+                )
+                fig.update_layout(height=500)
+                st.plotly_chart(fig, use_container_width=True)
+                
+            else:
                 st.info("Keine Loyalty-Daten verfügbar. Diese Feature benötigt detaillierte Spieler-Draft-Daten.")
                 st.markdown("""
                 **Hinweis:** Für vollständige Player Analysis werden folgende Daten in deinem Google Sheet benötigt:
