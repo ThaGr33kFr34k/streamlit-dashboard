@@ -635,8 +635,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     for col in ['Season', 'Year', 'season', 'year']:
         if col in drafts_df.columns:
             season_col = col
-            st.write(f"DEBUG - Verwende {col} als Season-Spalte")
-            st.write(f"DEBUG - {col} unique values: {sorted(drafts_df[col].unique())}")
             break
     
     if season_col is None:
