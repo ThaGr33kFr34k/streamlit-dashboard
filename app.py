@@ -690,10 +690,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     
     # Mappe TeamID zu Manager Namen (jahr-spezifisch)
     if teams_df is not None and not teams_df.empty:
-        # DEBUG: Zeige teams_df Struktur
-        st.write("DEBUG - teams_df Spalten:", teams_df.columns.tolist())
-        st.write("DEBUG - teams_df erste 5 Zeilen:")
-        st.dataframe(teams_df.head())
         
         # Erstelle jahr-spezifisches Team-Mapping
         manager_col = None
@@ -717,9 +713,7 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
         if teams_season_col is None:
             st.error("Keine Season/Year Spalte in teams_df gefunden für jahr-spezifisches Mapping!")
             return None
-        
-        st.write(f"DEBUG - Verwende {season_col} aus drafts_df und {teams_season_col} aus teams_df für Mapping")
-        
+                
         # Merge um Manager-Namen für jede Draft-Zeile zu bekommen
         drafts_with_managers = drafts_df.merge(
             teams_df[['TeamID', teams_season_col, manager_col]], 
@@ -727,9 +721,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
             right_on=['TeamID', teams_season_col], 
             how='left'
         )
-        
-        st.write("DEBUG - Nach Manager-Merge:")
-        st.write(f"Ursprünglich {len(drafts_df)} Zeilen, nach Merge {len(drafts_with_managers)} Zeilen")
         
         # Überprüfe auf fehlende Manager-Zuordnungen
         missing_managers = drafts_with_managers[manager_col].isna().sum()
@@ -808,13 +799,6 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     
     # Bereinige NaN/None Werte für Treemap
     loyalty_combinations = loyalty_combinations.dropna(subset=['Manager', 'Player'])
-    
-    # Prüfe auf problematische Werte für Treemap
-    st.write("DEBUG - Treemap Daten Check:")
-    st.write(f"Manager NaN count: {loyalty_combinations['Manager'].isna().sum()}")
-    st.write(f"Player NaN count: {loyalty_combinations['Player'].isna().sum()}")
-    st.write(f"Times_Drafted NaN count: {loyalty_combinations['Times_Drafted'].isna().sum()}")
-    st.write(f"Loyalty_Score NaN count: {loyalty_combinations['Loyalty_Score'].isna().sum()}")
     
     return loyalty_combinations
     
