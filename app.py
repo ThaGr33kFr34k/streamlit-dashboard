@@ -1734,13 +1734,13 @@ def main():
             
             # Farben für jede Kategorie definieren
             stat_colors = {
-                'Points': '#FF6B6B',         # Rot
-                'Rebounds': '#4B0082',       # Dunkelviolett
-                'Assists': '#45B7D1',       # Blau
-                'Steals': '#96CEB4',        # Grün
-                'Blocks': '#FF00FF',        # Magenta
-                '3PM': '#FFA500',           # Lila
-                'Turnovers': '#FFA07A',     # Lachs/Orange
+                'Points': '#FF6B6B',        # Rot
+                'Rebounds': '#4B0082',      # Dunkelviolett
+                'Assists': '#8B008B',       # Dunkelmagenta
+                'Steals': '#00008B',        # Dunkelblau
+                'Blocks': '#2F4F4F',        # Dunkelgrau
+                '3PM': '#8B0000',           # Dunkelrot
+                'Turnovers': '#008B8B',     # DunkelCyan
                 'FG%': '#5C4033',           # Dunkelbraun
                 'FT%': '#556B2F'            # Olivgruen
             }
