@@ -1747,7 +1747,7 @@ def main():
 
             with tab1:
                 st.subheader("Career Averages")
-                st.markdown("Alle Stats gerechnet auf die Anzahl der gespielten Saisons. Dies gibt eine realistische Darstellung der Stärken/Schwächen. Manager, die schon länger dabei sind haben keinen Vorteil in der Auswertung.\Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
+                st.markdown("Alle Stats gerechnet auf die Anzahl der gespielten Saisons. Dies gibt eine realistische Darstellung der Stärken/Schwächen. Manager, die schon länger dabei sind haben keinen Vorteil in der Auswertung.  Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
 
                 # Zähle die Anzahl der gespielten Jahre pro Manager/Team
                 years_played = filtered_categories_df.groupby(groupby_column)['Saison'].nunique().rename("Years Played")
@@ -1836,7 +1836,7 @@ def main():
 
             with tab2:
                 st.subheader("All-Time Stat Leaders")
-                st.markdown("Alle Statistiken seit Anbeginn der Domination League zu einer Summe addiert. Manager, die schon länger dabei sind haben logischerweise einen Vorteil in der Auswertung, da sie mehr Jahre hatten, um Stats zu sammeln.\Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
+                st.markdown("Alle Statistiken seit Anbeginn der Domination League zu einer Summe addiert. Manager, die schon länger dabei sind haben logischerweise einen Vorteil in der Auswertung, da sie mehr Jahre hatten, um Stats zu sammeln.  Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
 
                 agg_funcs = {stat: 'sum' for stat in raw_stats}
                 agg_funcs.update({stat: 'mean' for stat in percentage_stats})
