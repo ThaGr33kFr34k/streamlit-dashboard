@@ -1673,16 +1673,16 @@ def main():
                 st.plotly_chart(fig, use_container_width=True)
                 
             else:
-            st.info("Keine Loyalty-Daten verfügbar. Diese Feature benötigt detaillierte Spieler-Draft-Daten.")
-            st.markdown("""
-            **Hinweis:** Für vollständige Player Analysis werden folgende Daten in deinem Google Sheet benötigt:
+                st.info("Keine Loyalty-Daten verfügbar. Diese Feature benötigt detaillierte Spieler-Draft-Daten.")
+                st.markdown("""
+                **Hinweis:** Für vollständige Player Analysis werden folgende Daten in deinem Google Sheet benötigt:
             
-            - **mDrafts Sheet:** Spielernamen für jeden Draft Pick
-            - **Team Rosters:** Welche Spieler in welchen Teams waren
-            - **Season Results:** Verknüpfung von Spielern zu Championship/Finals Teams
+                - **mDrafts Sheet:** Spielernamen für jeden Draft Pick
+                - **Team Rosters:** Welche Spieler in welchen Teams waren
+                - **Season Results:** Verknüpfung von Spielern zu Championship/Finals Teams
             
-            Sobald diese Daten verfügbar sind, werden hier automatisch echte Insights angezeigt!
-            """)
+                Sobald diese Daten verfügbar sind, werden hier automatisch echte Insights angezeigt!
+                """)
 
     elif analysis_type == "📊 Categories":
         st.header("Statistik-Kategorien")
