@@ -1690,7 +1690,7 @@ def main():
         # Überprüfe, ob die Daten geladen wurden
         if categories_df is not None and not categories_df.empty:
             
-            # Filtere Turnovers = 0 aus den Daten heraus
+            # Filtere alle Zeilen heraus, die Turnovers = 0 haben
             filtered_categories_df = categories_df[categories_df['Turnovers'] != 0].copy()
             
             # Manager-Mapping aus categories_df erstellen (falls vorhanden)
@@ -1714,10 +1714,23 @@ def main():
             tab1, tab2 = st.tabs(["📈 Career Averages", "🥇 All-Time Stat Leaders"])
         
             # Statistische Berechnungen
-            # Definiere die Spalten für Rohdaten und Prozentwerte
+            # Definiere die Spalten für Rohdaten und Prozentwerte mit Emojis
             raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', '3PM', 'Turnovers']
             percentage_stats = ['FG%', 'FT%']
             stats_to_plot = raw_stats + percentage_stats
+            
+            # Emojis für jede Kategorie
+            stat_emojis = {
+                'Points': '🗑️',
+                'Rebounds': '🙌',
+                'Assists': '🤝✨',
+                'Steals': '🥷',
+                'Blocks': '☝🏽🚫',
+                '3PM': '👌',
+                'Turnovers': '🔄',
+                'FG%': '🎯',
+                'FT%': '💯'
+            }
             
             # Farben für jede Kategorie definieren
             stat_colors = {
@@ -1734,7 +1747,7 @@ def main():
 
             with tab1:
                 st.subheader("Career Averages")
-                st.markdown("Kumulierte Stats gerechnet auf die Anzahl der gespielten Saisons. Dies gibt eine realistische Darstellung der Stärken/Schwächen. Manager, die schon länger dabei sind haben keinen Vorteil in der Auswertung. Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
+                st.markdown("Durchschnittliche Statistiken pro Jahr.")
 
                 # Zähle die Anzahl der gespielten Jahre pro Manager/Team
                 years_played = filtered_categories_df.groupby(groupby_column)['Saison'].nunique().rename("Years Played")
@@ -1755,7 +1768,8 @@ def main():
 
                 # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
                 for stat in stats_to_plot:
-                    ascending_sort = (stat == 'Turnovers')
+                    # Turnovers wird aufsteigend (klein nach groß) sortiert, alle anderen absteigend
+                    ascending_sort = True if stat == 'Turnovers' else False
                     sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)
                     
                     # Formatiere Prozentwerte für die Anzeige
@@ -1764,12 +1778,14 @@ def main():
                         display_stats[stat] = (display_stats[stat] * 100).round(1)
                         x_format = '.1f'
                         x_suffix = '%'
+                        text_values = [f"{val:.1f}%" for val in display_stats[stat]]
                     else:
                         display_stats = sorted_stats
                         x_format = 'd'
                         x_suffix = ''
+                        text_values = [f"{int(val)}" for val in display_stats[stat]]
                 
-                    title = f"Top 10 - Career Average {stat}"
+                    title = f"Top 10 - Career Average {stat_emojis[stat]} {stat}"
 
                     fig = px.bar(
                         display_stats,
@@ -1777,17 +1793,21 @@ def main():
                         x=stat,
                         orientation='h',
                         title=title,
-                        color_discrete_sequence=[stat_colors[stat]]
+                        color_discrete_sequence=[stat_colors[stat]],
+                        text=text_values
                     )
                     fig.update_layout(
-                        yaxis={'categoryorder': 'total ascending'},
-                        xaxis_title=f"{stat}{x_suffix}",
+                        yaxis={'categoryorder': 'total ascending' if not ascending_sort else 'total descending'},
+                        xaxis_title=f"{stat_emojis[stat]} {stat}{x_suffix}",
                         yaxis_title="Manager" if groupby_column == 'Manager' else "Team Name"
                     )
                     
                     # Formatiere x-Achsen Labels für Prozentwerte
                     if stat in percentage_stats:
                         fig.update_xaxes(tickformat='.1f', ticksuffix='%')
+                    
+                    # Text innerhalb der Balken positionieren
+                    fig.update_traces(textposition='inside', textfont_size=12, textfont_color='white')
                     
                     st.plotly_chart(fig, use_container_width=True)
 
@@ -1802,7 +1822,7 @@ def main():
                 )
             
                 # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
-                ascending_sort = (selected_category == 'Turnovers')
+                ascending_sort = True if selected_category == 'Turnovers' else False
                 filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
                 
                 # Erstelle eine Kopie für die Anzeige mit formatierten Prozentwerten
@@ -1825,7 +1845,8 @@ def main():
 
                 # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
                 for stat in stats_to_plot:
-                    ascending_sort = (stat == 'Turnovers')
+                    # Turnovers wird aufsteigend (klein nach groß) sortiert, alle anderen absteigend
+                    ascending_sort = True if stat == 'Turnovers' else False
                     sorted_stats = all_time_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
                     
                     # Formatiere Prozentwerte für die Anzeige
@@ -1834,12 +1855,14 @@ def main():
                         display_stats[stat] = (display_stats[stat] * 100).round(1)
                         x_format = '.1f'
                         x_suffix = '%'
+                        text_values = [f"{val:.1f}%" for val in display_stats[stat]]
                     else:
                         display_stats = sorted_stats
                         x_format = 'd'
                         x_suffix = ''
+                        text_values = [f"{int(val)}" for val in display_stats[stat]]
                 
-                    title = f"Top 10 - All-Time {stat}"
+                    title = f"Top 10 - All-Time {stat_emojis[stat]} {stat}"
 
                     fig = px.bar(
                         display_stats,
@@ -1847,17 +1870,21 @@ def main():
                         x=stat,
                         orientation='h',
                         title=title,
-                        color_discrete_sequence=[stat_colors[stat]]
+                        color_discrete_sequence=[stat_colors[stat]],
+                        text=text_values
                     )
                     fig.update_layout(
-                        yaxis={'categoryorder': 'total ascending'},
-                        xaxis_title=f"{stat}{x_suffix}",
+                        yaxis={'categoryorder': 'total ascending' if not ascending_sort else 'total descending'},
+                        xaxis_title=f"{stat_emojis[stat]} {stat}{x_suffix}",
                         yaxis_title="Manager" if groupby_column == 'Manager' else "Team Name"
                     )
                     
                     # Formatiere x-Achsen Labels für Prozentwerte
                     if stat in percentage_stats:
                         fig.update_xaxes(tickformat='.1f', ticksuffix='%')
+                    
+                    # Text innerhalb der Balken positionieren
+                    fig.update_traces(textposition='inside', textfont_size=12, textfont_color='white')
                     
                     st.plotly_chart(fig, use_container_width=True)
 
@@ -1872,7 +1899,7 @@ def main():
                 )
             
                 # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
-                ascending_sort = (selected_category == 'Turnovers')
+                ascending_sort = True if selected_category == 'Turnovers' else False
                 filtered_table = all_time_stats.sort_values(by=selected_category, ascending=ascending_sort)
                 
                 # Erstelle eine Kopie für die Anzeige mit formatierten Prozentwerten
