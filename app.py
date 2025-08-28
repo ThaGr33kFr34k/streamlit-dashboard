@@ -1706,7 +1706,7 @@ def main():
             agg_funcs = {stat: 'sum' for stat in raw_stats}
             agg_funcs.update({stat: 'mean' for stat in percentage_stats})
         
-            all_time_stats = categories_df.groupby('Team').agg(agg_funcs)
+            all_time_stats = categories_df.groupby('TeamID').agg(agg_funcs)
 
             # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
             for stat in stats_to_plot:
@@ -1750,16 +1750,16 @@ def main():
             st.markdown("Durchschnittliche Statistiken pro Jahr, absteigend sortiert nach Punkten.")
 
             # Zähle die Anzahl der gespielten Jahre pro Team
-            years_played = categories_df.groupby('Team')['Saison'].nunique().rename("Years Played")
+            years_played = categories_df.groupby('TeamID')['Saison'].nunique().rename("Years Played")
 
             # Berechne die Summen der Rohwerte
-            raw_stats_sums = categories_df.groupby('Team')[raw_stats].sum()
+            raw_stats_sums = categories_df.groupby('TeamID')[raw_stats].sum()
 
             # Berechne die Durchschnittswerte pro Jahr
             career_averages = raw_stats_sums.div(years_played, axis=0)
 
             # Füge die Prozentwerte hinzu (die Berechnung ist dieselbe wie im ersten Tab)
-            percentage_averages = categories_df.groupby('Team')[percentage_stats].mean()
+            percentage_averages = categories_df.groupby('TeamID')[percentage_stats].mean()
             career_averages = pd.concat([career_averages, percentage_averages], axis=1)
 
             # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
