@@ -1690,8 +1690,8 @@ def main():
         # Überprüfe, ob die Daten geladen wurden
         if categories_df is not None and not categories_df.empty:
         
-        # Tabs für die zwei Ansichten erstellen
-        tab1, tab2 = st.tabs(["🥇 All-Time Stat Leaders", "📈 Career Averages"])
+            # Tabs für die zwei Ansichten erstellen
+            tab1, tab2 = st.tabs(["🥇 All-Time Stat Leaders", "📈 Career Averages"])
         
         # Statistische Berechnungen
         # Definiere die Spalten für Rohdaten und Prozentwerte
@@ -1809,9 +1809,9 @@ def main():
             # Zeige die gefilterte Tabelle an
             st.dataframe(filtered_table, use_container_width=True)
             
-    else:
-        st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
-        st.info("Bitte überprüfen Sie die Datenquelle und die URL in der `load_categories_data`-Funktion.")
+        else:
+            st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
+            st.info("Bitte überprüfen Sie die Datenquelle und die URL in der `load_categories_data`-Funktion.")
 
 if __name__ == "__main__":
     main()
