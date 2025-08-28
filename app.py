@@ -1735,19 +1735,19 @@ def main():
             # Farben für jede Kategorie definieren
             stat_colors = {
                 'Points': '#FF6B6B',         # Rot
-                'Rebounds': '#4ECDC4',       # Türkis
+                'Rebounds': '#4B0082',       # Dunkelviolett
                 'Assists': '#45B7D1',       # Blau
                 'Steals': '#96CEB4',        # Grün
-                'Blocks': '#FFEAA7',        # Gelb
-                '3PM': '#DDA0DD',           # Lila
+                'Blocks': '#FF00FF',        # Magenta
+                '3PM': '#FFA500',           # Lila
                 'Turnovers': '#FFA07A',     # Lachs/Orange
-                'FG%': '#98D8E8',           # Hellblau
-                'FT%': '#F7DC6F'            # Gold
+                'FG%': '#5C4033',           # Dunkelbraun
+                'FT%': '#556B2F'            # Olivgruen
             }
 
             with tab1:
                 st.subheader("Career Averages")
-                st.markdown("Durchschnittliche Statistiken pro Jahr.")
+                st.markdown("Alle Stats gerechnet auf die Anzahl der gespielten Saisons. Dies gibt eine realistische Darstellung der Stärken/Schwächen. Manager, die schon länger dabei sind haben keinen Vorteil in der Auswertung.\Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
 
                 # Zähle die Anzahl der gespielten Jahre pro Manager/Team
                 years_played = filtered_categories_df.groupby(groupby_column)['Saison'].nunique().rename("Years Played")
@@ -1836,7 +1836,7 @@ def main():
 
             with tab2:
                 st.subheader("All-Time Stat Leaders")
-                st.markdown("Alle Statistiken seit Anbeginn der Domination League zu einer Summe addiert. Manager, die schon länger dabei sind haben logischerweise einen Vorteil in der Auswertung, da sie mehr Jahre hatten, um Stats zu sammeln. Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
+                st.markdown("Alle Statistiken seit Anbeginn der Domination League zu einer Summe addiert. Manager, die schon länger dabei sind haben logischerweise einen Vorteil in der Auswertung, da sie mehr Jahre hatten, um Stats zu sammeln.\Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
 
                 agg_funcs = {stat: 'sum' for stat in raw_stats}
                 agg_funcs.update({stat: 'mean' for stat in percentage_stats})
