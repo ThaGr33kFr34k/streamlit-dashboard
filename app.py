@@ -1685,10 +1685,10 @@ def main():
                 """)
 
     elif analysis_type == "📊 Categories":
-    st.header("Statistik-Kategorien")
+        st.header("Statistik-Kategorien")
     
-    # Überprüfe, ob die Daten geladen wurden
-    if categories_df is not None and not categories_df.empty:
+        # Überprüfe, ob die Daten geladen wurden
+        if categories_df is not None and not categories_df.empty:
         
         # Tabs für die zwei Ansichten erstellen
         tab1, tab2 = st.tabs(["🥇 All-Time Stat Leaders", "📈 Career Averages"])
@@ -1700,50 +1700,50 @@ def main():
         all_stats = raw_stats + percentage_stats
 
         with tab1:
-    st.subheader("All-Time Stat Leaders")
-    st.markdown("Summierte Statistiken über alle Saisons.")
+            st.subheader("All-Time Stat Leaders")
+            st.markdown("Summierte Statistiken über alle Saisons.")
 
-    # Berechne die Summe der Rohwerte und den Durchschnitt der Prozentwerte
-    raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', '3PM', 'Turnovers']
-    percentage_stats = ['FG%', 'FT%']
-    stats_to_plot = raw_stats + percentage_stats
+            # Berechne die Summe der Rohwerte und den Durchschnitt der Prozentwerte
+            raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', '3PM', 'Turnovers']
+            percentage_stats = ['FG%', 'FT%']
+            stats_to_plot = raw_stats + percentage_stats
 
-    agg_funcs = {stat: 'sum' for stat in raw_stats}
-    agg_funcs.update({stat: 'mean' for stat in percentage_stats})
+            agg_funcs = {stat: 'sum' for stat in raw_stats}
+            agg_funcs.update({stat: 'mean' for stat in percentage_stats})
     
-    all_time_stats = categories_df.groupby('Team').agg(agg_funcs)
+            all_time_stats = categories_df.groupby('Team').agg(agg_funcs)
 
-    # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
-    for stat in stats_to_plot:
-        ascending_sort = (stat == 'Turnovers')
-        sorted_stats = all_time_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
+            # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
+            for stat in stats_to_plot:
+                ascending_sort = (stat == 'Turnovers')
+                sorted_stats = all_time_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
         
-        title = f"Top 10 - All-Time {stat}"
+                title = f"Top 10 - All-Time {stat}"
 
-        fig = px.bar(
-            sorted_stats,
-            y=sorted_stats.index,
-            x=stat,
-            orientation='h',
-            title=title
-        )
-        fig.update_layout(
-            yaxis={'categoryorder': 'total ascending'},
-            xaxis_title=stat,
-            yaxis_title="Team Name"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+                fig = px.bar(
+                    sorted_stats,
+                    y=sorted_stats.index,
+                    x=stat,
+                    orientation='h',
+                    title=title
+                )
+                fig.update_layout(
+                    yaxis={'categoryorder': 'total ascending'},
+                    xaxis_title=stat,
+                    yaxis_title="Team Name"
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-    # --- NEU: Dynamische Tabelle für alle Manager ---
+            # --- NEU: Dynamische Tabelle für alle Manager ---
     st.subheader("Vollständige Tabelle aller Manager")
     
-    # Dropdown-Menü, um die Kategorie auszuwählen
+            # Dropdown-Menü, um die Kategorie auszuwählen
     selected_category = st.selectbox(
         "Wählen Sie eine Kategorie:",
         options=stats_to_plot
     )
     
-    # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
+            # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
     ascending_sort = (selected_category == 'Turnovers')
     filtered_table = all_time_stats.sort_values(by=selected_category, ascending=ascending_sort)
 
@@ -1751,63 +1751,63 @@ def main():
     st.dataframe(filtered_table, use_container_width=True)
 
         with tab2:
-    st.subheader("Career Averages")
-    st.markdown("Durchschnittliche Statistiken pro Jahr, absteigend sortiert nach Punkten.")
+            st.subheader("Career Averages")
+            st.markdown("Durchschnittliche Statistiken pro Jahr, absteigend sortiert nach Punkten.")
 
-    # Zähle die Anzahl der gespielten Jahre pro Team
-    years_played = categories_df.groupby('Team')['Saison'].nunique().rename("Years Played")
+            # Zähle die Anzahl der gespielten Jahre pro Team
+            years_played = categories_df.groupby('Team')['Saison'].nunique().rename("Years Played")
 
-    # Berechne die Summen der Rohwerte
-    raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', '3PM', 'Turnovers']
-    percentage_stats = ['FG%', 'FT%']
-    stats_to_plot = raw_stats + percentage_stats
+            # Berechne die Summen der Rohwerte
+            raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', '3PM', 'Turnovers']
+            percentage_stats = ['FG%', 'FT%']
+            stats_to_plot = raw_stats + percentage_stats
     
-    raw_stats_sums = categories_df.groupby('Team')[raw_stats].sum()
+            raw_stats_sums = categories_df.groupby('Team')[raw_stats].sum()
 
-    # Berechne die Durchschnittswerte pro Jahr
-    career_averages = raw_stats_sums.div(years_played, axis=0)
+            # Berechne die Durchschnittswerte pro Jahr
+            career_averages = raw_stats_sums.div(years_played, axis=0)
 
-    # Füge die Prozentwerte hinzu (die Berechnung ist dieselbe wie im ersten Tab)
-    percentage_averages = categories_df.groupby('Team')[percentage_stats].mean()
-    career_averages = pd.concat([career_averages, percentage_averages], axis=1)
+            # Füge die Prozentwerte hinzu (die Berechnung ist dieselbe wie im ersten Tab)
+            percentage_averages = categories_df.groupby('Team')[percentage_stats].mean()
+            career_averages = pd.concat([career_averages, percentage_averages], axis=1)
 
-    # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
-    for stat in stats_to_plot:
-        ascending_sort = (stat == 'Turnovers')
-        sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)
+            # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
+            for stat in stats_to_plot:
+                ascending_sort = (stat == 'Turnovers')
+                sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)
         
-        title = f"Top 10 - Career Average {stat}"
+                title = f"Top 10 - Career Average {stat}"
 
-        fig = px.bar(
-            sorted_stats,
-            y=sorted_stats.index,
-            x=stat,
-            orientation='h',
-            title=title
-        )
-        fig.update_layout(
-            yaxis={'categoryorder': 'total ascending'},
-            xaxis_title=stat,
-            yaxis_title="Team Name"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+                fig = px.bar(
+                    sorted_stats,
+                    y=sorted_stats.index,
+                    x=stat,
+                    orientation='h',
+                    title=title
+                )
+                fig.update_layout(
+                    yaxis={'categoryorder': 'total ascending'},
+                    xaxis_title=stat,
+                    yaxis_title="Team Name"
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-    # --- NEU: Dynamische Tabelle für alle Manager ---
-    st.subheader("Vollständige Tabelle aller Manager")
+            # --- NEU: Dynamische Tabelle für alle Manager ---
+                st.subheader("Vollständige Tabelle aller Manager")
     
-    # Dropdown-Menü, um die Kategorie auszuwählen
-    selected_category = st.selectbox(
-        "Wählen Sie eine Kategorie:",
-        options=stats_to_plot,
-        key="tab2_selectbox"  # Wichtig: Eindeutigen Key hinzufügen
-    )
+            # Dropdown-Menü, um die Kategorie auszuwählen
+            selected_category = st.selectbox(
+                "Wählen Sie eine Kategorie:",
+                options=stats_to_plot,
+                key="tab2_selectbox"  # Wichtig: Eindeutigen Key hinzufügen
+            )
     
-    # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
-    ascending_sort = (selected_category == 'Turnovers')
-    filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
+            # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
+            ascending_sort = (selected_category == 'Turnovers')
+            filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
 
-    # Zeige die gefilterte Tabelle an
-    st.dataframe(filtered_table, use_container_width=True)
+            # Zeige die gefilterte Tabelle an
+            st.dataframe(filtered_table, use_container_width=True)
             
     else:
         st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
