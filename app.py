@@ -1672,7 +1672,7 @@ def main():
                 fig.update_layout(height=500)
                 st.plotly_chart(fig, use_container_width=True)
                 
-        else:
+            else:
             st.info("Keine Loyalty-Daten verfügbar. Diese Feature benötigt detaillierte Spieler-Draft-Daten.")
             st.markdown("""
             **Hinweis:** Für vollständige Player Analysis werden folgende Daten in deinem Google Sheet benötigt:
