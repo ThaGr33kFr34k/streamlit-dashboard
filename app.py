@@ -1684,29 +1684,27 @@ def main():
                 Sobald diese Daten verfügbar sind, werden hier automatisch echte Insights angezeigt!
                 """)
 
-    elif analysis_type == "📊 Categories":
+elif analysis_type == "📊 Categories":
         st.header("Statistik-Kategorien")
     
         # Überprüfe, ob die Daten geladen wurden
         if categories_df is not None and not categories_df.empty:
             
-            # Manager-Mapping aus categories_df erstellen (falls vorhanden)
-            # Annahme: categories_df hat bereits eine 'Manager' Spalte oder wir nutzen das existing mapping
+            # Filtere Turnovers = 0 aus den Daten heraus
+            filtered_categories_df = categories_df[categories_df['Turnovers'] != 0].copy()
             
-            # Falls categories_df noch TeamID hat, aber Manager-Namen benötigt werden:
-            # Erstelle ein vereinfachtes Mapping von TeamID zu Manager Name
-            if 'Manager' not in categories_df.columns and team_mapping:
+            # Manager-Mapping aus categories_df erstellen (falls vorhanden)
+            if 'Manager' not in filtered_categories_df.columns and 'team_mapping' in locals():
                 # Erstelle ein Mapping von TeamID zu dem häufigsten Manager-Namen für dieses Team
                 teamid_to_manager = {}
                 for (team_id, year), manager in team_mapping.items():
                     if team_id not in teamid_to_manager:
                         teamid_to_manager[team_id] = manager
-                    # Optional: Könnte auch den häufigsten Namen nehmen, wenn ein Team mehrere Manager hatte
                 
                 # Füge Manager-Spalte hinzu
-                categories_df['Manager'] = categories_df['TeamID'].map(teamid_to_manager)
+                filtered_categories_df['Manager'] = filtered_categories_df['TeamID'].map(teamid_to_manager)
                 groupby_column = 'Manager'
-            elif 'Manager' in categories_df.columns:
+            elif 'Manager' in filtered_categories_df.columns:
                 groupby_column = 'Manager'
             else:
                 # Fallback auf TeamID, falls kein Mapping verfügbar
@@ -1720,61 +1718,101 @@ def main():
             raw_stats = ['Points', 'Rebounds', 'Assists', 'Steals', 'Blocks', '3PM', 'Turnovers']
             percentage_stats = ['FG%', 'FT%']
             stats_to_plot = raw_stats + percentage_stats
+            
+            # Farben für jede Kategorie definieren
+            stat_colors = {
+                'Points': '#FF6B6B',         # Rot
+                'Rebounds': '#4ECDC4',       # Türkis
+                'Assists': '#45B7D1',       # Blau
+                'Steals': '#96CEB4',        # Grün
+                'Blocks': '#FFEAA7',        # Gelb
+                '3PM': '#DDA0DD',           # Lila
+                'Turnovers': '#FFA07A',     # Lachs/Orange
+                'FG%': '#98D8E8',           # Hellblau
+                'FT%': '#F7DC6F'            # Gold
+            }
 
             with tab1:
                 st.subheader("Career Averages")
                 st.markdown("Kumulierte Stats gerechnet auf die Anzahl der gespielten Saisons. Dies gibt eine realistische Darstellung der Stärken/Schwächen. Manager, die schon länger dabei sind haben keinen Vorteil in der Auswertung. Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
 
                 # Zähle die Anzahl der gespielten Jahre pro Manager/Team
-                years_played = categories_df.groupby(groupby_column)['Saison'].nunique().rename("Years Played")
+                years_played = filtered_categories_df.groupby(groupby_column)['Saison'].nunique().rename("Years Played")
 
                 # Berechne die Summen der Rohwerte
-                raw_stats_sums = categories_df.groupby(groupby_column)[raw_stats].sum()
+                raw_stats_sums = filtered_categories_df.groupby(groupby_column)[raw_stats].sum()
 
                 # Berechne die Durchschnittswerte pro Jahr
                 career_averages = raw_stats_sums.div(years_played, axis=0)
 
                 # Füge die Prozentwerte hinzu (die Berechnung ist dieselbe wie im ersten Tab)
-                percentage_averages = categories_df.groupby(groupby_column)[percentage_stats].mean()
+                percentage_averages = filtered_categories_df.groupby(groupby_column)[percentage_stats].mean()
                 career_averages = pd.concat([career_averages, percentage_averages], axis=1)
+                
+                # Runde die Rohwerte auf ganze Zahlen, lasse Prozentwerte als Dezimalzahlen
+                for stat in raw_stats:
+                    career_averages[stat] = career_averages[stat].round(0).astype(int)
 
                 # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
                 for stat in stats_to_plot:
                     ascending_sort = (stat == 'Turnovers')
                     sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)
+                    
+                    # Formatiere Prozentwerte für die Anzeige
+                    if stat in percentage_stats:
+                        display_stats = sorted_stats.copy()
+                        display_stats[stat] = (display_stats[stat] * 100).round(1)
+                        x_format = '.1f'
+                        x_suffix = '%'
+                    else:
+                        display_stats = sorted_stats
+                        x_format = 'd'
+                        x_suffix = ''
                 
                     title = f"Top 10 - Career Average {stat}"
 
                     fig = px.bar(
-                        sorted_stats,
-                        y=sorted_stats.index,
+                        display_stats,
+                        y=display_stats.index,
                         x=stat,
                         orientation='h',
-                        title=title
+                        title=title,
+                        color_discrete_sequence=[stat_colors[stat]]
                     )
                     fig.update_layout(
                         yaxis={'categoryorder': 'total ascending'},
-                        xaxis_title=stat,
+                        xaxis_title=f"{stat}{x_suffix}",
                         yaxis_title="Manager" if groupby_column == 'Manager' else "Team Name"
                     )
+                    
+                    # Formatiere x-Achsen Labels für Prozentwerte
+                    if stat in percentage_stats:
+                        fig.update_xaxes(tickformat='.1f', ticksuffix='%')
+                    
                     st.plotly_chart(fig, use_container_width=True)
 
-                # --- NEU: Dynamische Tabelle für alle Manager ---
+                # --- Dynamische Tabelle für alle Manager ---
                 st.subheader("Vollständige Tabelle aller Manager")
                 
                 # Dropdown-Menü, um die Kategorie auszuwählen
                 selected_category = st.selectbox(
                     "Wählen Sie eine Kategorie:",
                     options=stats_to_plot,
-                    key="tab2_selectbox"  # Wichtig: Eindeutigen Key hinzufügen
+                    key="tab1_selectbox"
                 )
             
                 # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
                 ascending_sort = (selected_category == 'Turnovers')
                 filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
+                
+                # Erstelle eine Kopie für die Anzeige mit formatierten Prozentwerten
+                display_table = filtered_table.copy()
+                for stat in percentage_stats:
+                    if stat in display_table.columns:
+                        display_table[stat] = (display_table[stat] * 100).round(1).astype(str) + '%'
 
                 # Zeige die gefilterte Tabelle an
-                st.dataframe(filtered_table, use_container_width=True)
+                st.dataframe(display_table, use_container_width=True)
 
             with tab2:
                 st.subheader("All-Time Stat Leaders")
@@ -1783,45 +1821,69 @@ def main():
                 agg_funcs = {stat: 'sum' for stat in raw_stats}
                 agg_funcs.update({stat: 'mean' for stat in percentage_stats})
             
-                all_time_stats = categories_df.groupby(groupby_column).agg(agg_funcs)
+                all_time_stats = filtered_categories_df.groupby(groupby_column).agg(agg_funcs)
 
                 # Erstelle für jede Kategorie ein horizontales Balkendiagramm für die Top 10
                 for stat in stats_to_plot:
                     ascending_sort = (stat == 'Turnovers')
                     sorted_stats = all_time_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
+                    
+                    # Formatiere Prozentwerte für die Anzeige
+                    if stat in percentage_stats:
+                        display_stats = sorted_stats.copy()
+                        display_stats[stat] = (display_stats[stat] * 100).round(1)
+                        x_format = '.1f'
+                        x_suffix = '%'
+                    else:
+                        display_stats = sorted_stats
+                        x_format = 'd'
+                        x_suffix = ''
                 
                     title = f"Top 10 - All-Time {stat}"
 
                     fig = px.bar(
-                        sorted_stats,
-                        y=sorted_stats.index,
+                        display_stats,
+                        y=display_stats.index,
                         x=stat,
                         orientation='h',
-                        title=title
+                        title=title,
+                        color_discrete_sequence=[stat_colors[stat]]
                     )
                     fig.update_layout(
                         yaxis={'categoryorder': 'total ascending'},
-                        xaxis_title=stat,
+                        xaxis_title=f"{stat}{x_suffix}",
                         yaxis_title="Manager" if groupby_column == 'Manager' else "Team Name"
                     )
+                    
+                    # Formatiere x-Achsen Labels für Prozentwerte
+                    if stat in percentage_stats:
+                        fig.update_xaxes(tickformat='.1f', ticksuffix='%')
+                    
                     st.plotly_chart(fig, use_container_width=True)
 
-                # --- NEU: Dynamische Tabelle für alle Manager ---
+                # --- Dynamische Tabelle für alle Manager ---
                 st.subheader("Vollständige Tabelle aller Manager")
                 
                 # Dropdown-Menü, um die Kategorie auszuwählen
                 selected_category = st.selectbox(
                     "Wählen Sie eine Kategorie:",
-                    options=stats_to_plot
+                    options=stats_to_plot,
+                    key="tab2_selectbox"
                 )
             
                 # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
                 ascending_sort = (selected_category == 'Turnovers')
                 filtered_table = all_time_stats.sort_values(by=selected_category, ascending=ascending_sort)
+                
+                # Erstelle eine Kopie für die Anzeige mit formatierten Prozentwerten
+                display_table = filtered_table.copy()
+                for stat in percentage_stats:
+                    if stat in display_table.columns:
+                        display_table[stat] = (display_table[stat] * 100).round(1).astype(str) + '%'
 
                 # Zeige die gefilterte Tabelle an
-                st.dataframe(filtered_table, use_container_width=True)
-                
+                st.dataframe(display_table, use_container_width=True)
+
         else:
             st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
             
