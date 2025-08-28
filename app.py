@@ -1699,7 +1699,7 @@ def main():
         percentage_stats = ['FG%', 'FT%']
         all_stats = raw_stats + percentage_stats
 
-        with tab1:
+            with tab1:
             st.subheader("All-Time Stat Leaders")
             st.markdown("Summierte Statistiken über alle Saisons.")
 
@@ -1735,22 +1735,22 @@ def main():
                 st.plotly_chart(fig, use_container_width=True)
 
             # --- NEU: Dynamische Tabelle für alle Manager ---
-    st.subheader("Vollständige Tabelle aller Manager")
+            st.subheader("Vollständige Tabelle aller Manager")
     
             # Dropdown-Menü, um die Kategorie auszuwählen
-    selected_category = st.selectbox(
-        "Wählen Sie eine Kategorie:",
-        options=stats_to_plot
-    )
+            selected_category = st.selectbox(
+            "Wählen Sie eine Kategorie:",
+            options=stats_to_plot
+            )
     
             # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
-    ascending_sort = (selected_category == 'Turnovers')
-    filtered_table = all_time_stats.sort_values(by=selected_category, ascending=ascending_sort)
+            ascending_sort = (selected_category == 'Turnovers')
+            filtered_table = all_time_stats.sort_values(by=selected_category, ascending=ascending_sort)
 
-    # Zeige die gefilterte Tabelle an
-    st.dataframe(filtered_table, use_container_width=True)
+            # Zeige die gefilterte Tabelle an
+            st.dataframe(filtered_table, use_container_width=True)
 
-        with tab2:
+            with tab2:
             st.subheader("Career Averages")
             st.markdown("Durchschnittliche Statistiken pro Jahr, absteigend sortiert nach Punkten.")
 
