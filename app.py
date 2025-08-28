@@ -1684,7 +1684,7 @@ def main():
                 Sobald diese Daten verfügbar sind, werden hier automatisch echte Insights angezeigt!
                 """)
 
-elif analysis_type == "📊 Categories":
+    elif analysis_type == "📊 Categories":
         st.header("Statistik-Kategorien")
     
         # Überprüfe, ob die Daten geladen wurden
