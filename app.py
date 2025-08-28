@@ -1800,7 +1800,7 @@ def main():
             # Zeige die gefilterte Tabelle an
             st.dataframe(filtered_table, use_container_width=True)
 
-        else:
+    else:
         st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
 
 if __name__ == "__main__":
