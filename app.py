@@ -1253,24 +1253,6 @@ def main():
             
             st.plotly_chart(fig, use_container_width=True)
             
-            # Medal statistics
-            st.subheader("📊 Medal Statistics")
-            
-            total_seasons = len(teams_df['Year'].unique())
-            total_possible_medals = total_seasons * 3  # 3 medals per season
-            
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.metric("Total Seasons", total_seasons)
-            with col2:
-                st.metric("Total Gold Medals", medal_table['Gold'].sum())
-            with col3:
-                st.metric("Total Silver Medals", medal_table['Silver'].sum())
-            with col4:
-                st.metric("Total Bronze Medals", medal_table['Bronze'].sum())
-        else:
-            st.error("Could not create medal table.")
     
     elif analysis_type == "🎯 Drafts":
         st.header("Draft Analysis")
