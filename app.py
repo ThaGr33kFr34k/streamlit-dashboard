@@ -984,12 +984,105 @@ def main():
     
     # Initialize session state if not exists
     if 'analysis_type' not in st.session_state:
-        st.session_state.analysis_type = "🥊 Head-to-Head"
+        st.session_state.analysis_type = "👥 Team-View"
     
     analysis_type = st.session_state.analysis_type
     
     # Main content based on selection
-    if analysis_type == "🥊 Head-to-Head":
+    if analysis_type == "👥 Team-View":
+        st.header("Team-View - Manager Dashboard")
+        
+        # Überprüfe, ob die Daten geladen wurden
+        if seasons_df is not None and not seasons_df.empty:
+            
+            # 1. Manager-Dropdown erstellen
+            st.subheader("Manager auswählen")
+            
+            # Erstelle Liste aller einzigartigen Manager-Namen
+            manager_names = sorted(seasons_df['First Name'].dropna().unique())
+            
+            # Manager-Dropdown
+            selected_manager = st.selectbox(
+                "Wählen Sie einen Manager:",
+                options=manager_names,
+                key="team_view_manager_select"
+            )
+            
+            if selected_manager:
+                st.markdown(f"### Dashboard für **{selected_manager}**")
+                
+                # 2. Filtere Daten für den ausgewählten Manager
+                manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
+                
+                if not manager_data.empty:
+                    # 3. Erstelle Tabelle mit den gewünschten Spalten
+                    st.subheader("📈 Saison-Historie")
+                    
+                    # Definiere die gewünschten Spalten
+                    table_columns = [
+                        'Saison', 'Team Name', 'Wins', 'Losses', 'Ties', 
+                        'Win-Percentage %', 'Playoff Seed', 'Final Rank'
+                    ]
+                    
+                    # Überprüfe welche Spalten tatsächlich existieren
+                    available_columns = [col for col in table_columns if col in manager_data.columns]
+                    
+                    if available_columns:
+                        # Erstelle Display-Tabelle mit verfügbaren Spalten
+                        display_table = manager_data[available_columns].copy()
+                        
+                        # Sortiere nach Saison absteigend (neueste zuerst)
+                        if 'Saison' in display_table.columns:
+                            display_table = display_table.sort_values('Saison', ascending=False)
+                        
+                        # Formatiere Win-Percentage als Prozentwert falls vorhanden
+                        if 'Win-Percentage %' in display_table.columns:
+                            # Falls die Werte als Dezimalzahlen vorliegen (0.75 statt 75)
+                            if display_table['Win-Percentage %'].max() <= 1:
+                                display_table['Win-Percentage %'] = (display_table['Win-Percentage %'] * 100).round(1)
+                            display_table['Win-Percentage %'] = display_table['Win-Percentage %'].astype(str) + '%'
+                        
+                        # Zeige die Tabelle an
+                        st.dataframe(display_table, use_container_width=True, hide_index=True)
+                        
+                        # Zusätzliche Statistiken
+                        st.subheader("📊 Zusammenfassung")
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            total_seasons = len(manager_data)
+                            st.metric("Gespielte Saisons", total_seasons)
+                        
+                        with col2:
+                            if 'Wins' in manager_data.columns:
+                                total_wins = manager_data['Wins'].sum()
+                                st.metric("Gesamt Siege", int(total_wins))
+                        
+                        with col3:
+                            if 'Losses' in manager_data.columns:
+                                total_losses = manager_data['Losses'].sum()
+                                st.metric("Gesamt Niederlagen", int(total_losses))
+                        
+                        with col4:
+                            if 'Win-Percentage %' in manager_data.columns and manager_data['Win-Percentage %'].notna().any():
+                                # Berechne durchschnittliche Win-Percentage
+                                avg_win_pct = manager_data['Win-Percentage %'].mean()
+                                if avg_win_pct <= 1:  # Falls als Dezimalzahl
+                                    avg_win_pct *= 100
+                                st.metric("Ø Win-Rate", f"{avg_win_pct:.1f}%")
+                    
+                    else:
+                        st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
+                        st.info("Verfügbare Spalten: " + ", ".join(manager_data.columns.tolist()))
+                
+                else:
+                    st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
+        
+        else:
+            st.warning("Die Seasons-Daten konnten nicht geladen werden.")
+            
+    elif analysis_type == "🥊 Head-to-Head":
         st.header("Head-to-Head Analysis")
         
         managers = sorted(teams_df['First Name'].unique())
@@ -1936,99 +2029,6 @@ def main():
 
         else:
             st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
-            
-    elif analysis_type == "👥 Team-View":
-        st.header("Team-View - Manager Dashboard")
-        
-        # Überprüfe, ob die Daten geladen wurden
-        if seasons_df is not None and not seasons_df.empty:
-            
-            # 1. Manager-Dropdown erstellen
-            st.subheader("Manager auswählen")
-            
-            # Erstelle Liste aller einzigartigen Manager-Namen
-            manager_names = sorted(seasons_df['First Name'].dropna().unique())
-            
-            # Manager-Dropdown
-            selected_manager = st.selectbox(
-                "Wählen Sie einen Manager:",
-                options=manager_names,
-                key="team_view_manager_select"
-            )
-            
-            if selected_manager:
-                st.markdown(f"### Dashboard für **{selected_manager}**")
-                
-                # 2. Filtere Daten für den ausgewählten Manager
-                manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
-                
-                if not manager_data.empty:
-                    # 3. Erstelle Tabelle mit den gewünschten Spalten
-                    st.subheader("📈 Saison-Historie")
-                    
-                    # Definiere die gewünschten Spalten
-                    table_columns = [
-                        'Saison', 'Team Name', 'Wins', 'Losses', 'Ties', 
-                        'Win-Percentage %', 'Playoff Seed', 'Final Rank'
-                    ]
-                    
-                    # Überprüfe welche Spalten tatsächlich existieren
-                    available_columns = [col for col in table_columns if col in manager_data.columns]
-                    
-                    if available_columns:
-                        # Erstelle Display-Tabelle mit verfügbaren Spalten
-                        display_table = manager_data[available_columns].copy()
-                        
-                        # Sortiere nach Saison absteigend (neueste zuerst)
-                        if 'Saison' in display_table.columns:
-                            display_table = display_table.sort_values('Saison', ascending=False)
-                        
-                        # Formatiere Win-Percentage als Prozentwert falls vorhanden
-                        if 'Win-Percentage %' in display_table.columns:
-                            # Falls die Werte als Dezimalzahlen vorliegen (0.75 statt 75)
-                            if display_table['Win-Percentage %'].max() <= 1:
-                                display_table['Win-Percentage %'] = (display_table['Win-Percentage %'] * 100).round(1)
-                            display_table['Win-Percentage %'] = display_table['Win-Percentage %'].astype(str) + '%'
-                        
-                        # Zeige die Tabelle an
-                        st.dataframe(display_table, use_container_width=True, hide_index=True)
-                        
-                        # Zusätzliche Statistiken
-                        st.subheader("📊 Zusammenfassung")
-                        
-                        col1, col2, col3, col4 = st.columns(4)
-                        
-                        with col1:
-                            total_seasons = len(manager_data)
-                            st.metric("Gespielte Saisons", total_seasons)
-                        
-                        with col2:
-                            if 'Wins' in manager_data.columns:
-                                total_wins = manager_data['Wins'].sum()
-                                st.metric("Gesamt Siege", int(total_wins))
-                        
-                        with col3:
-                            if 'Losses' in manager_data.columns:
-                                total_losses = manager_data['Losses'].sum()
-                                st.metric("Gesamt Niederlagen", int(total_losses))
-                        
-                        with col4:
-                            if 'Win-Percentage %' in manager_data.columns and manager_data['Win-Percentage %'].notna().any():
-                                # Berechne durchschnittliche Win-Percentage
-                                avg_win_pct = manager_data['Win-Percentage %'].mean()
-                                if avg_win_pct <= 1:  # Falls als Dezimalzahl
-                                    avg_win_pct *= 100
-                                st.metric("Ø Win-Rate", f"{avg_win_pct:.1f}%")
-                    
-                    else:
-                        st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
-                        st.info("Verfügbare Spalten: " + ", ".join(manager_data.columns.tolist()))
-                
-                else:
-                    st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
-        
-        else:
-            st.warning("Die Seasons-Daten konnten nicht geladen werden.")
             
 if __name__ == "__main__":
     main()
