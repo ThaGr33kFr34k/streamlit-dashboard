@@ -1262,19 +1262,34 @@ def main():
             
             # Create eternal table from seasons_df
             if 'seasons_df' in locals() or 'seasons_df' in globals():
-                # Group by First Name and calculate statistics
-                eternal_stats = seasons_df.groupby('First Name').agg({
-                    'Wins': 'sum',
-                    'Losses': 'sum', 
-                    'Ties': 'sum',
-                    'Season': 'count'  # Count of seasons played
-                }).reset_index()
+                # Debug: Show available columns first
+                st.write("DEBUG - Verfügbare Spalten in seasons_df:")
+                st.write(seasons_df.columns.tolist())
                 
-                # Rename columns for consistency
-                eternal_stats = eternal_stats.rename(columns={
-                    'First Name': 'Manager',
-                    'Season': 'Gespielte Saisons'
-                })
+                # Check if we have the required columns and find alternatives
+                required_cols = ['Wins', 'Losses', 'Ties', 'Season']
+                missing_cols = [col for col in required_cols if col not in seasons_df.columns]
+                
+                if missing_cols:
+                    st.error(f"Fehlende Spalten: {missing_cols}")
+                    st.write("Alle verfügbaren Spalten:", seasons_df.columns.tolist())
+                    # Show first few rows to understand structure
+                    st.write("Erste 3 Zeilen:")
+                    st.write(seasons_df.head(3))
+                else:
+                    # Group by First Name and calculate statistics
+                    eternal_stats = seasons_df.groupby('First Name').agg({
+                        'Wins': 'sum',
+                        'Losses': 'sum', 
+                        'Ties': 'sum',
+                        'Season': 'count'  # Count of seasons played
+                    }).reset_index()
+                    
+                    # Rename columns for consistency
+                    eternal_stats = eternal_stats.rename(columns={
+                        'First Name': 'Manager',
+                        'Season': 'Gespielte Saisons'
+                    })
                 
                 # Rename the Season count column
                 eternal_stats = eternal_stats.rename(columns={'Season': 'Gespielte Saisons'})
