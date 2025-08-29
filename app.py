@@ -965,6 +965,8 @@ def main():
     st.sidebar.title("Navigation")
     
     # Create navigation buttons instead of selectbox
+    if st.sidebar.button("⛹🏽‍♂️ Team-View", use_container_width=True):
+        st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
     if st.sidebar.button("🥊 Head-to-Head", use_container_width=True):
         st.session_state.analysis_type = "🥊 Head-to-Head"
     if st.sidebar.button("🏆 Playoff Performance", use_container_width=True):
