@@ -1863,7 +1863,7 @@ def main():
                     if stat == 'Turnovers':
                         # Filtere Manager mit mindestens 5 gespielten Saisons
                         qualified_managers = years_played[years_played >= 5].index
-                        filtered_stats = career_averages.loc[qualified_managers]
+                        filtered_stats = all_time_stats.loc[qualified_managers]
                         sorted_stats = filtered_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
                     else:
                         sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)                    
