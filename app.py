@@ -1866,7 +1866,7 @@ def main():
                         filtered_stats = all_time_stats.loc[qualified_managers]
                         sorted_stats = filtered_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
                     else:
-                        sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)                    
+                        sorted_stats = all_time_stats.sort_values(by=stat, ascending=ascending_sort).head(10)                    
                   
                     # Formatiere Prozentwerte für die Anzeige
                     if stat in percentage_stats:
