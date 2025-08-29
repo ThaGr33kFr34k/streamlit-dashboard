@@ -1260,15 +1260,15 @@ def main():
         with tab2:
             st.subheader("📊 Ewige Tabelle")
             
-            # Create eternal table from seasons_df
+            # Create eternal table from manager_data
             if 'seasons_df' in locals() or 'seasons_df' in globals():
                 # Debug: Show available columns first
                 st.write("DEBUG - Verfügbare Spalten in seasons_df:")
-                st.write(seasons_df.columns.tolist())
+                st.write(manager_data.columns.tolist())
                 
                 # Check if we have the required columns and find alternatives
                 required_cols = ['Wins', 'Losses', 'Ties', 'Season']
-                missing_cols = [col for col in required_cols if col not in seasons_df.columns]
+                missing_cols = [col for col in required_cols if col not in manager_data.columns]
                 
                 if missing_cols:
                     st.error(f"Fehlende Spalten: {missing_cols}")
