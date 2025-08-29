@@ -1773,6 +1773,15 @@ def main():
                     ascending_sort = True if stat == 'Turnovers' else False
                     sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)
                     
+                    # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
+                    if stat == 'Turnovers':
+                        # Filtere Manager mit mindestens 5 gespielten Saisons
+                        qualified_managers = years_played[years_played >= 5].index
+                        filtered_stats = career_averages.loc[qualified_managers]
+                        sorted_stats = filtered_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
+                    else:
+                        sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)
+                    
                     # Formatiere Prozentwerte für die Anzeige
                     if stat in percentage_stats:
                         display_stats = sorted_stats.copy()
@@ -1849,7 +1858,16 @@ def main():
                     # Turnovers wird aufsteigend (klein nach groß) sortiert, alle anderen absteigend
                     ascending_sort = True if stat == 'Turnovers' else False
                     sorted_stats = all_time_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
-                    
+                   
+                    # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
+                    if stat == 'Turnovers':
+                        # Filtere Manager mit mindestens 5 gespielten Saisons
+                        qualified_managers = years_played[years_played >= 5].index
+                        filtered_stats = career_averages.loc[qualified_managers]
+                        sorted_stats = filtered_stats.sort_values(by=stat, ascending=ascending_sort).head(10)
+                    else:
+                        sorted_stats = career_averages.sort_values(by=stat, ascending=ascending_sort).head(10)                    
+                  
                     # Formatiere Prozentwerte für die Anzeige
                     if stat in percentage_stats:
                         display_stats = sorted_stats.copy()
