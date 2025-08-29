@@ -82,13 +82,15 @@ def load_data():
         matchups_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=652199133"
         drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
         categories_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=987718515"
+        seasons_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=1895764019"
         
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
         drafts_df = pd.read_csv(drafts_url)
         categories_df = pd.read_csv(categories_url)
+        seasons_df = pd.read_csv(seasons_url)
         
-        return teams_df, matchups_df, drafts_df, categories_df
+        return teams_df, matchups_df, drafts_df, categories_df, seasons_df
     
     except (URLError, HTTPError) as e:
         st.error(f"Fehler beim Laden der Daten: {e.reason}")
