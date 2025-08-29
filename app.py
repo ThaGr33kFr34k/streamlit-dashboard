@@ -1196,148 +1196,148 @@ def main():
             st.dataframe(full_styled, use_container_width=True, hide_index=True)
         
     elif analysis_type == "🏅 Medal Overview":
-    st.header("Ewige Tabellen")
+        st.header("Medal Overview")
     
-    # Create tabs
-    tab1, tab2 = st.tabs(["🏆 Medal Table", "📊 Ewige Tabelle"])
-    
-    with tab1:
-        medal_table = create_medal_table(teams_df)
+        # Create tabs
+        tab1, tab2 = st.tabs(["🏆 Medal Table", "📊 Ewige Tabelle"])
         
-        if medal_table is not None:
-            st.subheader("🏆 Medal Table")
+        with tab1:
+            medal_table = create_medal_table(teams_df)
             
-            # Display medal table
-            medal_styled = medal_table.style.applymap(lambda x: "font-weight: bold;", subset=['Manager'])
-            st.dataframe(
-                medal_styled,
-                column_config={
-                    "Rank": "Rank",
-                    "Manager": "Manager",
-                    "Gold": "🥇 Gold",
-                    "Silver": "🥈 Silver", 
-                    "Bronze": "🥉 Bronze",
-                    "Total": "Total"
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-            
-            # Medal visualization
-            fig = go.Figure()
-            
-            fig.add_trace(go.Bar(
-                name='🥇 Gold',
-                x=medal_table['Manager'],
-                y=medal_table['Gold'],
-                marker_color='#FFD700'  # Gold color
-            ))
-            
-            fig.add_trace(go.Bar(
-                name='🥈 Silver',
-                x=medal_table['Manager'],
-                y=medal_table['Silver'],
-                marker_color='#C0C0C0'  # Silver color
-            ))
-            
-            fig.add_trace(go.Bar(
-                name='🥉 Bronze',
-                x=medal_table['Manager'],
-                y=medal_table['Bronze'],
-                marker_color='#CD7F32'  # Bronze color
-            ))
-            
-            fig.update_layout(
-                title='Medal Distribution by Manager',
-                xaxis_title='Manager',
-                yaxis_title='Number of Medals',
-                barmode='stack',
-                height=500
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab2:
-        st.subheader("📊 Ewige Tabelle")
+            if medal_table is not None:
+                st.subheader("🏆 Medal Table")
+                
+                # Display medal table
+                medal_styled = medal_table.style.applymap(lambda x: "font-weight: bold;", subset=['Manager'])
+                st.dataframe(
+                    medal_styled,
+                    column_config={
+                        "Rank": "Rank",
+                        "Manager": "Manager",
+                        "Gold": "🥇 Gold",
+                        "Silver": "🥈 Silver", 
+                        "Bronze": "🥉 Bronze",
+                        "Total": "Total"
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
+                
+                # Medal visualization
+                fig = go.Figure()
+                
+                fig.add_trace(go.Bar(
+                    name='🥇 Gold',
+                    x=medal_table['Manager'],
+                    y=medal_table['Gold'],
+                    marker_color='#FFD700'  # Gold color
+                ))
+                
+                fig.add_trace(go.Bar(
+                    name='🥈 Silver',
+                    x=medal_table['Manager'],
+                    y=medal_table['Silver'],
+                    marker_color='#C0C0C0'  # Silver color
+                ))
+                
+                fig.add_trace(go.Bar(
+                    name='🥉 Bronze',
+                    x=medal_table['Manager'],
+                    y=medal_table['Bronze'],
+                    marker_color='#CD7F32'  # Bronze color
+                ))
+                
+                fig.update_layout(
+                    title='Medal Distribution by Manager',
+                    xaxis_title='Manager',
+                    yaxis_title='Number of Medals',
+                    barmode='stack',
+                    height=500
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
         
-        # Create eternal table from seasons_df
-        if 'seasons_df' in locals() or 'seasons_df' in globals():
-            # Group by Manager and calculate statistics
-            eternal_stats = seasons_df.groupby('Manager').agg({
-                'Wins': 'sum',
-                'Losses': 'sum', 
-                'Ties': 'sum',
-                'Season': 'count'  # Count of seasons played
-            }).reset_index()
+        with tab2:
+            st.subheader("📊 Ewige Tabelle")
             
-            # Rename the Season count column
-            eternal_stats = eternal_stats.rename(columns={'Season': 'Gespielte Saisons'})
-            
-            # Calculate win percentage
-            total_games = eternal_stats['Wins'] + eternal_stats['Losses'] + eternal_stats['Ties']
-            eternal_stats['Win-Percentage %'] = (eternal_stats['Wins'] / total_games * 100).round(2)
-            
-            # Sort by: 1. Most Wins (descending), 2. Highest Win-Percentage (descending)
-            eternal_stats = eternal_stats.sort_values(['Wins', 'Win-Percentage %'], ascending=[False, False])
-            
-            # Add ranking
-            eternal_stats['Ranking'] = range(1, len(eternal_stats) + 1)
-            
-            # Reorder columns
-            eternal_stats = eternal_stats[['Ranking', 'Manager', 'Wins', 'Losses', 'Ties', 'Win-Percentage %', 'Gespielte Saisons']]
-            
-            # Display the eternal table
-            st.dataframe(
-                eternal_stats,
-                column_config={
-                    "Ranking": "Ranking",
-                    "Manager": "Manager",
-                    "Wins": "Wins",
-                    "Losses": "Losses",
-                    "Ties": "Ties", 
-                    "Win-Percentage %": "Win-Percentage %",
-                    "Gespielte Saisons": "Gespielte Saisons"
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-            
-            # Visualization for eternal table
-            fig_eternal = go.Figure()
-            
-            fig_eternal.add_trace(go.Bar(
-                name='Wins',
-                x=eternal_stats['Manager'],
-                y=eternal_stats['Wins'],
-                marker_color='#28a745'  # Green for wins
-            ))
-            
-            fig_eternal.add_trace(go.Bar(
-                name='Losses',
-                x=eternal_stats['Manager'],
-                y=eternal_stats['Losses'],
-                marker_color='#dc3545'  # Red for losses
-            ))
-            
-            fig_eternal.add_trace(go.Bar(
-                name='Ties',
-                x=eternal_stats['Manager'],
-                y=eternal_stats['Ties'],
-                marker_color='#ffc107'  # Yellow for ties
-            ))
-            
-            fig_eternal.update_layout(
-                title='Ewige Tabelle - Wins/Losses/Ties Distribution',
-                xaxis_title='Manager',
-                yaxis_title='Number of Games',
-                barmode='stack',
-                height=500
-            )
-            
-            st.plotly_chart(fig_eternal, use_container_width=True)
-            
-        else:
-            st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
+            # Create eternal table from seasons_df
+            if 'seasons_df' in locals() or 'seasons_df' in globals():
+                # Group by Manager and calculate statistics
+                eternal_stats = seasons_df.groupby('Manager').agg({
+                    'Wins': 'sum',
+                    'Losses': 'sum', 
+                    'Ties': 'sum',
+                    'Season': 'count'  # Count of seasons played
+                }).reset_index()
+                
+                # Rename the Season count column
+                eternal_stats = eternal_stats.rename(columns={'Season': 'Gespielte Saisons'})
+                
+                # Calculate win percentage
+                total_games = eternal_stats['Wins'] + eternal_stats['Losses'] + eternal_stats['Ties']
+                eternal_stats['Win-Percentage %'] = (eternal_stats['Wins'] / total_games * 100).round(2)
+                
+                # Sort by: 1. Most Wins (descending), 2. Highest Win-Percentage (descending)
+                eternal_stats = eternal_stats.sort_values(['Wins', 'Win-Percentage %'], ascending=[False, False])
+                
+                # Add ranking
+                eternal_stats['Ranking'] = range(1, len(eternal_stats) + 1)
+                
+                # Reorder columns
+                eternal_stats = eternal_stats[['Ranking', 'Manager', 'Wins', 'Losses', 'Ties', 'Win-Percentage %', 'Gespielte Saisons']]
+                
+                # Display the eternal table
+                st.dataframe(
+                    eternal_stats,
+                    column_config={
+                        "Ranking": "Ranking",
+                        "Manager": "Manager",
+                        "Wins": "Wins",
+                        "Losses": "Losses",
+                        "Ties": "Ties", 
+                        "Win-Percentage %": "Win-Percentage %",
+                        "Gespielte Saisons": "Gespielte Saisons"
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
+                
+                # Visualization for eternal table
+                fig_eternal = go.Figure()
+                
+                fig_eternal.add_trace(go.Bar(
+                    name='Wins',
+                    x=eternal_stats['Manager'],
+                    y=eternal_stats['Wins'],
+                    marker_color='#28a745'  # Green for wins
+                ))
+                
+                fig_eternal.add_trace(go.Bar(
+                    name='Losses',
+                    x=eternal_stats['Manager'],
+                    y=eternal_stats['Losses'],
+                    marker_color='#dc3545'  # Red for losses
+                ))
+                
+                fig_eternal.add_trace(go.Bar(
+                    name='Ties',
+                    x=eternal_stats['Manager'],
+                    y=eternal_stats['Ties'],
+                    marker_color='#ffc107'  # Yellow for ties
+                ))
+                
+                fig_eternal.update_layout(
+                    title='Ewige Tabelle - Wins/Losses/Ties Distribution',
+                    xaxis_title='Manager',
+                    yaxis_title='Number of Games',
+                    barmode='stack',
+                    height=500
+                )
+                
+                st.plotly_chart(fig_eternal, use_container_width=True)
+                
+            else:
+                st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
             
     
     elif analysis_type == "🎯 Drafts":
