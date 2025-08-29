@@ -1281,9 +1281,14 @@ def main():
                 # Rename the Season count column
                 eternal_stats = eternal_stats.rename(columns={'Season': 'Gespielte Saisons'})
                 
-                # Calculate win percentage
+                # Berechnung der Gesamtzahl der Spiele
                 total_games = eternal_stats['Wins'] + eternal_stats['Losses'] + eternal_stats['Ties']
-                eternal_stats['Win-Percentage %'] = (eternal_stats['Wins'] / total_games * 100).round(2)
+
+                # Berechne die Anzahl der "equivalent wins" (Siege + die Hälfte der Unentschieden)
+                equivalent_wins = eternal_stats['Wins'] + (eternal_stats['Ties'] / 2)
+
+                # Berechne die neue Sieg-Quote
+                eternal_stats['Win-Percentage %'] = (equivalent_wins / total_games * 100).round(2)
                 
                 # Sort by: 1. Most Wins (descending), 2. Highest Win-Percentage (descending)
                 eternal_stats = eternal_stats.sort_values(['Wins', 'Win-Percentage %'], ascending=[False, False])
