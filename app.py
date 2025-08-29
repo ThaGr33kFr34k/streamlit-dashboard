@@ -1262,13 +1262,19 @@ def main():
             
             # Create eternal table from seasons_df
             if 'seasons_df' in locals() or 'seasons_df' in globals():
-                # Group by Manager and calculate statistics
-                eternal_stats = seasons_df.groupby('Manager').agg({
+                # Group by first name and calculate statistics
+                eternal_stats = seasons_df.groupby('first name').agg({
                     'Wins': 'sum',
                     'Losses': 'sum', 
                     'Ties': 'sum',
                     'Season': 'count'  # Count of seasons played
                 }).reset_index()
+                
+                # Rename columns for consistency
+                eternal_stats = eternal_stats.rename(columns={
+                    'first name': 'Manager',
+                    'Season': 'Gespielte Saisons'
+                })
                 
                 # Rename the Season count column
                 eternal_stats = eternal_stats.rename(columns={'Season': 'Gespielte Saisons'})
@@ -1338,7 +1344,6 @@ def main():
                 
             else:
                 st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
-            
     
     elif analysis_type == "🎯 Drafts":
         st.header("Draft Analysis")
