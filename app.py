@@ -1693,22 +1693,23 @@ def main():
             # Filtere alle Zeilen heraus, die Turnovers = 0 haben
             filtered_categories_df = categories_df[categories_df['Turnovers'] != 0].copy()
             
-            # Manager-Mapping aus categories_df erstellen (falls vorhanden)
-            if 'Manager' not in filtered_categories_df.columns and 'team_mapping' in locals():
-                # Erstelle ein Mapping von TeamID zu dem häufigsten Manager-Namen für dieses Team
-                teamid_to_manager = {}
-                for (team_id, year), manager in team_mapping.items():
-                    if team_id not in teamid_to_manager:
-                        teamid_to_manager[team_id] = manager
-                
-                # Füge Manager-Spalte hinzu
-                filtered_categories_df['Manager'] = filtered_categories_df['TeamID'].map(teamid_to_manager)
-                groupby_column = 'Manager'
-            elif 'Manager' in filtered_categories_df.columns:
-                groupby_column = 'Manager'
+            # Manager-Mapping korrekt implementieren
+            if 'Manager' not in filtered_categories_df.columns:
+                # Nutze das bestehende team_mapping aus create_team_mapping()
+                # Format: {(TeamID, Year): FirstName}
+                if 'team_mapping' in locals() and team_mapping:
+                    # Erstelle Manager-Spalte basierend auf TeamID und Saison
+                    def get_manager_name(row):
+                        key = (row['TeamID'], row['Saison'])
+                        return team_mapping.get(key, f"Team_{row['TeamID']}")
+                    
+                    filtered_categories_df['Manager'] = filtered_categories_df.apply(get_manager_name, axis=1)
+                    groupby_column = 'Manager'
+                else:
+                    # Fallback auf TeamID, falls kein Mapping verfügbar
+                    groupby_column = 'TeamID'
             else:
-                # Fallback auf TeamID, falls kein Mapping verfügbar
-                groupby_column = 'TeamID'
+                groupby_column = 'Manager'
         
             # Tabs für die zwei Ansichten erstellen
             tab1, tab2 = st.tabs(["📈 Career Averages", "🥇 All-Time Stat Leaders"])
