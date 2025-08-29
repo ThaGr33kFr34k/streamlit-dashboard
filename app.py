@@ -1259,8 +1259,10 @@ def main():
         
         with tab2:
             st.subheader("📊 Ewige Tabelle")
-            st.write("""Sortiert nach den meisten Siegen. Bei Gleichstand wird die Win-Percentage % verglichen. 
-            Notiz: 2 Ties ergeben 1 Win (Default Berechnung von ESPN)""")
+            st.write("""
+            Sortiert nach den meisten Siegen. Bei Gleichstand wird die Win-Percentage % verglichen.
+            Notiz: 2 Ties ergeben 1 Win (Default Berechnung von ESPN)
+            """)
             
             # Create eternal table from seasons_df
             if 'seasons_df' in locals() or 'seasons_df' in globals():
