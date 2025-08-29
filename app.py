@@ -1262,8 +1262,8 @@ def main():
             
             # Create eternal table from seasons_df
             if 'seasons_df' in locals() or 'seasons_df' in globals():
-                # Group by first name and calculate statistics
-                eternal_stats = seasons_df.groupby('first name').agg({
+                # Group by First Name and calculate statistics
+                eternal_stats = seasons_df.groupby('First Name').agg({
                     'Wins': 'sum',
                     'Losses': 'sum', 
                     'Ties': 'sum',
@@ -1272,7 +1272,7 @@ def main():
                 
                 # Rename columns for consistency
                 eternal_stats = eternal_stats.rename(columns={
-                    'first name': 'Manager',
+                    'First Name': 'Manager',
                     'Season': 'Gespielte Saisons'
                 })
                 
