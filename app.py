@@ -1262,27 +1262,20 @@ def main():
             
             # Create eternal table from seasons_df
             if 'seasons_df' in locals() or 'seasons_df' in globals():
-                # Check which columns are available (same as in your Team-View code)
-                required_columns = ['Wins', 'Losses', 'Ties', 'Saison']
-                available_columns = [col for col in required_columns if col in seasons_df.columns]
-                
-                st.write("DEBUG - Verfügbare relevante Spalten:", available_columns)
-                st.write("DEBUG - Alle Spalten:", seasons_df.columns.tolist())
-                
-                # Try with 'Saison' instead of 'Season' (as used in your Team-View)
-                if all(col in seasons_df.columns for col in ['First Name', 'Wins', 'Losses', 'Ties', 'Saison']):
+                # Now we know the correct column names: Year, Wins, Losses, Ties, First Name
+                if all(col in seasons_df.columns for col in ['First Name', 'Wins', 'Losses', 'Ties', 'Year']):
                     # Group by First Name and calculate statistics
                     eternal_stats = seasons_df.groupby('First Name').agg({
                         'Wins': 'sum',
                         'Losses': 'sum', 
                         'Ties': 'sum',
-                        'Saison': 'count'  # Count of seasons played
+                        'Year': 'count'  # Count of seasons played
                     }).reset_index()
                     
                     # Rename columns for consistency
                     eternal_stats = eternal_stats.rename(columns={
                         'First Name': 'Manager',
-                        'Saison': 'Gespielte Saisons'
+                        'Year': 'Gespielte Saisons'
                     })
                 
                 # Rename the Season count column
