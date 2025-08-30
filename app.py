@@ -1212,8 +1212,9 @@ def main():
                     # Filter data for this manager
                     manager_data = seasons_df[seasons_df['First Name'] == manager].copy()
                     
-                    # Remove rows where Playoff Seed or Final Rank is NaN
+                    # Remove rows where Playoff Seed or Final Rank is NaN and filter for playoff seeds 1-8 only
                     valid_data = manager_data.dropna(subset=['Playoff Seed', 'Final Rank'])
+                    valid_data = valid_data[valid_data['Playoff Seed'] <= 8]
                     
                     if not valid_data.empty:
                         # Calculate differences (Final Rank - Playoff Seed)
@@ -1269,38 +1270,72 @@ def main():
                     st.markdown("*Managers who underperform in playoffs*")
                     
                     if choke_stats:
+                        # Style the choke table with red colors
+                        def style_choke_table(df):
+                            def highlight_chokes(val):
+                                if isinstance(val, (int, float)):
+                                    if val > 2:
+                                        return 'background-color: #ffebee; color: #c62828; font-weight: bold'
+                                    elif val > 1:
+                                        return 'background-color: #ffcdd2; color: #d32f2f'
+                                    elif val > 0:
+                                        return 'background-color: #ffecb3; color: #ef6c00'
+                                return ''
+                            
+                            styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Worst Choke'])
+                            styled = styled.applymap(lambda x: 'background-color: #ffebee' if x > df['Chokes'].mean() else '', subset=['Chokes'])
+                            return styled
+                        
+                        choke_styled = style_choke_table(choke_df)
                         st.dataframe(
-                            choke_df,
+                            choke_styled,
                             column_config={
                                 "Manager": "Manager",
-                                "Chokes": "Chokes",
-                                "Clutches": "Clutches",
-                                "Neutral": "Neutral",
-                                "Total Playoffs": "Total Playoffs",
-                                "Choking Index": "Choking Index",
-                                "Worst Choke": "Worst Choke"
+                                "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
+                                "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"),
+                                "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
+                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
+                                "Choking Index": st.column_config.NumberColumn("😱 Index", help="Durchschnittliche Underperformance", format="%.2f"),
+                                "Worst Choke": st.column_config.NumberColumn("💥 Worst", help="Schlimmste Underperformance")
                             },
                             hide_index=True,
                             use_container_width=True
                         )
                     else:
-                        st.info("No chokers found! 🎉")
+                        st.success("No chokers found! 🎉")
                 
                 with col2:
                     st.markdown("### 🔥 Clutch-O-Meter")
                     st.markdown("*Managers who rise to the occasion*")
                     
                     if clutch_stats:
+                        # Style the clutch table with green colors
+                        def style_clutch_table(df):
+                            def highlight_clutches(val):
+                                if isinstance(val, (int, float)):
+                                    if val > 2:
+                                        return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
+                                    elif val > 1:
+                                        return 'background-color: #c8e6c9; color: #388e3c'
+                                    elif val > 0:
+                                        return 'background-color: #dcedc8; color: #689f38'
+                                return ''
+                            
+                            styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Best Clutch'])
+                            styled = styled.applymap(lambda x: 'background-color: #e8f5e8' if x > df['Clutches'].mean() else '', subset=['Clutches'])
+                            return styled
+                        
+                        clutch_styled = style_clutch_table(clutch_df)
                         st.dataframe(
-                            clutch_df,
+                            clutch_styled,
                             column_config={
                                 "Manager": "Manager",
-                                "Clutches": "Clutches", 
-                                "Chokes": "Chokes",
-                                "Neutral": "Neutral",
-                                "Total Playoffs": "Total Playoffs",
-                                "Clutch-O-Meter": "Clutch-O-Meter",
-                                "Best Clutch": "Best Clutch"
+                                "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"), 
+                                "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
+                                "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
+                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
+                                "Clutch-O-Meter": st.column_config.NumberColumn("🔥 Meter", help="Durchschnittliche Overperformance", format="%.2f"),
+                                "Best Clutch": st.column_config.NumberColumn("⭐ Best", help="Beste Overperformance")
                             },
                             hide_index=True,
                             use_container_width=True
@@ -1312,10 +1347,15 @@ def main():
                 st.markdown("---")
                 st.markdown("""
                 **How it works:**
+                - **Only Playoff Seeds 1-8 are considered** (teams that made playoffs)
                 - **Choke**: Final Rank > Playoff Seed (e.g., 3rd seed finishes 5th = Choke)
                 - **Clutch**: Final Rank < Playoff Seed (e.g., 6th seed finishes 2nd = Clutch)
                 - **Choking Index**: Average difference (higher = more choking)
                 - **Clutch-O-Meter**: Average clutch performance (higher = more clutch)
+                - **Color Coding**: 
+                  - 🔴 Red shades = Poor performance/High chokes
+                  - 🟢 Green shades = Great performance/High clutches  
+                  - Darker colors = More extreme values
                 """)
                 
             else:
