@@ -1239,8 +1239,7 @@ def main():
                                 'Clutches': clutches,
                                 'Neutral': neutral,
                                 'Total Playoffs': total_playoff_appearances,
-                                'Choking Index': round(avg_difference, 2),
-                                'Worst Choke': valid_data['Difference'].max()
+                                'Choking Index': round(-avg_difference, 2)  # Negative for choking
                             })
                         else:  # More clutching than choking
                             clutch_stats.append({
@@ -1249,14 +1248,13 @@ def main():
                                 'Chokes': chokes,
                                 'Neutral': neutral,
                                 'Total Playoffs': total_playoff_appearances,
-                                'Clutch-O-Meter': round(abs(avg_difference), 2),
-                                'Best Clutch': abs(valid_data['Difference'].min())
+                                'Clutch-O-Meter': round(abs(avg_difference), 2)  # Positive for clutching
                             })
                 
                 # Create DataFrames
                 if choke_stats:
                     choke_df = pd.DataFrame(choke_stats)
-                    choke_df = choke_df.sort_values('Choking Index', ascending=False)
+                    choke_df = choke_df.sort_values('Choking Index', ascending=True)  # Most negative first
                 
                 if clutch_stats:
                     clutch_df = pd.DataFrame(clutch_stats)
@@ -1274,15 +1272,15 @@ def main():
                         def style_choke_table(df):
                             def highlight_chokes(val):
                                 if isinstance(val, (int, float)):
-                                    if val > 2:
+                                    if val < -2:  # Very negative = very bad choking
                                         return 'background-color: #ffebee; color: #c62828; font-weight: bold'
-                                    elif val > 1:
+                                    elif val < -1:
                                         return 'background-color: #ffcdd2; color: #d32f2f'
-                                    elif val > 0:
+                                    elif val < 0:
                                         return 'background-color: #ffecb3; color: #ef6c00'
                                 return ''
                             
-                            styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Worst Choke'])
+                            styled = df.style.applymap(highlight_chokes, subset=['Choking Index'])
                             styled = styled.applymap(lambda x: 'background-color: #ffebee' if x > df['Chokes'].mean() else '', subset=['Chokes'])
                             return styled
                         
@@ -1295,8 +1293,7 @@ def main():
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"),
                                 "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
                                 "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
-                                "Choking Index": st.column_config.NumberColumn("😱 Index", help="Durchschnittliche Underperformance", format="%.2f"),
-                                "Worst Choke": st.column_config.NumberColumn("💥 Worst", help="Schlimmste Underperformance")
+                                "Choking Index": st.column_config.NumberColumn("😱 Index", help="Durchschnittliche Underperformance (negativer = schlechter)", format="%.2f")
                             },
                             hide_index=True,
                             use_container_width=True
@@ -1321,7 +1318,7 @@ def main():
                                         return 'background-color: #dcedc8; color: #689f38'
                                 return ''
                             
-                            styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Best Clutch'])
+                            styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter'])
                             styled = styled.applymap(lambda x: 'background-color: #e8f5e8' if x > df['Clutches'].mean() else '', subset=['Clutches'])
                             return styled
                         
@@ -1334,8 +1331,7 @@ def main():
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
                                 "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
                                 "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
-                                "Clutch-O-Meter": st.column_config.NumberColumn("🔥 Meter", help="Durchschnittliche Overperformance", format="%.2f"),
-                                "Best Clutch": st.column_config.NumberColumn("⭐ Best", help="Beste Overperformance")
+                                "Clutch-O-Meter": st.column_config.NumberColumn("🔥 Meter", help="Durchschnittliche Overperformance (höher = besser)", format="%.2f")
                             },
                             hide_index=True,
                             use_container_width=True
@@ -1350,12 +1346,13 @@ def main():
                 - **Only Playoff Seeds 1-8 are considered** (teams that made playoffs)
                 - **Choke**: Final Rank > Playoff Seed (e.g., 3rd seed finishes 5th = Choke)
                 - **Clutch**: Final Rank < Playoff Seed (e.g., 6th seed finishes 2nd = Clutch)
-                - **Choking Index**: Average difference (higher = more choking)
-                - **Clutch-O-Meter**: Average clutch performance (higher = more clutch)
+                - **Choking Index**: Durchschnitt aller Chokes (NEGATIV = schlechter)
+                  - Beispiel: -2.5 = Du verlierst durchschnittlich 2.5 Plätze
+                - **Clutch-O-Meter**: Durchschnitt aller Clutches (POSITIV = besser)
+                  - Beispiel: 1.8 = Du gewinnst durchschnittlich 1.8 Plätze
                 - **Color Coding**: 
-                  - 🔴 Red shades = Poor performance/High chokes
-                  - 🟢 Green shades = Great performance/High clutches  
-                  - Darker colors = More extreme values
+                  - 🔴 Red shades = Choking (je dunkler, desto schlechter)
+                  - 🟢 Green shades = Clutching (je dunkler, desto besser)
                 """)
                 
             else:
