@@ -3,6 +3,9 @@ Folgende Auswertungen soll es geben:
 * Playoffs
   Anzahl Playoff-Games und daraus resultierende Win% vs Anzahl Regular Season Games und Win%
     => Wer performt wenn es drauf ankommt?
+  Choking Index / Clutch-O-Meterppp
+    Differenz zwischen Regular Season Seed und tatsächlichem Endergebnis.
+    Beispiel: 1st Seed → früh in den Playoffs raus = hoher Choke-Faktor
 
 * Head-to-Head 
   Jeder Spieler hat seinen persönlichen „Angstgegner“ (gegen den er die meisten Spiele verloren hat).  
@@ -20,15 +23,14 @@ Folgende Auswertungen soll es geben:
     Bei Gleichstand in Gold- und Silbermedaillen entscheidet die Anzahl der Bronzemedaillen. 
     4. Gleiche Medaillenanzahl:
     Wenn zwei oder mehr Länder die gleiche Anzahl an Gold-, Silber- und Bronzemedaillen haben, werden sie alphabetisch sortiert und erhalten den gleichen Rang im Medaillenspiegel
+  Ewige Tabelle
 
 * Drafts
-  "Choking Index"
-  Differenz zwischen Regular Season Seed und tatsächlichem Endergebnis.
-  Beispiel: 1st Seed → früh in den Playoffs raus = hoher Choke-Faktor
   Comeback Kings
     Welche Teams hatten die größte Diskrepanz zwischen schlechtem Draftplatz / Regular Season Rank und finalem Playoff-Rank?
   "Draft Value Tracker"
     Wie stark ist der Zusammenhang zwischen Draft-Slot und finalem Endrang?
+
   Zeig z. B. eine Heatmap: “Slot 1 landet im Schnitt auf Platz X, Slot 10 auf Platz Y.”
 
 * Lottery Luck
