@@ -1231,23 +1231,29 @@ def main():
                         # Calculate average difference
                         avg_difference = valid_data['Difference'].mean()
                         
+                        # Calculate total sum of all chokes and clutches
+                        total_choke_sum = valid_data[valid_data['Difference'] > 0]['Difference'].sum()
+                        total_clutch_sum = valid_data[valid_data['Difference'] < 0]['Difference'].sum()
+                        
                         # Add to appropriate list based on overall tendency
                         if avg_difference > 0:  # More choking than clutching
                             choke_stats.append({
                                 'Manager': manager,
+                                'Total Playoffs': total_playoff_appearances,
+                                'Total Sum': -total_choke_sum,  # Negative for total choking
                                 'Chokes': chokes,
                                 'Clutches': clutches,
                                 'Neutral': neutral,
-                                'Total Playoffs': total_playoff_appearances,
                                 'Choking Index': round(-avg_difference, 2)  # Negative for choking
                             })
                         else:  # More clutching than choking
                             clutch_stats.append({
                                 'Manager': manager,
+                                'Total Playoffs': total_playoff_appearances,
+                                'Total Sum': abs(total_clutch_sum),  # Positive for total clutching
                                 'Clutches': clutches,
                                 'Chokes': chokes,
                                 'Neutral': neutral,
-                                'Total Playoffs': total_playoff_appearances,
                                 'Clutch-O-Meter': round(abs(avg_difference), 2)  # Positive for clutching
                             })
                 
@@ -1289,10 +1295,11 @@ def main():
                             choke_styled,
                             column_config={
                                 "Manager": "Manager",
+                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
+                                "Total Sum": st.column_config.NumberColumn("💯 Total Sum", help="Summe aller Chokes (negativer = schlechter)", format="%.0f"),
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"),
                                 "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
-                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
                                 "Choking Index": st.column_config.NumberColumn("😱 Index", help="Durchschnittliche Underperformance (negativer = schlechter)", format="%.2f")
                             },
                             hide_index=True,
@@ -1327,10 +1334,11 @@ def main():
                             clutch_styled,
                             column_config={
                                 "Manager": "Manager",
+                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
+                                "Total Sum": st.column_config.NumberColumn("💯 Total Sum", help="Summe aller Clutches (höher = besser)", format="%.0f"),
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"), 
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
                                 "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
-                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
                                 "Clutch-O-Meter": st.column_config.NumberColumn("🔥 Meter", help="Durchschnittliche Overperformance (höher = besser)", format="%.2f")
                             },
                             hide_index=True,
@@ -1348,6 +1356,9 @@ def main():
                 - **Clutch**: Final Rank < Playoff Seed (e.g., 6th seed finishes 2nd = Clutch)
                 - **Choking Index**: Durchschnitt aller Chokes (NEGATIV = schlechter)
                   - Beispiel: -2.5 = Du verlierst durchschnittlich 2.5 Plätze
+                - **Total Sum**: Summe aller Differenzen (NEGATIV bei Chokes, POSITIV bei Clutches)
+                  - Beispiel Choke: 2x(-2) + 1x(-1) = -5 total
+                  - Beispiel Clutch: 2x(+3) + 1x(+1) = +7 total
                 - **Clutch-O-Meter**: Durchschnitt aller Clutches (POSITIV = besser)
                   - Beispiel: 1.8 = Du gewinnst durchschnittlich 1.8 Plätze
                 - **Color Coding**: 
