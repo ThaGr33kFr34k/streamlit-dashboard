@@ -1293,11 +1293,11 @@ def main():
                             choke_styled,
                             column_config={
                                 "Manager": "Manager",
-                                "Total Sum": st.column_config.NumberColumn("💯 Total Sum", help="Summe aller Chokes (negativer = schlechter)", format="%.0f"),
+                                "Total Sum": st.column_config.NumberColumn("😱 Index", help="Summe aller Chokes (negativer = schlechter)", format="%.0f"),
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"),
                                 "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
-                                "Choking Index": st.column_config.NumberColumn("😱 Index", help="Durchschnittliche Underperformance (negativer = schlechter)", format="%.2f")
+                                "Choking Index": st.column_config.NumberColumn("Durchschnitt", help="Durchschnittliche Underperformance (negativer = schlechter)", format="%.2f")
                             },
                             hide_index=True,
                             use_container_width=True
@@ -1331,11 +1331,11 @@ def main():
                             clutch_styled,
                             column_config={
                                 "Manager": "Manager",
-                                "Total Sum": st.column_config.NumberColumn("💯 Total Sum", help="Summe aller Clutches (höher = besser)", format="%.0f"),
+                                "Total Sum": st.column_config.NumberColumn("💪 Clutch-O-Meter", help="Summe aller Clutches (höher = besser)", format="%.0f"),
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"), 
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
                                 "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
-                                "Clutch-O-Meter": st.column_config.NumberColumn("🔥 Meter", help="Durchschnittliche Overperformance (höher = besser)", format="%.2f")
+                                "Clutch-O-Meter": st.column_config.NumberColumn("Durchschnitt", help="Durchschnittliche Overperformance (höher = besser)", format="%.2f")
                             },
                             hide_index=True,
                             use_container_width=True
