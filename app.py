@@ -1239,7 +1239,6 @@ def main():
                         if avg_difference > 0:  # More choking than clutching
                             choke_stats.append({
                                 'Manager': manager,
-                                'Total Playoffs': total_playoff_appearances,
                                 'Total Sum': -total_choke_sum,  # Negative for total choking
                                 'Chokes': chokes,
                                 'Clutches': clutches,
@@ -1249,7 +1248,6 @@ def main():
                         else:  # More clutching than choking
                             clutch_stats.append({
                                 'Manager': manager,
-                                'Total Playoffs': total_playoff_appearances,
                                 'Total Sum': abs(total_clutch_sum),  # Positive for total clutching
                                 'Clutches': clutches,
                                 'Chokes': chokes,
@@ -1260,11 +1258,11 @@ def main():
                 # Create DataFrames
                 if choke_stats:
                     choke_df = pd.DataFrame(choke_stats)
-                    choke_df = choke_df.sort_values('Choking Index', ascending=True)  # Most negative first
+                    choke_df = choke_df.sort_values('Total Sum', ascending=True)  # Most negative first
                 
                 if clutch_stats:
                     clutch_df = pd.DataFrame(clutch_stats)
-                    clutch_df = clutch_df.sort_values('Clutch-O-Meter', ascending=False)
+                    clutch_df = clutch_df.sort_values('Total Sum', ascending=False)  # Highest positive first
                 
                 # Display tables side by side
                 col1, col2 = st.columns(2)
@@ -1278,15 +1276,15 @@ def main():
                         def style_choke_table(df):
                             def highlight_chokes(val):
                                 if isinstance(val, (int, float)):
-                                    if val < -2:  # Very negative = very bad choking
+                                    if val < -6:  # Very negative = very bad choking
                                         return 'background-color: #ffebee; color: #c62828; font-weight: bold'
-                                    elif val < -1:
+                                    elif val < -3:
                                         return 'background-color: #ffcdd2; color: #d32f2f'
                                     elif val < 0:
                                         return 'background-color: #ffecb3; color: #ef6c00'
                                 return ''
                             
-                            styled = df.style.applymap(highlight_chokes, subset=['Choking Index'])
+                            styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Total Sum'])
                             styled = styled.applymap(lambda x: 'background-color: #ffebee' if x > df['Chokes'].mean() else '', subset=['Chokes'])
                             return styled
                         
@@ -1295,7 +1293,6 @@ def main():
                             choke_styled,
                             column_config={
                                 "Manager": "Manager",
-                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
                                 "Total Sum": st.column_config.NumberColumn("💯 Total Sum", help="Summe aller Chokes (negativer = schlechter)", format="%.0f"),
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"),
@@ -1317,15 +1314,15 @@ def main():
                         def style_clutch_table(df):
                             def highlight_clutches(val):
                                 if isinstance(val, (int, float)):
-                                    if val > 2:
+                                    if val > 6:  # Very positive = very good clutching
                                         return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
-                                    elif val > 1:
+                                    elif val > 3:
                                         return 'background-color: #c8e6c9; color: #388e3c'
                                     elif val > 0:
                                         return 'background-color: #dcedc8; color: #689f38'
                                 return ''
                             
-                            styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter'])
+                            styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Total Sum'])
                             styled = styled.applymap(lambda x: 'background-color: #e8f5e8' if x > df['Clutches'].mean() else '', subset=['Clutches'])
                             return styled
                         
@@ -1334,7 +1331,6 @@ def main():
                             clutch_styled,
                             column_config={
                                 "Manager": "Manager",
-                                "Total Playoffs": st.column_config.NumberColumn("🏀 Total", help="Gesamte Playoff-Teilnahmen"),
                                 "Total Sum": st.column_config.NumberColumn("💯 Total Sum", help="Summe aller Clutches (höher = besser)", format="%.0f"),
                                 "Clutches": st.column_config.NumberColumn("🟢 Clutches", help="Anzahl der Overperformances"), 
                                 "Chokes": st.column_config.NumberColumn("🔴 Chokes", help="Anzahl der Underperformances"),
