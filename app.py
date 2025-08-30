@@ -1172,28 +1172,154 @@ def main():
     elif analysis_type == "🏆 Playoff Performance":
         st.header("Playoff Performance Analysis")
         
-        # Calculate stats
-        full_stats, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
+        # Create tabs
+        tab1, tab2 = st.tabs(["📊 Performance Overview", "🎯 Choke vs Clutch"])
         
-        if full_stats is not None:
-            # Rankings side by side
-            st.subheader("Rankings: Who performs when it matters?")
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.markdown("**🏀 Best Regular Season Teams**")
-                reg_styled = style_dataframe_with_colors(reg_ranked, ['Regular Win%'])
-                st.dataframe(reg_styled, use_container_width=True, hide_index=True)
-
-            with col2:
-                st.markdown("**🔥 Best Playoff Teams**")
-                playoff_styled = style_dataframe_with_colors(playoff_ranked, ['Playoff Win%'])
-                st.dataframe(playoff_styled, use_container_width=True, hide_index=True)
-
-            # Full overview table
-            st.subheader("Complete Overview: Regular vs Playoff Performance")
-            full_styled = style_dataframe_with_colors(full_stats, ['Regular Win%', 'Playoff Win%'])
-            st.dataframe(full_styled, use_container_width=True, hide_index=True)
+        with tab1:
+            # Calculate stats
+            full_stats, reg_ranked, playoff_ranked = calculate_playoff_stats(processed_df, teams_df)
+            
+            if full_stats is not None:
+                # Rankings side by side
+                st.subheader("Rankings: Who performs when it matters?")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("**🏀 Best Regular Season Teams**")
+                    reg_styled = style_dataframe_with_colors(reg_ranked, ['Regular Win%'])
+                    st.dataframe(reg_styled, use_container_width=True, hide_index=True)
+                with col2:
+                    st.markdown("**🔥 Best Playoff Teams**")
+                    playoff_styled = style_dataframe_with_colors(playoff_ranked, ['Playoff Win%'])
+                    st.dataframe(playoff_styled, use_container_width=True, hide_index=True)
+                # Full overview table
+                st.subheader("Complete Overview: Regular vs Playoff Performance")
+                full_styled = style_dataframe_with_colors(full_stats, ['Regular Win%', 'Playoff Win%'])
+                st.dataframe(full_styled, use_container_width=True, hide_index=True)
+        
+        with tab2:
+            st.subheader("🎯 Choke vs Clutch Analysis")
+            
+            # Check if seasons_df is available
+            if 'seasons_df' in locals() or 'seasons_df' in globals():
+                # Get all manager names
+                manager_names = sorted(seasons_df['First Name'].dropna().unique())
+                
+                # Calculate choke/clutch stats for each manager
+                choke_stats = []
+                clutch_stats = []
+                
+                for manager in manager_names:
+                    # Filter data for this manager
+                    manager_data = seasons_df[seasons_df['First Name'] == manager].copy()
+                    
+                    # Remove rows where Playoff Seed or Final Rank is NaN
+                    valid_data = manager_data.dropna(subset=['Playoff Seed', 'Final Rank'])
+                    
+                    if not valid_data.empty:
+                        # Calculate differences (Final Rank - Playoff Seed)
+                        # Positive difference = worse final rank than seed = Choke
+                        # Negative difference = better final rank than seed = Clutch
+                        valid_data['Difference'] = valid_data['Final Rank'] - valid_data['Playoff Seed']
+                        
+                        # Count chokes and clutches
+                        chokes = len(valid_data[valid_data['Difference'] > 0])
+                        clutches = len(valid_data[valid_data['Difference'] < 0])
+                        neutral = len(valid_data[valid_data['Difference'] == 0])
+                        total_playoff_appearances = len(valid_data)
+                        
+                        # Calculate average difference
+                        avg_difference = valid_data['Difference'].mean()
+                        
+                        # Add to appropriate list based on overall tendency
+                        if avg_difference > 0:  # More choking than clutching
+                            choke_stats.append({
+                                'Manager': manager,
+                                'Chokes': chokes,
+                                'Clutches': clutches,
+                                'Neutral': neutral,
+                                'Total Playoffs': total_playoff_appearances,
+                                'Choking Index': round(avg_difference, 2),
+                                'Worst Choke': valid_data['Difference'].max()
+                            })
+                        else:  # More clutching than choking
+                            clutch_stats.append({
+                                'Manager': manager,
+                                'Clutches': clutches,
+                                'Chokes': chokes,
+                                'Neutral': neutral,
+                                'Total Playoffs': total_playoff_appearances,
+                                'Clutch-O-Meter': round(abs(avg_difference), 2),
+                                'Best Clutch': abs(valid_data['Difference'].min())
+                            })
+                
+                # Create DataFrames
+                if choke_stats:
+                    choke_df = pd.DataFrame(choke_stats)
+                    choke_df = choke_df.sort_values('Choking Index', ascending=False)
+                
+                if clutch_stats:
+                    clutch_df = pd.DataFrame(clutch_stats)
+                    clutch_df = clutch_df.sort_values('Clutch-O-Meter', ascending=False)
+                
+                # Display tables side by side
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("### 😱 Choking Index")
+                    st.markdown("*Managers who underperform in playoffs*")
+                    
+                    if choke_stats:
+                        st.dataframe(
+                            choke_df,
+                            column_config={
+                                "Manager": "Manager",
+                                "Chokes": "Chokes",
+                                "Clutches": "Clutches",
+                                "Neutral": "Neutral",
+                                "Total Playoffs": "Total Playoffs",
+                                "Choking Index": "Choking Index",
+                                "Worst Choke": "Worst Choke"
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+                    else:
+                        st.info("No chokers found! 🎉")
+                
+                with col2:
+                    st.markdown("### 🔥 Clutch-O-Meter")
+                    st.markdown("*Managers who rise to the occasion*")
+                    
+                    if clutch_stats:
+                        st.dataframe(
+                            clutch_df,
+                            column_config={
+                                "Manager": "Manager",
+                                "Clutches": "Clutches", 
+                                "Chokes": "Chokes",
+                                "Neutral": "Neutral",
+                                "Total Playoffs": "Total Playoffs",
+                                "Clutch-O-Meter": "Clutch-O-Meter",
+                                "Best Clutch": "Best Clutch"
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+                    else:
+                        st.info("No clutch performers found! 😅")
+                
+                # Explanation
+                st.markdown("---")
+                st.markdown("""
+                **How it works:**
+                - **Choke**: Final Rank > Playoff Seed (e.g., 3rd seed finishes 5th = Choke)
+                - **Clutch**: Final Rank < Playoff Seed (e.g., 6th seed finishes 2nd = Clutch)
+                - **Choking Index**: Average difference (higher = more choking)
+                - **Clutch-O-Meter**: Average clutch performance (higher = more clutch)
+                """)
+                
+            else:
+                st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
         
     elif analysis_type == "🏅 Medal Overview":
         st.header("Medal Overview")
