@@ -28,51 +28,32 @@ st.markdown("""
     color: #FF6B35;
 }
 
-/* Metric-Container */
-.metric-container {
-    background-color: #f0f2f6;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin: 0.5rem 0;
+/* Metrik-Container (passt sich an) */
+div.st-emotion-cache-1f810n4 {
+    background-color: var(--secondary-background-color) !important;
 }
 
-/* Container für Medaillen und Gegner */
-.medal-container {
-    display: flex;
-    justify-content: space-around;
-    margin: 1rem 0;
-}
-
-/* Spezifische Anpassungen, die sich automatisch an den Dark Mode anpassen */
+/* Allgemeine Styles für alle Boxen (Rahmen, Padding) */
 .favorite-opponent, .nightmare-opponent, .champion-player, .legend-player, .loyalty-player {
     padding: 1rem;
     border-radius: 0.5rem;
     margin: 0.5rem 0;
 }
 
-/* Anpassungen für 'favorite-opponent' (Overperformer) */
-div.st-emotion-cache-1f810n4:has(div h4:contains("🚀")) {
-    background-color: var(--secondary-background-color) !important;
+/* Farbanpassungen für Dark/Light-Mode mit festen Randfarben */
+.favorite-opponent {
     border-left: 4px solid #4CAF50 !important;
 }
-
-/* Anpassungen für 'nightmare-opponent' (Underperformer) */
-div.st-emotion-cache-1f810n4:has(div h4:contains("😰")) {
-    background-color: var(--secondary-background-color) !important;
+.nightmare-opponent {
     border-left: 4px solid #f44336 !important;
 }
-
-/* Weitere Spieler-Kategorien im Dark Mode sichtbar machen */
-div.st-emotion-cache-1f810n4:has(div h4:contains("🏆")) {
-    background-color: var(--secondary-background-color) !important;
+.champion-player {
     border-left: 4px solid #FFD700 !important;
 }
-div.st-emotion-cache-1f810n4:has(div h4:contains("🌟")) {
-    background-color: var(--secondary-background-color) !important;
+.legend-player {
     border-left: 4px solid #4169E1 !important;
 }
-div.st-emotion-cache-1f810n4:has(div h4:contains("❤️")) {
-    background-color: var(--secondary-background-color) !important;
+.loyalty-player {
     border-left: 4px solid #8A2BE2 !important;
 }
 </style>
