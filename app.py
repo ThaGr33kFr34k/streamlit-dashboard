@@ -1208,8 +1208,8 @@ def main():
                                     )
             
                                     st.plotly_chart(fig_rank, use_container_width=True)
-                        else:
-                            st.info("Keine Final Rank Daten verfügbar")
+                            else:
+                                st.info("Keine Final Rank Daten verfügbar")
                         
                         # 6. Kombinierte Performance Grafik (wenn beide Daten vorhanden)
                         if ('Final Rank' in timeline_data.columns and 
