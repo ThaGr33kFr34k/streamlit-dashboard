@@ -1621,6 +1621,9 @@ def main():
                 
                 # Create DataFrame and sort by percentage
                 lottery_df = pd.DataFrame(lottery_stats).sort_values('Top3_Percentage', ascending=False)
+
+                # --- FÜGE DIESE ZEILE HINZU, UM NACH SAISONS ZU FILTERN ---
+                lottery_df = lottery_df[lottery_df['Total_Seasons'] >= 3]
                 
                 # Display lottery luck table
                 col1, col2 = st.columns([2, 1])
