@@ -1103,6 +1103,7 @@ def main():
                         with chart_col1:
                             # Draft Pick Timeline (falls vorhanden)
                             if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
+                                st.write(timeline_data.columns)
                                 # Finde die richtige Draft Pick Spalte
                                 draft_col = None
                                 for col in timeline_data.columns:
