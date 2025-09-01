@@ -1012,7 +1012,7 @@ def main():
                     
                     # Definiere die gewünschten Spalten
                     table_columns = [
-                        'Saison', 'Team Name', 'Wins', 'Losses', 'Ties', 
+                        'Year', 'Team Name', 'Wins', 'Losses', 'Ties', 
                         'Win-Percentage %', 'Playoff Seed', 'Final Rank'
                     ]
                     
@@ -1023,9 +1023,9 @@ def main():
                         # Erstelle Display-Tabelle mit verfügbaren Spalten
                         display_table = manager_data[available_columns].copy()
                         
-                        # Sortiere nach Saison absteigend (neueste zuerst)
-                        if 'Saison' in display_table.columns:
-                            display_table = display_table.sort_values('Saison', ascending=False)
+                        # Sortiere nach Year absteigend (neueste zuerst)
+                        if 'Year' in display_table.columns:
+                            display_table = display_table.sort_values('Year', ascending=False)
                         
                         # Formatiere Win-Percentage als Prozentwert falls vorhanden
                         if 'Win-Percentage %' in display_table.columns:
@@ -1037,7 +1037,7 @@ def main():
                         # Zeige die Tabelle an
                         st.dataframe(display_table, use_container_width=True, hide_index=True)
                         
-                        # Zusätzliche Statistiken
+                        # 4. Zusätzliche Statistiken
                         st.subheader("📊 Zusammenfassung")
                         
                         col1, col2, col3, col4 = st.columns(4)
@@ -1063,6 +1063,170 @@ def main():
                                 if avg_win_pct <= 1:  # Falls als Dezimalzahl
                                     avg_win_pct *= 100
                                 st.metric("Ø Win-Rate", f"{avg_win_pct:.1f}%")
+                        
+                        # 5. Timeline-Grafiken
+                        st.subheader("📈 Performance Timeline")
+                        
+                        # Sortiere Daten für Timeline chronologisch
+                        timeline_data = manager_data.copy()
+                        if 'Year' in timeline_data.columns:
+                            timeline_data = timeline_data.sort_values('Year', ascending=True)
+                        
+                        # Erstelle zwei Spalten für die Grafiken nebeneinander
+                        chart_col1, chart_col2 = st.columns(2)
+                        
+                        with chart_col1:
+                            # Draft Pick Timeline (falls vorhanden)
+                            if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
+                                # Finde die richtige Draft Pick Spalte
+                                draft_col = None
+                                for col in timeline_data.columns:
+                                    if 'draft pick' in col.lower() or col.lower() == 'draft pick':
+                                        draft_col = col
+                                        break
+                                
+                                if draft_col and timeline_data[draft_col].notna().any():
+                                    st.markdown("**🎯 Draft Pick Timeline**")
+                                    
+                                    # Filtere nur Jahre mit Draft Pick Daten
+                                    draft_data = timeline_data[timeline_data[draft_col].notna()]
+                                    
+                                    fig_draft = go.Figure()
+                                    fig_draft.add_trace(go.Scatter(
+                                        x=draft_data['Year'],
+                                        y=draft_data[draft_col],
+                                        mode='lines+markers',
+                                        name='Draft Pick',
+                                        line=dict(color='#ff6b6b', width=3),
+                                        marker=dict(size=8, color='#ff6b6b')
+                                    ))
+                                    
+                                    fig_draft.update_layout(
+                                        title=f'Draft Pick Entwicklung - {selected_manager}',
+                                        xaxis_title='Jahr',
+                                        yaxis_title='Draft Pick Position',
+                                        yaxis=dict(autorange='reversed'),  # Niedrigere Picks (1, 2, 3) oben
+                                        height=400,
+                                        showlegend=False
+                                    )
+                                    
+                                    st.plotly_chart(fig_draft, use_container_width=True)
+                                else:
+                                    st.info("Keine Draft Pick Daten verfügbar")
+                            else:
+                                st.info("Draft Pick Spalte nicht gefunden")
+                        
+                        with chart_col2:
+                            # Final Rank Timeline
+                            if 'Final Rank' in timeline_data.columns and timeline_data['Final Rank'].notna().any():
+                                st.markdown("**🏆 Final Rank Timeline**")
+                                
+                                # Filtere nur Jahre mit Final Rank Daten
+                                rank_data = timeline_data[timeline_data['Final Rank'].notna()]
+                                
+                                # Farbkodierung basierend auf Rank (1-3 = Gold/Silber/Bronze, etc.)
+                                def get_rank_color(rank):
+                                    if rank == 1:
+                                        return '#FFD700'  # Gold
+                                    elif rank == 2:
+                                        return '#C0C0C0'  # Silber
+                                    elif rank == 3:
+                                        return '#CD7F32'  # Bronze
+                                    elif rank <= 4:
+                                        return '#4CAF50'  # Grün (Playoffs)
+                                    elif rank <= 8:
+                                        return '#FF9800'  # Orange (Playoffs)
+                                    else:
+                                        return '#F44336'  # Rot (No Playoffs)
+                                
+                                colors = [get_rank_color(rank) for rank in rank_data['Final Rank']]
+                                
+                                fig_rank = go.Figure()
+                                fig_rank.add_trace(go.Scatter(
+                                    x=rank_data['Year'],
+                                    y=rank_data['Final Rank'],
+                                    mode='lines+markers',
+                                    name='Final Rank',
+                                    line=dict(color='#2196F3', width=3),
+                                    marker=dict(
+                                        size=10, 
+                                        color=colors,
+                                        line=dict(color='white', width=2)
+                                    )
+                                ))
+                                
+                                fig_rank.update_layout(
+                                    title=f'Final Rank Entwicklung - {selected_manager}',
+                                    xaxis_title='Jahr',
+                                    yaxis_title='Final Rank Position',
+                                    yaxis=dict(autorange='reversed'),  # Bessere Ranks (1, 2, 3) oben
+                                    height=400,
+                                    showlegend=False
+                                )
+                                
+                                st.plotly_chart(fig_rank, use_container_width=True)
+                            else:
+                                st.info("Keine Final Rank Daten verfügbar")
+                        
+                        # 6. Kombinierte Performance Grafik (wenn beide Daten vorhanden)
+                        if ('Final Rank' in timeline_data.columns and 
+                            'Playoff Seed' in timeline_data.columns and 
+                            timeline_data['Final Rank'].notna().any() and 
+                            timeline_data['Playoff Seed'].notna().any()):
+                            
+                            st.markdown("**📊 Playoff Performance: Seed vs. Final Rank**")
+                            
+                            # Filtere Daten wo beide Werte vorhanden sind
+                            playoff_data = timeline_data[
+                                (timeline_data['Final Rank'].notna()) & 
+                                (timeline_data['Playoff Seed'].notna()) &
+                                (timeline_data['Playoff Seed'] <= 8)  # Nur echte Playoff Teams
+                            ]
+                            
+                            if not playoff_data.empty:
+                                fig_performance = go.Figure()
+                                
+                                # Playoff Seed
+                                fig_performance.add_trace(go.Scatter(
+                                    x=playoff_data['Year'],
+                                    y=playoff_data['Playoff Seed'],
+                                    mode='lines+markers',
+                                    name='Playoff Seed',
+                                    line=dict(color='#9C27B0', width=2, dash='dash'),
+                                    marker=dict(size=6, color='#9C27B0')
+                                ))
+                                
+                                # Final Rank
+                                fig_performance.add_trace(go.Scatter(
+                                    x=playoff_data['Year'],
+                                    y=playoff_data['Final Rank'],
+                                    mode='lines+markers',
+                                    name='Final Rank',
+                                    line=dict(color='#FF5722', width=3),
+                                    marker=dict(size=8, color='#FF5722')
+                                ))
+                                
+                                fig_performance.update_layout(
+                                    title=f'Playoff Seed vs. Final Rank - {selected_manager}',
+                                    xaxis_title='Jahr',
+                                    yaxis_title='Position',
+                                    yaxis=dict(autorange='reversed'),
+                                    height=400,
+                                    legend=dict(
+                                        orientation="h",
+                                        yanchor="bottom",
+                                        y=1.02,
+                                        xanchor="right",
+                                        x=1
+                                    )
+                                )
+                                
+                                st.plotly_chart(fig_performance, use_container_width=True)
+                                
+                                # Kurze Erklärung
+                                st.caption("💡 Wenn die rote Linie (Final Rank) unter der violetten Linie (Playoff Seed) liegt = Overperformance (Clutch)")
+                            else:
+                                st.info("Nicht genügend Playoff-Daten für Vergleich verfügbar")
                     
                     else:
                         st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
