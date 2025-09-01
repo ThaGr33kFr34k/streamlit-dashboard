@@ -926,6 +926,31 @@ def display_opponent_analysis(favorites, nightmares, selected_manager):
         else:
             st.info(f"Keine Angstgegner mit mindestens 5 Spielen für {selected_manager} gefunden.")
 
+def normalize_year_column(df):
+    """Standardisiert Jahr-Spalten zu 'Year'"""
+    if df is None or df.empty:
+        return df
+    
+    year_columns = ['Year', 'year', 'YEAR', 'Season', 'season', 'SEASON', 
+                   'Saison', 'saison', 'SAISON', 'Date', 'date', 'DATE']
+    
+    for col in year_columns:
+        if col in df.columns:
+            if col != 'Year':
+                df = df.rename(columns={col: 'Year'})
+                st.info(f"Spalte '{col}' wurde zu 'Year' umbenannt")
+            return df
+    
+    # Falls keine Jahr-Spalte gefunden wird, gib DataFrame unverändert zurück
+    return df
+
+def normalize_dataframes(*dataframes):
+    """Normalisiert mehrere DataFrames auf einmal"""
+    normalized = []
+    for df in dataframes:
+        normalized.append(normalize_year_column(df))
+    return normalized
+
 # Main app
 def main():
     st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
