@@ -1518,7 +1518,7 @@ def main():
             else:
                 st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
     
-elif analysis_type == "🎯 Drafts":
+    elif analysis_type == "🎯 Drafts":
     st.header("Draft Analysis")
 
     # Process draft data
