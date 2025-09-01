@@ -1228,7 +1228,7 @@ def main():
                             
                             if not playoff_data.empty:
                                 fig_performance = go.Figure()
-                                
+                                st.write(playoff_data.columns)
                                 # Playoff Seed
                                 fig_performance.add_trace(go.Scatter(
                                     x=playoff_data['Season'],
