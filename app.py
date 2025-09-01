@@ -19,59 +19,62 @@ st.set_page_config(
 # Custom CSS for better mobile experience
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 2rem;
-        color: #FF6B35;
-    }
-    .metric-container {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
-    }
-    .medal-container {
-        display: flex;
-        justify-content: space-around;
-        margin: 1rem 0;
-    }
-    .favorite-opponent {
-        background-color: #e8f5e8;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #4CAF50;
-        margin: 0.5rem 0;
-    }
-    .nightmare-opponent {
-        background-color: #fee;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #f44336;
-        margin: 0.5rem 0;
-    }
-    .champion-player {
-        background-color: #fff8dc;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #FFD700;
-        margin: 0.5rem 0;
-    }
-    .legend-player {
-        background-color: #f0f8ff;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #4169E1;
-        margin: 0.5rem 0;
-    }
-    .loyalty-player {
-        background-color: #f5f0ff;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #8A2BE2;
-        margin: 0.5rem 0;
-    }
+/* Überschriften */
+.main-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #FF6B35;
+}
+
+/* Metric-Container */
+.metric-container {
+    background-color: #f0f2f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+/* Container für Medaillen und Gegner */
+.medal-container {
+    display: flex;
+    justify-content: space-around;
+    margin: 1rem 0;
+}
+
+/* Spezifische Anpassungen, die sich automatisch an den Dark Mode anpassen */
+.favorite-opponent, .nightmare-opponent, .champion-player, .legend-player, .loyalty-player {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+/* Anpassungen für 'favorite-opponent' (Overperformer) */
+div.st-emotion-cache-1f810n4:has(div h4:contains("🚀")) {
+    background-color: var(--secondary-background-color) !important;
+    border-left: 4px solid #4CAF50 !important;
+}
+
+/* Anpassungen für 'nightmare-opponent' (Underperformer) */
+div.st-emotion-cache-1f810n4:has(div h4:contains("😰")) {
+    background-color: var(--secondary-background-color) !important;
+    border-left: 4px solid #f44336 !important;
+}
+
+/* Weitere Spieler-Kategorien im Dark Mode sichtbar machen */
+div.st-emotion-cache-1f810n4:has(div h4:contains("🏆")) {
+    background-color: var(--secondary-background-color) !important;
+    border-left: 4px solid #FFD700 !important;
+}
+div.st-emotion-cache-1f810n4:has(div h4:contains("🌟")) {
+    background-color: var(--secondary-background-color) !important;
+    border-left: 4px solid #4169E1 !important;
+}
+div.st-emotion-cache-1f810n4:has(div h4:contains("❤️")) {
+    background-color: var(--secondary-background-color) !important;
+    border-left: 4px solid #8A2BE2 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
