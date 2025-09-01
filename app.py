@@ -262,6 +262,7 @@ def create_draft_scatter_plot(draft_analysis_df):
             'Draft_Position': 'Draft Position', 
             'Final_Rank': 'Final Rank',
             'Over_Under': 'Over/Under Score'
+            template="plotly_dark"
         },
         color_continuous_scale='RdYlGn'  # Red for negative, Green for positive
     )
@@ -1694,6 +1695,7 @@ def main():
                     labels={'Top3_Percentage': 'Top 3 Pick %', 'Manager': 'Manager'},
                     color='Top3_Percentage',
                     color_continuous_scale='RdYlGn'
+                    template="plotly_dark"
                 )
                 fig_lottery.update_layout(height=400, showlegend=False)
                 fig_lottery.add_hline(y=33.3, line_dash="dash", line_color="gray", annotation_text="Erwartungswert (33.3%)")
@@ -1758,6 +1760,7 @@ def main():
                         title='Kumulative Over/Under Performance by Manager',
                         color='Kumulierter_Over_Under',
                         color_continuous_scale='RdYlGn'
+                        template="plotly_dark"
                     )
                     fig.update_layout(height=400)
                     st.plotly_chart(fig, use_container_width=True)
@@ -1873,6 +1876,7 @@ def main():
                     title='Top 15 Championship Players',
                     color='Championships',
                     color_continuous_scale='Reds'
+                    template="plotly_dark"
                 )
                 fig.update_layout(height=400, xaxis_tickangle=-45)
                 st.plotly_chart(fig, use_container_width=True)
@@ -1908,6 +1912,7 @@ def main():
                         title='Top 10 First Round Superstars',
                         color='Avg_Pick_in_Round1',
                         color_continuous_scale='Blues_r'
+                        template="plotly_dark"
                     )
                     fig1.update_layout(height=350, xaxis_tickangle=-45)
                     st.plotly_chart(fig1, use_container_width=True)
@@ -1937,6 +1942,7 @@ def main():
                         hover_data=['Player'],
                         title='Playoff Heroes: Draft Position vs Playoff Success',
                         labels={'Avg_Draft_Position': 'Ø Draft Position', 'Playoff_Rate': 'Playoff Rate'}
+                        template="plotly_dark"
                     )
                     fig2.update_layout(height=350)
                     st.plotly_chart(fig2, use_container_width=True)
@@ -2026,6 +2032,7 @@ def main():
                     color='Loyalty_Score',
                     color_continuous_scale='Viridis',
                     title='Manager-Player Loyalty Map (Top 20)'
+                    template="plotly_dark"
                 )
                 fig.update_layout(height=500)
                 st.plotly_chart(fig, use_container_width=True)
@@ -2163,6 +2170,7 @@ def main():
                         title=title,
                         color_discrete_sequence=[stat_colors[stat]],
                         text=text_values
+                        template="plotly_dark"
                     )
                     fig.update_layout(
                         yaxis={'categoryorder': 'total ascending' if not ascending_sort else 'total descending'},
@@ -2249,6 +2257,7 @@ def main():
                         title=title,
                         color_discrete_sequence=[stat_colors[stat]],
                         text=text_values
+                        template="plotly_dark"
                     )
                     fig.update_layout(
                         yaxis={'categoryorder': 'total ascending' if not ascending_sort else 'total descending'},
