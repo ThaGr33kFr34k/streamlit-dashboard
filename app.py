@@ -90,12 +90,19 @@ def load_data():
         categories_df = pd.read_csv(categories_url)
         seasons_df = pd.read_csv(seasons_url)
         
+        # --- HIER WIRD DIE SPALTE UMBENANNT ---
+        if 'Year' in seasons_df.columns:
+            seasons_df = seasons_df.rename(columns={'Year': 'Saison'})
+            
+        # Optional: Clean up seasons_df columns
+        seasons_df.columns = seasons_df.columns.str.strip()
+        
         return teams_df, matchups_df, drafts_df, categories_df, seasons_df
     
-    except (URLError, HTTPError) as e:
-        st.error(f"Fehler beim Laden der Daten: {e.reason}")
-        return None, None, None, None
-
+    except Exception as e:
+        st.error(f"Error loading data from Google Sheets: {e}")
+        return None, None, None, None, None
+        
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
     if teams_df is None:
