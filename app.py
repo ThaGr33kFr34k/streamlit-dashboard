@@ -263,7 +263,7 @@ def create_draft_scatter_plot(draft_analysis_df):
             'Final_Rank': 'Final Rank',
             'Over_Under': 'Over/Under Score',
         },
-        template="plotly_dark"
+        template="plotly_dark",
         color_continuous_scale='RdYlGn'  # Red for negative, Green for positive
     )
     
