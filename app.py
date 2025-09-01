@@ -1231,7 +1231,7 @@ def main():
                                 st.write(playoff_data.columns)
                                 # Playoff Seed
                                 fig_performance.add_trace(go.Scatter(
-                                    x=playoff_data['Season'],
+                                    x=playoff_data['Saison'],
                                     y=playoff_data['Playoff Seed'],
                                     mode='lines+markers',
                                     name='Playoff Seed',
@@ -1241,7 +1241,7 @@ def main():
                                 
                                 # Final Rank
                                 fig_performance.add_trace(go.Scatter(
-                                    x=playoff_data['Year'],
+                                    x=playoff_data['Saison'],
                                     y=playoff_data['Final Rank'],
                                     mode='lines+markers',
                                     name='Final Rank',
@@ -1251,7 +1251,7 @@ def main():
                                 
                                 fig_performance.update_layout(
                                     title=f'Playoff Seed vs. Final Rank - {selected_manager}',
-                                    xaxis_title='Jahr',
+                                    xaxis_title='Saison',
                                     yaxis_title='Position',
                                     yaxis=dict(autorange='reversed'),
                                     height=400,
