@@ -1519,307 +1519,294 @@ def main():
                 st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
     
     elif analysis_type == "🎯 Drafts":
-    st.header("Draft Analysis")
-
-    # Process draft data
-    draft_analysis_df = process_draft_data(drafts_df, teams_df)
-
-    if draft_analysis_df is not None and not draft_analysis_df.empty:
-        # Tabs for different draft analyses
-        # New order: Over/Under, Lottery, Manager, Draft vs Final, Draft Value
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "🚀 Over/Under Performance", 
-            "🍀 Lottery Luck", 
-            "🎯 Manager Performance", 
-            "📊 Draft vs Final Position", 
-            "📈 Draft Value Analysis"
-        ])
-
-        with tab1:
-            st.subheader("Over/Under Performance")
-            st.markdown("*Diskrepanz zwischen Draft-Position und finalem Rang*")
+        st.header("Draft Analysis")
+        
+        # Process draft data
+        draft_analysis_df = process_draft_data(drafts_df, teams_df)
+        
+        if draft_analysis_df is not None and not draft_analysis_df.empty:
+            # Tabs for different draft analyses
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Over/Under Performance", "📊 Draft vs Final Position", "🍀 Lottery Luck", "🎯 Manager Performance", "📈 Draft Value Analysis"])
             
-            # Season filter
-            seasons = sorted(draft_analysis_df['Season'].unique(), reverse=True)
-            selected_season = st.selectbox("Saison auswählen:", ["Alle Saisons"] + list(seasons))
-            if selected_season != "Alle Saisons":
-                filtered_df = draft_analysis_df[draft_analysis_df['Season'] == selected_season]
-            else:
-                filtered_df = draft_analysis_df
-            
-            # Top Over/Underperformers
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### 🚀 Beste Overperformer")
-                st.markdown("*Höchste positive Abweichung (Draft schlechter als Endrang)*")
-                best_over = filtered_df.nlargest(5, 'Over_Under')
+            with tab1:
+                st.subheader("Over/Under Performance")
+                st.markdown("*Diskrepanz zwischen Draft-Position und finalem Rang*")
                 
-                for i, (_, row) in enumerate(best_over.iterrows()):
-                    st.markdown(f"""
+                # Season filter
+                seasons = sorted(draft_analysis_df['Season'].unique(), reverse=True)
+                selected_season = st.selectbox("Saison auswählen:", ["Alle Saisons"] + list(seasons))
+                if selected_season != "Alle Saisons":
+                    filtered_df = draft_analysis_df[draft_analysis_df['Season'] == selected_season]
+                else:
+                    filtered_df = draft_analysis_df
+                
+                # Top Over/Underperformers
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("### 🚀 Beste Overperformer")
+                    st.markdown("*Höchste positive Abweichung (Draft schlechter als Endrang)*")
+                    best_over = filtered_df.nlargest(5, 'Over_Under')
+                    
+                    for i, (_, row) in enumerate(best_over.iterrows()):
+                        st.markdown(f"""
                         <div class="favorite-opponent">
                             <h4>#{i+1} {row['Manager']} ({row['Season']})</h4>
                             <p><strong>+{row['Over_Under']}</strong> (Pick {row['Draft_Position']} → Rang {row['Final_Rank']})</p>
                         </div>
                         """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown("### 😰 Größte Underperformer")  
-                st.markdown("*Höchste negative Abweichung (Draft besser als Endrang)*")
-                worst_under = filtered_df.nsmallest(5, 'Over_Under')
                 
-                for i, (_, row) in enumerate(worst_under.iterrows()):
-                    st.markdown(f"""
+                with col2:
+                    st.markdown("### 😰 Größte Underperformer")  
+                    st.markdown("*Höchste negative Abweichung (Draft besser als Endrang)*")
+                    worst_under = filtered_df.nsmallest(5, 'Over_Under')
+                    
+                    for i, (_, row) in enumerate(worst_under.iterrows()):
+                        st.markdown(f"""
                         <div class="nightmare-opponent">
                             <h4>#{i+1} {row['Manager']} ({row['Season']})</h4>
                             <p><strong>{row['Over_Under']}</strong> (Pick {row['Draft_Position']} → Rang {row['Final_Rank']})</p>
                         </div>
                         """, unsafe_allow_html=True)
-        
-        with tab2:
-            st.subheader("Lottery Luck")
-            st.markdown("*Welcher Manager hatte in wie viel Prozent seiner Saisons einen Top 3 Pick?*")
             
-            # Calculate lottery luck for each manager
-            lottery_stats = []
-            managers = draft_analysis_df['Manager'].unique()
-            
-            for manager in managers:
-                manager_data = draft_analysis_df[draft_analysis_df['Manager'] == manager]
-                total_seasons = len(manager_data)
-                top3_picks = len(manager_data[manager_data['Draft_Position'] <= 3])
-                top3_percentage = (top3_picks / total_seasons * 100) if total_seasons > 0 else 0
+            with tab2:
+                st.subheader("Draft Position vs Final Rank")
                 
-                lottery_stats.append({
-                    'Manager': manager,
-                    'Total_Seasons': total_seasons,
-                    'Top3_Picks': top3_picks,
-                    'Top3_Percentage': round(top3_percentage, 1)
-                })
-            
-            # Create DataFrame and sort by percentage
-            lottery_df = pd.DataFrame(lottery_stats).sort_values('Top3_Percentage', ascending=False)
-            
-            # --- FÜGE DIESE ZEILE HINZU, UM NACH SAISONS ZU FILTERN ---
-            lottery_df = lottery_df[lottery_df['Total_Seasons'] >= 5]
-            
-            # Display lottery luck table
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                # Color coding for lottery luck
-                def highlight_lottery_luck(val):
-                    if pd.isna(val):
-                        return ""
-                    if val >= 40:
-                        return "background-color: rgba(0, 150, 0, 0.4);"
-                    elif val >= 30:
-                        return "background-color: rgba(50, 180, 50, 0.3);"
-                    elif val >= 20:
-                        return "background-color: rgba(150, 220, 150, 0.2);"
-                    elif val >= 10:
-                        return "background-color: rgba(255, 255, 0, 0.1);"
-                    else:
-                        return "background-color: rgba(255, 150, 100, 0.3);"
+                # Scatter plot
+                fig = create_draft_scatter_plot(draft_analysis_df)
+                if fig:
+                    st.plotly_chart(fig, use_container_width=True)
                 
-                styled_lottery = lottery_df.style.applymap(
-                    highlight_lottery_luck, 
-                    subset=['Top3_Percentage']
+                # Correlation analysis
+                correlation, p_value = calculate_correlation(
+                    draft_analysis_df['Draft_Position'], 
+                    draft_analysis_df['Final_Rank']
                 )
                 
-                st.dataframe(
-                    styled_lottery,
-                    column_config={
-                        "Manager": "Manager",
-                        "Total_Seasons": "Gespielte Saisons",
-                        "Top3_Picks": "Top 3 Picks",
-                        "Top3_Percentage": "Top 3 Pick %"
-                    },
-                    hide_index=True,
-                    use_container_width=True
-                )
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Correlation", f"{correlation:.3f}")
+                with col2:
+                    st.metric("P-Value", f"{p_value:.3f}")
+                with col3:
+                    significance = "Significant" if p_value < 0.05 else "Not Significant"
+                    st.metric("Statistical Significance", significance)
+                
+                st.markdown(f"""
+                **Interpretation:**
+                - Correlation of {correlation:.3f} indicates {"a strong" if abs(correlation) > 0.7 else "a moderate" if abs(correlation) > 0.3 else "a weak"} relationship
+                - {"Draft position is a good predictor of final rank" if abs(correlation) > 0.5 else "Draft position has limited predictive power"}
+                """)
             
-            with col2:
-                # Show top 3 most and least lucky managers
-                st.markdown("**🍀 Glückspilze**")
-                top_lucky = lottery_df.head(3)
-                if not top_lucky.empty:
+            with tab3:
+                st.subheader("Lottery Luck")
+                st.markdown("*Welcher Manager hatte in wie viel Prozent seiner Saisons einen Top 3 Pick?*")
+                
+                # Calculate lottery luck for each manager
+                lottery_stats = []
+                managers = draft_analysis_df['Manager'].unique()
+                
+                for manager in managers:
+                    manager_data = draft_analysis_df[draft_analysis_df['Manager'] == manager]
+                    total_seasons = len(manager_data)
+                    top3_picks = len(manager_data[manager_data['Draft_Position'] <= 3])
+                    top3_percentage = (top3_picks / total_seasons * 100) if total_seasons > 0 else 0
+                    
+                    lottery_stats.append({
+                        'Manager': manager,
+                        'Total_Seasons': total_seasons,
+                        'Top3_Picks': top3_picks,
+                        'Top3_Percentage': round(top3_percentage, 1)
+                    })
+                
+                # Create DataFrame and sort by percentage
+                lottery_df = pd.DataFrame(lottery_stats).sort_values('Top3_Percentage', ascending=False)
+
+                # --- FÜGE DIESE ZEILE HINZU, UM NACH SAISONS ZU FILTERN ---
+                lottery_df = lottery_df[lottery_df['Total_Seasons'] >= 5]
+                
+                # Display lottery luck table
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    # Color coding for lottery luck
+                    def highlight_lottery_luck(val):
+                        if pd.isna(val):
+                            return ""
+                        if val >= 40:
+                            return "background-color: rgba(0, 150, 0, 0.4);"  # Very lucky - Dark green
+                        elif val >= 30:
+                            return "background-color: rgba(50, 180, 50, 0.3);"  # Lucky - Medium green
+                        elif val >= 20:
+                            return "background-color: rgba(150, 220, 150, 0.2);"  # Above average - Light green
+                        elif val >= 10:
+                            return "background-color: rgba(255, 255, 0, 0.1);"  # Average - Light yellow
+                        else:
+                            return "background-color: rgba(255, 150, 100, 0.3);"  # Unlucky - Orange
+                    
+                    styled_lottery = lottery_df.style.applymap(
+                        highlight_lottery_luck, 
+                        subset=['Top3_Percentage']
+                    )
+                    
+                    st.dataframe(
+                        styled_lottery,
+                        column_config={
+                            "Manager": "Manager",
+                            "Total_Seasons": "Gespielte Saisons",
+                            "Top3_Picks": "Top 3 Picks",
+                            "Top3_Percentage": "Top 3 Pick %"
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    # Show top 3 most and least lucky managers
+                    st.markdown("**🍀 Glückspilze**")
+                    top_lucky = lottery_df.head(3)
                     for i, (_, row) in enumerate(top_lucky.iterrows()):
                         st.markdown(f"**{i+1}.** {row['Manager']} ({row['Top3_Percentage']}%)")
-                else:
-                    st.info("Nicht genügend Daten für Glückspilze")
-                
-                st.markdown("**😔 Pechvögel**")
-                bottom_lucky = lottery_df.tail(3).iloc[::-1]
-                if not bottom_lucky.empty:
+                    
+                    st.markdown("**😔 Pechvögel**")
+                    bottom_lucky = lottery_df.tail(3).iloc[::-1]  # Reverse order
                     for i, (_, row) in enumerate(bottom_lucky.iterrows()):
                         st.markdown(f"**{i+1}.** {row['Manager']} ({row['Top3_Percentage']}%)")
-                else:
-                    st.info("Nicht genügend Daten für Pechvögel")
-            
-            # Visualization
-            fig_lottery = px.bar(
-                lottery_df,
-                x='Manager',
-                y='Top3_Percentage',
-                title='Lottery Luck: Top 3 Pick Percentage by Manager',
-                labels={'Top3_Percentage': 'Top 3 Pick %', 'Manager': 'Manager'},
-                color='Top3_Percentage',
-                color_continuous_scale='RdYlGn',
-                template="plotly_dark"
-            )
-            fig_lottery.update_layout(height=400, showlegend=False)
-            fig_lottery.add_hline(y=33.3, line_dash="dash", line_color="gray", annotation_text="Erwartungswert (33.3%)")
-            st.plotly_chart(fig_lottery, use_container_width=True)
-
-        with tab3:
-            st.subheader("Manager Draft Performance")
-            
-            # Cumulative over/under analysis
-            cumulative_df = calculate_cumulative_over_under(draft_analysis_df)
-            
-            if cumulative_df is not None:
-                st.markdown("**Over/Under Performance (Positive = Overperformed)**")
                 
-                # Round the average columns to whole numbers
-                display_cumulative = cumulative_df.copy()
-                display_cumulative['Avg_Draft_Position'] = display_cumulative['Avg_Draft_Position'].round(0).astype(int)
-                display_cumulative['Avg_Final_Rank'] = display_cumulative['Avg_Final_Rank'].round(0).astype(int)
-                
-                # Color coding for over/under performance
-                def highlight_over_under(val):
-                    if pd.isna(val):
-                        return ""
-                    if val > 5:
-                        return "background-color: rgba(0, 150, 0, 0.4);"
-                    elif val > 2:
-                        return "background-color: rgba(50, 180, 50, 0.3);"
-                    elif val > 0:
-                        return "background-color: rgba(150, 220, 150, 0.2);"
-                    elif val == 0:
-                        return "background-color: rgba(255, 255, 0, 0.1);"
-                    elif val > -2:
-                        return "background-color: rgba(255, 200, 150, 0.2);"
-                    elif val > -5:
-                        return "background-color: rgba(255, 150, 100, 0.3);"
-                    else:
-                        return "background-color: rgba(200, 0, 0, 0.4);"
-                
-                styled_cumulative = display_cumulative.style.applymap(
-                    highlight_over_under, 
-                    subset=['Kumulierter_Over_Under']
-                )
-                
-                st.dataframe(
-                    styled_cumulative,
-                    column_config={
-                        "Manager": "Manager",
-                        "Kumulierter_Over_Under": "Kumulierter Over/Under",
-                        "Anzahl_Saisons": "Anzahl Saisons",
-                        "Avg_Draft_Position": "Ø Draft Position",
-                        "Avg_Final_Rank": "Ø Final Rank"
-                    },
-                    hide_index=True,
-                    use_container_width=True
-                )
-                
-                # Bar chart of cumulative performance
-                fig = px.bar(
-                    cumulative_df,
+                # Visualization
+                fig_lottery = px.bar(
+                    lottery_df,
                     x='Manager',
-                    y='Kumulierter_Over_Under',
-                    title='Kumulative Over/Under Performance by Manager',
-                    color='Kumulierter_Over_Under',
+                    y='Top3_Percentage',
+                    title='Lottery Luck: Top 3 Pick Percentage by Manager',
+                    labels={'Top3_Percentage': 'Top 3 Pick %', 'Manager': 'Manager'},
+                    color='Top3_Percentage',
                     color_continuous_scale='RdYlGn',
                     template="plotly_dark"
                 )
-                fig.update_layout(height=400)
-                st.plotly_chart(fig, use_container_width=True)
+                fig_lottery.update_layout(height=400, showlegend=False)
+                fig_lottery.add_hline(y=33.3, line_dash="dash", line_color="gray", annotation_text="Erwartungswert (33.3%)")
+                st.plotly_chart(fig_lottery, use_container_width=True)
+            
+            with tab4:
+                st.subheader("Manager Draft Performance")
+                
+                # Cumulative over/under analysis
+                cumulative_df = calculate_cumulative_over_under(draft_analysis_df)
+                
+                if cumulative_df is not None:
+                    st.markdown("**Over/Under Performance (Positive = Overperformed)**")
+                    
+                    # Round the average columns to whole numbers
+                    display_cumulative = cumulative_df.copy()
+                    display_cumulative['Avg_Draft_Position'] = display_cumulative['Avg_Draft_Position'].round(0).astype(int)
+                    display_cumulative['Avg_Final_Rank'] = display_cumulative['Avg_Final_Rank'].round(0).astype(int)
+                    
+                    # Color coding for over/under performance
+                    def highlight_over_under(val):
+                        if pd.isna(val):
+                            return ""
+                        if val > 5:
+                            return "background-color: rgba(0, 150, 0, 0.4);"  # Dark green
+                        elif val > 2:
+                            return "background-color: rgba(50, 180, 50, 0.3);"  # Medium green
+                        elif val > 0:
+                            return "background-color: rgba(150, 220, 150, 0.2);"  # Light green
+                        elif val == 0:
+                            return "background-color: rgba(255, 255, 0, 0.1);"  # Light yellow
+                        elif val > -2:
+                            return "background-color: rgba(255, 200, 150, 0.2);"  # Light orange
+                        elif val > -5:
+                            return "background-color: rgba(255, 150, 100, 0.3);"  # Medium orange
+                        else:
+                            return "background-color: rgba(200, 0, 0, 0.4);"  # Dark red
+                    
+                    styled_cumulative = display_cumulative.style.applymap(
+                        highlight_over_under, 
+                        subset=['Kumulierter_Over_Under']
+                    )
+                    
+                    st.dataframe(
+                        styled_cumulative,
+                        column_config={
+                            "Manager": "Manager",
+                            "Kumulierter_Over_Under": "Kumulierter Over/Under",
+                            "Anzahl_Saisons": "Anzahl Saisons",
+                            "Avg_Draft_Position": "Ø Draft Position",
+                            "Avg_Final_Rank": "Ø Final Rank"
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                    
+                    # Bar chart of cumulative performance
+                    fig = px.bar(
+                        cumulative_df,
+                        x='Manager',
+                        y='Kumulierter_Over_Under',
+                        title='Kumulative Over/Under Performance by Manager',
+                        color='Kumulierter_Over_Under',
+                        color_continuous_scale='RdYlGn',
+                        template="plotly_dark"
+                    )
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+            
+            with tab5:
+                st.subheader("Draft Value Analysis")
+                
+                # Calculate draft value
+                draft_value_df = calculate_draft_value_analysis(draft_analysis_df)
+                
+                if draft_value_df is not None:
+                    st.markdown("**Average Final Rank by Draft Position**")
+                    
+                    # Round the average final rank to whole numbers and remove unnecessary columns
+                    display_df = draft_value_df[['Draft_Position', 'Avg_Final_Rank']].copy()
+                    display_df['Avg_Final_Rank'] = display_df['Avg_Final_Rank'].round(0).astype(int)
+                    
+                    st.dataframe(
+                        display_df,
+                        column_config={
+                            "Draft_Position": "Draft Position",
+                            "Avg_Final_Rank": "Ø Final Rank"
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                    
+                    # Line chart showing expected vs actual performance
+                    fig = go.Figure()
+                    
+                    fig.add_trace(go.Scatter(
+                        x=draft_value_df['Draft_Position'],
+                        y=draft_value_df['Avg_Final_Rank'],
+                        mode='lines+markers',
+                        name='Actual Performance',
+                        line=dict(color='blue')
+                    ))
+                    
+                    # Perfect prediction line
+                    fig.add_trace(go.Scatter(
+                        x=draft_value_df['Draft_Position'],
+                        y=draft_value_df['Draft_Position'],
+                        mode='lines',
+                        name='Perfect Prediction',
+                        line=dict(color='red', dash='dash')
+                    ))
+                    
+                    fig.update_layout(
+                        title='Draft Position vs Average Final Rank',
+                        xaxis_title='Draft Position',
+                        yaxis_title='Average Final Rank',
+                        yaxis=dict(autorange='reversed'),
+                        height=400
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
         
-        with tab4:
-            st.subheader("Draft Position vs Final Rank")
-            
-            # Scatter plot
-            fig = create_draft_scatter_plot(draft_analysis_df)
-            if fig:
-                st.plotly_chart(fig, use_container_width=True)
-            
-            # Correlation analysis
-            correlation, p_value = calculate_correlation(
-                draft_analysis_df['Draft_Position'],  
-                draft_analysis_df['Final_Rank']
-            )
-            
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Correlation", f"{correlation:.3f}")
-            with col2:
-                st.metric("P-Value", f"{p_value:.3f}")
-            with col3:
-                significance = "Significant" if p_value < 0.05 else "Not Significant"
-                st.metric("Statistical Significance", significance)
-            
-            st.markdown(f"""
-            **Interpretation:**
-            - Correlation of {correlation:.3f} indicates {"a strong" if abs(correlation) > 0.7 else "a moderate" if abs(correlation) > 0.3 else "a weak"} relationship
-            - {"Draft position is a good predictor of final rank" if abs(correlation) > 0.5 else "Draft position has limited predictive power"}
-            """)
-        
-        with tab5:
-            st.subheader("Draft Value Analysis")
-            
-            # Calculate draft value
-            draft_value_df = calculate_draft_value_analysis(draft_analysis_df)
-            
-            if draft_value_df is not None:
-                st.markdown("**Average Final Rank by Draft Position**")
-                
-                # Round the average final rank to whole numbers and remove unnecessary columns
-                display_df = draft_value_df[['Draft_Position', 'Avg_Final_Rank']].copy()
-                display_df['Avg_Final_Rank'] = display_df['Avg_Final_Rank'].round(0).astype(int)
-                
-                st.dataframe(
-                    display_df,
-                    column_config={
-                        "Draft_Position": "Draft Position",
-                        "Avg_Final_Rank": "Ø Final Rank"
-                    },
-                    hide_index=True,
-                    use_container_width=True
-                )
-                
-                # Line chart showing expected vs actual performance
-                fig = go.Figure()
-                
-                fig.add_trace(go.Scatter(
-                    x=draft_value_df['Draft_Position'],
-                    y=draft_value_df['Avg_Final_Rank'],
-                    mode='lines+markers',
-                    name='Actual Performance',
-                    line=dict(color='blue')
-                ))
-                
-                # Perfect prediction line
-                fig.add_trace(go.Scatter(
-                    x=draft_value_df['Draft_Position'],
-                    y=draft_value_df['Draft_Position'],
-                    mode='lines',
-                    name='Perfect Prediction',
-                    line=dict(color='red', dash='dash')
-                ))
-                
-                fig.update_layout(
-                    title='Draft Position vs Average Final Rank',
-                    xaxis_title='Draft Position',
-                    yaxis_title='Average Final Rank',
-                    yaxis=dict(autorange='reversed'),
-                    height=400
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-
-    else:
-        st.info("Draft data not available or could not be processed. Please check your mDrafts sheet URL and data format.")
+        else:
+            st.info("Draft data not available or could not be processed. Please check your mDrafts sheet URL and data format.")
 
     elif analysis_type == "👨‍💼 Player Analysis":
         st.header("Player Analysis")
