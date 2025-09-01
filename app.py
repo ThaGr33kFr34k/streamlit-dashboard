@@ -1231,7 +1231,7 @@ def main():
                                 
                                 # Playoff Seed
                                 fig_performance.add_trace(go.Scatter(
-                                    x=playoff_data['Year'],
+                                    x=playoff_data['Saison'],
                                     y=playoff_data['Playoff Seed'],
                                     mode='lines+markers',
                                     name='Playoff Seed',
