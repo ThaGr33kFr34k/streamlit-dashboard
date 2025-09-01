@@ -1145,53 +1145,71 @@ def main():
                             # Final Rank Timeline
                             if 'Final Rank' in timeline_data.columns and timeline_data['Final Rank'].notna().any():
                                 st.markdown("**🏆 Final Rank Timeline**")
-                                
+        
                                 # Filtere nur Jahre mit Final Rank Daten
                                 rank_data = timeline_data[timeline_data['Final Rank'].notna()]
-                                
-                                # Farbkodierung basierend auf Rank (1-3 = Gold/Silber/Bronze, etc.)
-                                def get_rank_color(rank):
-                                    if rank == 1:
-                                        return '#FFD700'  # Gold
-                                    elif rank == 2:
-                                        return '#C0C0C0'  # Silber
-                                    elif rank == 3:
-                                        return '#CD7F32'  # Bronze
-                                    elif rank <= 4:
-                                        return '#4CAF50'  # Grün (Playoffs)
-                                    elif rank <= 8:
-                                        return '#FF9800'  # Orange (Playoffs)
-                                    else:
-                                        return '#F44336'  # Rot (No Playoffs)
-                                
-                                colors = [get_rank_color(rank) for rank in rank_data['Final Rank']]
-                                
-                                fig_rank = go.Figure()
-                                fig_rank.add_trace(go.Scatter(
-                                    x=rank_data['Year'],
-                                    y=rank_data['Final Rank'],
-                                    mode='lines+markers',
-                                    name='Final Rank',
-                                    line=dict(color='#2196F3', width=3),
-                                    marker=dict(
-                                        size=10, 
-                                        color=colors,
-                                        line=dict(color='white', width=2)
+        
+                                # NORMALISIERUNG: Stelle sicher, dass eine Year-Spalte existiert
+                                rank_data = normalize_year_column(rank_data)
+        
+                                # Sichere Jahr-Spalten-Abfrage
+                                def get_year_column_safe(df):
+                                    year_columns = ['Year', 'year', 'YEAR', 'Season', 'season', 'SEASON', 
+                                                 'Saison', 'saison', 'SAISON', 'Date', 'date', 'DATE']
+            
+                                    for col in year_columns:
+                                        if col in df.columns:
+                                            return col
+                                    return None
+        
+                                year_col = get_year_column_safe(rank_data)
+        
+                                if year_col is None:
+                                    st.error(f"Keine Jahr-Spalte gefunden. Verfügbare Spalten: {rank_data.columns.tolist()}")
+                                else:
+                                    # Farbkodierung basierend auf Rank (1-3 = Gold/Silber/Bronze, etc.)
+                                    def get_rank_color(rank):
+                                        if rank == 1:
+                                            return '#FFD700'  # Gold
+                                        elif rank == 2:
+                                            return '#C0C0C0'  # Silber
+                                        elif rank == 3:
+                                            return '#CD7F32'  # Bronze
+                                        elif rank <= 4:
+                                            return '#4CAF50'  # Grün (Playoffs)
+                                        elif rank <= 8:
+                                            return '#FF9800'  # Orange (Playoffs)
+                                        else:
+                                            return '#F44336'  # Rot (No Playoffs)
+            
+                                    colors = [get_rank_color(rank) for rank in rank_data['Final Rank']]
+            
+                                    fig_rank = go.Figure()
+                                    fig_rank.add_trace(go.Scatter(
+                                        x=rank_data[year_col],  # Verwende die gefundene Jahr-Spalte
+                                        y=rank_data['Final Rank'],
+                                        mode='lines+markers',
+                                        name='Final Rank',
+                                        line=dict(color='#2196F3', width=3),
+                                        marker=dict(
+                                            size=10, 
+                                            color=colors,
+                                            line=dict(color='white', width=2)
+                                        )
+                                    ))
+            
+                                    fig_rank.update_layout(
+                                        title=f'Final Rank Entwicklung - {selected_manager}',
+                                        xaxis_title='Jahr',
+                                        yaxis_title='Final Rank Position',
+                                        yaxis=dict(autorange='reversed'),  # Bessere Ranks (1, 2, 3) oben
+                                        height=400,
+                                        showlegend=False
                                     )
-                                ))
-                                
-                                fig_rank.update_layout(
-                                    title=f'Final Rank Entwicklung - {selected_manager}',
-                                    xaxis_title='Jahr',
-                                    yaxis_title='Final Rank Position',
-                                    yaxis=dict(autorange='reversed'),  # Bessere Ranks (1, 2, 3) oben
-                                    height=400,
-                                    showlegend=False
-                                )
-                                
-                                st.plotly_chart(fig_rank, use_container_width=True)
-                            else:
-                                st.info("Keine Final Rank Daten verfügbar")
+            
+                                    st.plotly_chart(fig_rank, use_container_width=True)
+                        else:
+                            st.info("Keine Final Rank Daten verfügbar")
                         
                         # 6. Kombinierte Performance Grafik (wenn beide Daten vorhanden)
                         if ('Final Rank' in timeline_data.columns and 
