@@ -1006,7 +1006,11 @@ def main():
     analysis_type = st.session_state.analysis_type
     
     # Main content based on selection
-    if analysis_type == "👥 Team-View":
+    if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
+    # Erstelle die zwei Tabs für Team-View
+    tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
+    
+    with tab1:
         st.header("Team-View - Manager Dashboard")
         
         # Überprüfe, ob die Daten geladen wurden
@@ -1103,7 +1107,6 @@ def main():
                         with chart_col1:
                             # Draft Pick Timeline (falls vorhanden)
                             if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
-                                st.write(timeline_data.columns)
                                 # Finde die richtige Draft Pick Spalte
                                 draft_col = None
                                 for col in timeline_data.columns:
@@ -1232,7 +1235,7 @@ def main():
                                 
                                 # Playoff Seed
                                 fig_performance.add_trace(go.Scatter(
-                                    x=playoff_data['Saison'],
+                                    x=playoff_data['Year'],
                                     y=playoff_data['Playoff Seed'],
                                     mode='lines+markers',
                                     name='Playoff Seed',
@@ -1242,7 +1245,7 @@ def main():
                                 
                                 # Final Rank
                                 fig_performance.add_trace(go.Scatter(
-                                    x=playoff_data['Saison'],
+                                    x=playoff_data['Year'],
                                     y=playoff_data['Final Rank'],
                                     mode='lines+markers',
                                     name='Final Rank',
@@ -1252,7 +1255,7 @@ def main():
                                 
                                 fig_performance.update_layout(
                                     title=f'Playoff Seed vs. Final Rank - {selected_manager}',
-                                    xaxis_title='Saison',
+                                    xaxis_title='Jahr',
                                     yaxis_title='Position',
                                     yaxis=dict(autorange='reversed'),
                                     height=400,
@@ -1281,6 +1284,236 @@ def main():
         
         else:
             st.warning("Die Seasons-Daten konnten nicht geladen werden.")
+    
+    with tab2:
+        st.header("Historic Drafts")
+        
+        # Überprüfe, ob die Draft-Daten geladen wurden
+        if drafts_df is not None and not drafts_df.empty:
+            
+            # 1. Manager-Dropdown erstellen (identisch zum ersten Tab)
+            st.subheader("Manager auswählen")
+            
+            # Erstelle Liste aller einzigartigen Manager-Namen aus drafts_df
+            manager_names = sorted(drafts_df['Manager'].dropna().unique()) if 'Manager' in drafts_df.columns else []
+            
+            if not manager_names:
+                st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
+            else:
+                # Manager-Dropdown
+                selected_manager = st.selectbox(
+                    "Wählen Sie einen Manager:",
+                    options=manager_names,
+                    key="historic_drafts_manager_select"
+                )
+                
+                if selected_manager:
+                    st.markdown(f"### Draft-Historie für **{selected_manager}**")
+                    
+                    # 2. Filtere Draft-Daten für den ausgewählten Manager
+                    manager_drafts = drafts_df[drafts_df['Manager'] == selected_manager].copy()
+                    
+                    if not manager_drafts.empty:
+                        # 3. Sortiere nach Jahr absteigend (neueste zuerst)
+                        year_col = None
+                        for col in ['Year', 'Season', 'Jahr', 'Saison']:
+                            if col in manager_drafts.columns:
+                                year_col = col
+                                break
+                        
+                        if year_col:
+                            manager_drafts = manager_drafts.sort_values(year_col, ascending=False)
+                            years = sorted(manager_drafts[year_col].unique(), reverse=True)
+                        else:
+                            st.warning("Keine Jahr-Spalte gefunden in den Draft-Daten")
+                            years = ['Alle Jahre']
+                        
+                        # 4. Erstelle Draft-Übersicht für jede Saison
+                        st.subheader("🎯 Draft-Übersicht nach Saisons")
+                        
+                        for year in years:
+                            if year_col:
+                                year_drafts = manager_drafts[manager_drafts[year_col] == year]
+                                year_display = str(year)
+                            else:
+                                year_drafts = manager_drafts
+                                year_display = "Alle Jahre"
+                            
+                            if not year_drafts.empty:
+                                # Sortiere nach Draft-Position/Runde
+                                round_col = None
+                                pick_col = None
+                                
+                                for col in ['Round', 'Draft_Round', 'Runde', 'Pick', 'Draft_Pick', 'Position']:
+                                    if col in year_drafts.columns:
+                                        if 'round' in col.lower() or 'runde' in col.lower():
+                                            round_col = col
+                                        elif 'pick' in col.lower() or 'position' in col.lower():
+                                            pick_col = col
+                                
+                                # Sortiere nach verfügbarer Spalte
+                                if round_col:
+                                    year_drafts = year_drafts.sort_values(round_col, ascending=True)
+                                elif pick_col:
+                                    year_drafts = year_drafts.sort_values(pick_col, ascending=True)
+                                
+                                # Container für jede Saison
+                                with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=True):
+                                    
+                                    # Erstelle Draft-Tabelle
+                                    st.markdown("### Draft Picks")
+                                    
+                                    # Header
+                                    cols = st.columns([1, 3, 2, 2, 1])
+                                    with cols[0]:
+                                        st.markdown("**#**")
+                                    with cols[1]:
+                                        st.markdown("**Spieler**")
+                                    with cols[2]:
+                                        st.markdown("**Position**")
+                                    with cols[3]:
+                                        st.markdown("**Team**")
+                                    with cols[4]:
+                                        st.markdown("**Runde**")
+                                    
+                                    st.markdown("---")
+                                    
+                                    # Zeige jeden Draft Pick
+                                    for i, (_, pick) in enumerate(year_drafts.iterrows()):
+                                        cols = st.columns([1, 3, 2, 2, 1])
+                                        
+                                        # Styling für die ersten 3 Picks (Dark Mode kompatibel)
+                                        is_top_3 = i < 3
+                                        
+                                        with cols[0]:
+                                            if is_top_3:
+                                                # Top 3 Picks mit Highlight
+                                                pick_display = f"#{i+1}"
+                                                if i == 0:
+                                                    st.markdown(f'<div style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 14px; border: 2px solid #FFD700;">{pick_display}</div>', unsafe_allow_html=True)
+                                                elif i == 1:
+                                                    st.markdown(f'<div style="background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 14px; border: 2px solid #C0C0C0;">{pick_display}</div>', unsafe_allow_html=True)
+                                                elif i == 2:
+                                                    st.markdown(f'<div style="background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 14px; border: 2px solid #CD7F32;">{pick_display}</div>', unsafe_allow_html=True)
+                                            else:
+                                                st.write(f"#{i+1}")
+                                        
+                                        # Spielername
+                                        player_name = pick.get('Player', pick.get('Spieler', 'Unbekannt'))
+                                        with cols[1]:
+                                            if is_top_3:
+                                                st.markdown(f"**{player_name}**")
+                                            else:
+                                                st.write(player_name)
+                                        
+                                        # Position
+                                        position = pick.get('Position', pick.get('Pos', 'N/A'))
+                                        with cols[2]:
+                                            if is_top_3:
+                                                st.markdown(f"**{position}**")
+                                            else:
+                                                st.write(position)
+                                        
+                                        # Team
+                                        team = pick.get('Team', pick.get('NFL_Team', 'N/A'))
+                                        with cols[3]:
+                                            if is_top_3:
+                                                st.markdown(f"**{team}**")
+                                            else:
+                                                st.write(team)
+                                        
+                                        # Runde
+                                        draft_round = pick.get(round_col, pick.get('Round', 'N/A')) if round_col else 'N/A'
+                                        with cols[4]:
+                                            if is_top_3:
+                                                st.markdown(f"**{draft_round}**")
+                                            else:
+                                                st.write(draft_round)
+                                    
+                                    st.markdown("---")
+                        
+                        # 5. Zusammenfassende Statistiken
+                        st.subheader("📊 Draft-Zusammenfassung")
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            total_picks = len(manager_drafts)
+                            st.metric("Gesamt Picks", total_picks)
+                        
+                        with col2:
+                            if year_col:
+                                seasons_count = manager_drafts[year_col].nunique()
+                                avg_picks_per_season = total_picks / seasons_count if seasons_count > 0 else 0
+                                st.metric("Ø Picks/Saison", f"{avg_picks_per_season:.1f}")
+                            else:
+                                st.metric("Ø Picks/Saison", "N/A")
+                        
+                        with col3:
+                            # Lieblings-Position
+                            if 'Position' in manager_drafts.columns:
+                                fav_position = manager_drafts['Position'].value_counts().head(1)
+                                if len(fav_position) > 0:
+                                    st.metric("Lieblings-Position", fav_position.index[0], f"{fav_position.iloc[0]}x")
+                                else:
+                                    st.metric("Lieblings-Position", "N/A")
+                            else:
+                                st.metric("Lieblings-Position", "N/A")
+                        
+                        with col4:
+                            # Durchschnittliche Draft-Runde
+                            if round_col and manager_drafts[round_col].notna().any():
+                                avg_round = manager_drafts[round_col].mean()
+                                st.metric("Ø Draft-Runde", f"{avg_round:.1f}")
+                            else:
+                                st.metric("Ø Draft-Runde", "N/A")
+                        
+                        # 6. Top gedraftete Spieler dieses Managers
+                        st.subheader("⭐ Häufig gedraftete Spieler")
+                        
+                        if 'Player' in manager_drafts.columns or 'Spieler' in manager_drafts.columns:
+                            player_col = 'Player' if 'Player' in manager_drafts.columns else 'Spieler'
+                            top_players = manager_drafts[player_col].value_counts().head(5)
+                            
+                            if len(top_players) > 0:
+                                for i, (player, count) in enumerate(top_players.items()):
+                                    if count > 1:  # Nur Spieler die mehrfach gedraftet wurden
+                                        # Hole Jahre in denen dieser Spieler gedraftet wurde
+                                        player_years = []
+                                        if year_col:
+                                            player_years = manager_drafts[manager_drafts[player_col] == player][year_col].tolist()
+                                            years_str = ", ".join(map(str, sorted(player_years, reverse=True)))
+                                        else:
+                                            years_str = "Unbekannt"
+                                        
+                                        st.markdown(f"""
+                                        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin: 5px 0; border-left: 4px solid #4CAF50;">
+                                            <h5 style="margin: 0;">#{i+1} {player}</h5>
+                                            <p style="margin: 2px 0; color: #888;"><strong>{count}x</strong> gedraftet in: {years_str}</p>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                else:
+                                    st.info("Keine mehrfach gedrafteten Spieler gefunden")
+                            else:
+                                st.info("Player-Spalte nicht in den Draft-Daten gefunden")
+                    
+                    else:
+                        st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
+        
+        else:
+            st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
+
+
+# Hilfsfunktion für die Year-Normalisierung (falls benötigt)
+def normalize_year_column(df):
+    """Stelle sicher, dass eine Year-Spalte existiert"""
+    if 'Year' not in df.columns:
+        year_alternatives = ['Season', 'season', 'Jahr', 'Saison', 'saison']
+        for alt in year_alternatives:
+            if alt in df.columns:
+                df['Year'] = df[alt]
+                break
+    return df
             
     elif analysis_type == "🥊 Head-to-Head":
         st.header("Head-to-Head Analysis")
