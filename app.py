@@ -1286,7 +1286,7 @@ def main():
             st.warning("Die Seasons-Daten konnten nicht geladen werden.")
     
     with tab2:
-        st.header("Historic Drafts")
+        st.header("Historic Drafts - Manager Draft Historie")
         
         # Überprüfe, ob die Draft-Daten geladen wurden
         if drafts_df is not None and not drafts_df.empty:
