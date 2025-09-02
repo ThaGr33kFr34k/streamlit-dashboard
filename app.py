@@ -1017,17 +1017,17 @@ def main():
             if seasons_df is not None and not seasons_df.empty:
 
             # 1. Manager-Dropdown erstellen
-            st.subheader("Manager auswählen")
+                st.subheader("Manager auswählen")
 
             # Erstelle Liste aller einzigartigen Manager-Namen
-            manager_names = sorted(seasons_df['First Name'].dropna().unique())
+                manager_names = sorted(seasons_df['First Name'].dropna().unique())
 
             # Manager-Dropdown
-            selected_manager = st.selectbox(
-                "Wählen Sie einen Manager:",
-                options=manager_names,
-                key="team_view_manager_select"
-            )
+                selected_manager = st.selectbox(
+                    "Wählen Sie einen Manager:",
+                    options=manager_names,
+                    key="team_view_manager_select"
+                )
 
             if selected_manager:
                 st.markdown(f"### Dashboard für **{selected_manager}**")
