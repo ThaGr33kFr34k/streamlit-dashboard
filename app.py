@@ -1477,7 +1477,7 @@ def main():
                             def highlight_chokes(val):
                                 if isinstance(val, (int, float)):
                                     if val < -6:  # Very negative = very bad choking
-                                        return 'background-color: #ffebee; color: #c62828; font-weight: bold'
+                                        return 'background-color: #ffebee; color: #000000; font-weight: bold'
                                     elif val < -3:
                                         return 'background-color: #F44336; color: #F44336'
                                     elif val < 0:
