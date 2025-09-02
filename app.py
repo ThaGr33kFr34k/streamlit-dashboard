@@ -1009,165 +1009,165 @@ def main():
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
     # Erstelle die zwei Tabs für Team-View
     tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
-    
-        with tab1:
+
+    with tab1:
         st.header("Team-View - Manager Dashboard")
-        
-            # Überprüfe, ob die Daten geladen wurden
-            if seasons_df is not None and not seasons_df.empty:
-            
-                # 1. Manager-Dropdown erstellen
-                st.subheader("Manager auswählen")
-            
-                # Erstelle Liste aller einzigartigen Manager-Namen
-                manager_names = sorted(seasons_df['First Name'].dropna().unique())
-            
-                # Manager-Dropdown
-                selected_manager = st.selectbox(
-                    "Wählen Sie einen Manager:",
-                    options=manager_names,
-                    key="team_view_manager_select"
-                )
-            
-                if selected_manager:
-                    st.markdown(f"### Dashboard für **{selected_manager}**")
-                
-                    # 2. Filtere Daten für den ausgewählten Manager
-                    manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
-                
-                    if not manager_data.empty:
-                        # 3. Erstelle Tabelle mit den gewünschten Spalten
-                        st.subheader("📈 Saison-Historie")
-                    
-                        # Definiere die gewünschten Spalten
-                        table_columns = [
-                            'Year', 'Team Name', 'Wins', 'Losses', 'Ties', 
-                            'Win-Percentage %', 'Playoff Seed', 'Final Rank'
-                        ]
-                    
-                        # Überprüfe welche Spalten tatsächlich existieren
-                        available_columns = [col for col in table_columns if col in manager_data.columns]
-                    
-                        if available_columns:
-                            # Erstelle Display-Tabelle mit verfügbaren Spalten
-                            display_table = manager_data[available_columns].copy()
-                        
-                            # Sortiere nach Year absteigend (neueste zuerst)
-                            if 'Year' in display_table.columns:
+
+        # Überprüfe, ob die Daten geladen wurden
+        if seasons_df is not None and not seasons_df.empty:
+
+            # 1. Manager-Dropdown erstellen
+            st.subheader("Manager auswählen")
+
+            # Erstelle Liste aller einzigartigen Manager-Namen
+            manager_names = sorted(seasons_df['First Name'].dropna().unique())
+
+            # Manager-Dropdown
+            selected_manager = st.selectbox(
+                "Wählen Sie einen Manager:",
+                options=manager_names,
+                key="team_view_manager_select"
+            )
+
+            if selected_manager:
+                st.markdown(f"### Dashboard für **{selected_manager}**")
+
+                # 2. Filtere Daten für den ausgewählten Manager
+                manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
+
+                if not manager_data.empty:
+                    # 3. Erstelle Tabelle mit den gewünschten Spalten
+                    st.subheader("📈 Saison-Historie")
+
+                    # Definiere die gewünschten Spalten
+                    table_columns = [
+                        'Year', 'Team Name', 'Wins', 'Losses', 'Ties',
+                        'Win-Percentage %', 'Playoff Seed', 'Final Rank'
+                    ]
+
+                    # Überprüfe welche Spalten tatsächlich existieren
+                    available_columns = [col for col in table_columns if col in manager_data.columns]
+
+                    if available_columns:
+                        # Erstelle Display-Tabelle mit verfügbaren Spalten
+                        display_table = manager_data[available_columns].copy()
+
+                        # Sortiere nach Year absteigend (neueste zuerst)
+                        if 'Year' in display_table.columns:
                             display_table = display_table.sort_values('Year', ascending=False)
-                        
-                            # Formatiere Win-Percentage als Prozentwert falls vorhanden
-                            if 'Win-Percentage %' in display_table.columns:
-                                # Falls die Werte als Dezimalzahlen vorliegen (0.75 statt 75)
-                                if display_table['Win-Percentage %'].max() <= 1:
-                                    display_table['Win-Percentage %'] = (display_table['Win-Percentage %'] * 100).round(1)
-                                display_table['Win-Percentage %'] = display_table['Win-Percentage %'].astype(str) + '%'
-                        
-                            # Zeige die Tabelle an
-                            st.dataframe(display_table, use_container_width=True, hide_index=True)
-                        
-                            # 4. Zusätzliche Statistiken
-                            st.subheader("📊 Zusammenfassung")
-                        
-                            col1, col2, col3, col4 = st.columns(4)
-                        
-                            with col1:
-                                total_seasons = len(manager_data)
-                                st.metric("Gespielte Saisons", total_seasons)
-                        
-                            with col2:
-                                if 'Wins' in manager_data.columns:
-                                    total_wins = manager_data['Wins'].sum()
-                                    st.metric("Gesamt Siege", int(total_wins))
-                        
-                            with col3:
-                                if 'Losses' in manager_data.columns:
-                                    total_losses = manager_data['Losses'].sum()
-                                    st.metric("Gesamt Niederlagen", int(total_losses))
-                        
-                            with col4:
-                                if 'Win-Percentage %' in manager_data.columns and manager_data['Win-Percentage %'].notna().any():
-                                    # Berechne durchschnittliche Win-Percentage
-                                    avg_win_pct = manager_data['Win-Percentage %'].mean()
-                                    if avg_win_pct <= 1:  # Falls als Dezimalzahl
-                                        avg_win_pct *= 100
-                                    st.metric("Ø Win-Rate", f"{avg_win_pct:.1f}%")
-                        
-                            # 5. Timeline-Grafiken
-                            st.subheader("📈 Performance Timeline")
-                        
-                            # Sortiere Daten für Timeline chronologisch
-                            timeline_data = manager_data.copy()
-                            if 'Year' in timeline_data.columns:
-                                timeline_data = timeline_data.sort_values('Year', ascending=True)
-                        
-                            # Erstelle zwei Spalten für die Grafiken nebeneinander
-                            chart_col1, chart_col2 = st.columns(2)
-                        
-                            with chart_col1:
-                                # Draft Pick Timeline (falls vorhanden)
-                                if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
-                                    # Finde die richtige Draft Pick Spalte
-                                    draft_col = None
-                                    for col in timeline_data.columns:
-                                        if 'draft pick' in col.lower() or col.lower() == 'draft pick':
-                                            draft_col = col
-                                            break
-                                
-                                    if draft_col and timeline_data[draft_col].notna().any():
-                                        st.markdown("**🎯 Draft Pick Timeline**")
-                                    
-                                        # Filtere nur Jahre mit Draft Pick Daten
-                                        draft_data = timeline_data[timeline_data[draft_col].notna()]
-                                    
-                                        fig_draft = go.Figure()
-                                        fig_draft.add_trace(go.Scatter(
-                                            x=draft_data['Year'],
-                                            y=draft_data[draft_col],
-                                            mode='lines+markers',
-                                            name='Draft Pick',
-                                            line=dict(color='#ff6b6b', width=3),
-                                            marker=dict(size=8, color='#ff6b6b')
-                                        ))
-                                    
-                                        fig_draft.update_layout(
-                                            title=f'Draft Pick Entwicklung - {selected_manager}',
-                                            xaxis_title='Jahr',
-                                            yaxis_title='Draft Pick Position',
-                                            yaxis=dict(autorange='reversed'),  # Niedrigere Picks (1, 2, 3) oben
-                                            height=400,
-                                            showlegend=False
-                                        )
-                                    
-                                        st.plotly_chart(fig_draft, use_container_width=True)
-                                    else:
-                                        st.info("Keine Draft Pick Daten verfügbar")
+
+                        # Formatiere Win-Percentage als Prozentwert falls vorhanden
+                        if 'Win-Percentage %' in display_table.columns:
+                            # Falls die Werte als Dezimalzahlen vorliegen (0.75 statt 75)
+                            if display_table['Win-Percentage %'].max() <= 1:
+                                display_table['Win-Percentage %'] = (display_table['Win-Percentage %'] * 100).round(1)
+                            display_table['Win-Percentage %'] = display_table['Win-Percentage %'].astype(str) + '%'
+
+                        # Zeige die Tabelle an
+                        st.dataframe(display_table, use_container_width=True, hide_index=True)
+
+                        # 4. Zusätzliche Statistiken
+                        st.subheader("📊 Zusammenfassung")
+
+                        col1, col2, col3, col4 = st.columns(4)
+
+                        with col1:
+                            total_seasons = len(manager_data)
+                            st.metric("Gespielte Saisons", total_seasons)
+
+                        with col2:
+                            if 'Wins' in manager_data.columns:
+                                total_wins = manager_data['Wins'].sum()
+                                st.metric("Gesamt Siege", int(total_wins))
+
+                        with col3:
+                            if 'Losses' in manager_data.columns:
+                                total_losses = manager_data['Losses'].sum()
+                                st.metric("Gesamt Niederlagen", int(total_losses))
+
+                        with col4:
+                            if 'Win-Percentage %' in manager_data.columns and manager_data['Win-Percentage %'].notna().any():
+                                # Berechne durchschnittliche Win-Percentage
+                                avg_win_pct = manager_data['Win-Percentage %'].mean()
+                                if avg_win_pct <= 1:  # Falls als Dezimalzahl
+                                    avg_win_pct *= 100
+                                st.metric("Ø Win-Rate", f"{avg_win_pct:.1f}%")
+
+                        # 5. Timeline-Grafiken
+                        st.subheader("📈 Performance Timeline")
+
+                        # Sortiere Daten für Timeline chronologisch
+                        timeline_data = manager_data.copy()
+                        if 'Year' in timeline_data.columns:
+                            timeline_data = timeline_data.sort_values('Year', ascending=True)
+
+                        # Erstelle zwei Spalten für die Grafiken nebeneinander
+                        chart_col1, chart_col2 = st.columns(2)
+
+                        with chart_col1:
+                            # Draft Pick Timeline (falls vorhanden)
+                            if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
+                                # Finde die richtige Draft Pick Spalte
+                                draft_col = None
+                                for col in timeline_data.columns:
+                                    if 'draft pick' in col.lower() or col.lower() == 'draft pick':
+                                        draft_col = col
+                                        break
+
+                                if draft_col and timeline_data[draft_col].notna().any():
+                                    st.markdown("**🎯 Draft Pick Timeline**")
+
+                                    # Filtere nur Jahre mit Draft Pick Daten
+                                    draft_data = timeline_data[timeline_data[draft_col].notna()]
+
+                                    fig_draft = go.Figure()
+                                    fig_draft.add_trace(go.Scatter(
+                                        x=draft_data['Year'],
+                                        y=draft_data[draft_col],
+                                        mode='lines+markers',
+                                        name='Draft Pick',
+                                        line=dict(color='#ff6b6b', width=3),
+                                        marker=dict(size=8, color='#ff6b6b')
+                                    ))
+
+                                    fig_draft.update_layout(
+                                        title=f'Draft Pick Entwicklung - {selected_manager}',
+                                        xaxis_title='Jahr',
+                                        yaxis_title='Draft Pick Position',
+                                        yaxis=dict(autorange='reversed'),  # Niedrigere Picks (1, 2, 3) oben
+                                        height=400,
+                                        showlegend=False
+                                    )
+
+                                    st.plotly_chart(fig_draft, use_container_width=True)
                                 else:
-                                    st.info("Draft Pick Spalte nicht gefunden")
-                        
-                            with chart_col2:
-                                # Final Rank Timeline
-                                if 'Final Rank' in timeline_data.columns and timeline_data['Final Rank'].notna().any():
-                                    st.markdown("**🏆 Final Rank Timeline**")
-        
+                                    st.info("Keine Draft Pick Daten verfügbar")
+                            else:
+                                st.info("Draft Pick Spalte nicht gefunden")
+
+                        with chart_col2:
+                            # Final Rank Timeline
+                            if 'Final Rank' in timeline_data.columns and timeline_data['Final Rank'].notna().any():
+                                st.markdown("**🏆 Final Rank Timeline**")
+
                                 # Filtere nur Jahre mit Final Rank Daten
                                 rank_data = timeline_data[timeline_data['Final Rank'].notna()]
-        
+
                                 # NORMALISIERUNG: Stelle sicher, dass eine Year-Spalte existiert
                                 rank_data = normalize_year_column(rank_data)
-        
+
                                 # Sichere Jahr-Spalten-Abfrage
                                 def get_year_column_safe(df):
-                                    year_columns = ['Year', 'year', 'YEAR', 'Season', 'season', 'SEASON', 
-                                                 'Saison', 'saison', 'SAISON', 'Date', 'date', 'DATE']
-            
+                                    year_columns = ['Year', 'year', 'YEAR', 'Season', 'season', 'SEASON',
+                                                    'Saison', 'saison', 'SAISON', 'Date', 'date', 'DATE']
+
                                     for col in year_columns:
                                         if col in df.columns:
                                             return col
                                     return None
-        
+
                                 year_col = get_year_column_safe(rank_data)
-        
+
                                 if year_col is None:
                                     st.error(f"Keine Jahr-Spalte gefunden. Verfügbare Spalten: {rank_data.columns.tolist()}")
                                 else:
@@ -1185,9 +1185,9 @@ def main():
                                             return '#FF9800'  # Orange (Playoffs)
                                         else:
                                             return '#F44336'  # Rot (No Playoffs)
-            
+
                                     colors = [get_rank_color(rank) for rank in rank_data['Final Rank']]
-            
+
                                     fig_rank = go.Figure()
                                     fig_rank.add_trace(go.Scatter(
                                         x=rank_data[year_col],  # Verwende die gefundene Jahr-Spalte
@@ -1196,12 +1196,12 @@ def main():
                                         name='Final Rank',
                                         line=dict(color='#2196F3', width=3),
                                         marker=dict(
-                                            size=10, 
+                                            size=10,
                                             color=colors,
                                             line=dict(color='white', width=2)
                                         )
                                     ))
-            
+
                                     fig_rank.update_layout(
                                         title=f'Final Rank Entwicklung - {selected_manager}',
                                         xaxis_title='Jahr',
@@ -1210,29 +1210,29 @@ def main():
                                         height=400,
                                         showlegend=False
                                     )
-            
+
                                     st.plotly_chart(fig_rank, use_container_width=True)
                             else:
                                 st.info("Keine Final Rank Daten verfügbar")
-                        
+
                         # 6. Kombinierte Performance Grafik (wenn beide Daten vorhanden)
-                        if ('Final Rank' in timeline_data.columns and 
-                            'Playoff Seed' in timeline_data.columns and 
-                            timeline_data['Final Rank'].notna().any() and 
+                        if ('Final Rank' in timeline_data.columns and
+                            'Playoff Seed' in timeline_data.columns and
+                            timeline_data['Final Rank'].notna().any() and
                             timeline_data['Playoff Seed'].notna().any()):
-                            
+
                             st.markdown("**📊 Playoff Performance: Seed vs. Final Rank**")
-                            
+
                             # Filtere Daten wo beide Werte vorhanden sind
                             playoff_data = timeline_data[
-                                (timeline_data['Final Rank'].notna()) & 
+                                (timeline_data['Final Rank'].notna()) &
                                 (timeline_data['Playoff Seed'].notna()) &
                                 (timeline_data['Playoff Seed'] <= 8)  # Nur echte Playoff Teams
                             ]
-                            
+
                             if not playoff_data.empty:
                                 fig_performance = go.Figure()
-                                
+
                                 # Playoff Seed
                                 fig_performance.add_trace(go.Scatter(
                                     x=playoff_data['Year'],
@@ -1242,7 +1242,7 @@ def main():
                                     line=dict(color='#9C27B0', width=2, dash='dash'),
                                     marker=dict(size=6, color='#9C27B0')
                                 ))
-                                
+
                                 # Final Rank
                                 fig_performance.add_trace(go.Scatter(
                                     x=playoff_data['Year'],
@@ -1252,7 +1252,7 @@ def main():
                                     line=dict(color='#FF5722', width=3),
                                     marker=dict(size=8, color='#FF5722')
                                 ))
-                                
+
                                 fig_performance.update_layout(
                                     title=f'Playoff Seed vs. Final Rank - {selected_manager}',
                                     xaxis_title='Jahr',
@@ -1267,36 +1267,36 @@ def main():
                                         x=1
                                     )
                                 )
-                                
+
                                 st.plotly_chart(fig_performance, use_container_width=True)
-                                
+
                                 # Kurze Erklärung
                                 st.caption("💡 Wenn die rote Linie (Final Rank) unter der violetten Linie (Playoff Seed) liegt = Overperformance (Clutch)")
                             else:
                                 st.info("Nicht genügend Playoff-Daten für Vergleich verfügbar")
-                    
-                    else:
-                        st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
-                        st.info("Verfügbare Spalten: " + ", ".join(manager_data.columns.tolist()))
-                
+
                 else:
-                    st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
-        
+                    st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
+                    st.info("Verfügbare Spalten: " + ", ".join(manager_data.columns.tolist()))
+
+            else:
+                st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
+
         else:
             st.warning("Die Seasons-Daten konnten nicht geladen werden.")
-    
+
     with tab2:
         st.header("Historic Drafts - Manager Draft Historie")
-        
+
         # Überprüfe, ob die Draft-Daten geladen wurden
         if drafts_df is not None and not drafts_df.empty:
-            
+
             # 1. Manager-Dropdown erstellen (identisch zum ersten Tab)
             st.subheader("Manager auswählen")
-            
+
             # Erstelle Liste aller einzigartigen Manager-Namen aus drafts_df
             manager_names = sorted(drafts_df['Manager'].dropna().unique()) if 'Manager' in drafts_df.columns else []
-            
+
             if not manager_names:
                 st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
             else:
@@ -1306,13 +1306,13 @@ def main():
                     options=manager_names,
                     key="historic_drafts_manager_select"
                 )
-                
+
                 if selected_manager:
                     st.markdown(f"### Draft-Historie für **{selected_manager}**")
-                    
+
                     # 2. Filtere Draft-Daten für den ausgewählten Manager
                     manager_drafts = drafts_df[drafts_df['Manager'] == selected_manager].copy()
-                    
+
                     if not manager_drafts.empty:
                         # 3. Sortiere nach Jahr absteigend (neueste zuerst)
                         year_col = None
@@ -1320,17 +1320,17 @@ def main():
                             if col in manager_drafts.columns:
                                 year_col = col
                                 break
-                        
+
                         if year_col:
                             manager_drafts = manager_drafts.sort_values(year_col, ascending=False)
                             years = sorted(manager_drafts[year_col].unique(), reverse=True)
                         else:
                             st.warning("Keine Jahr-Spalte gefunden in den Draft-Daten")
                             years = ['Alle Jahre']
-                        
+
                         # 4. Erstelle Draft-Übersicht für jede Saison
                         st.subheader("🎯 Draft-Übersicht nach Saisons")
-                        
+
                         for year in years:
                             if year_col:
                                 year_drafts = manager_drafts[manager_drafts[year_col] == year]
@@ -1338,31 +1338,31 @@ def main():
                             else:
                                 year_drafts = manager_drafts
                                 year_display = "Alle Jahre"
-                            
+
                             if not year_drafts.empty:
                                 # Sortiere nach Draft-Position/Runde
                                 round_col = None
                                 pick_col = None
-                                
+
                                 for col in ['Round', 'Draft_Round', 'Runde', 'Pick', 'Draft_Pick', 'Position']:
                                     if col in year_drafts.columns:
                                         if 'round' in col.lower() or 'runde' in col.lower():
                                             round_col = col
                                         elif 'pick' in col.lower() or 'position' in col.lower():
                                             pick_col = col
-                                
+
                                 # Sortiere nach verfügbarer Spalte
                                 if round_col:
                                     year_drafts = year_drafts.sort_values(round_col, ascending=True)
                                 elif pick_col:
                                     year_drafts = year_drafts.sort_values(pick_col, ascending=True)
-                                
+
                                 # Container für jede Saison
                                 with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=True):
-                                    
+
                                     # Erstelle Draft-Tabelle
                                     st.markdown("### Draft Picks")
-                                    
+
                                     # Header
                                     cols = st.columns([1, 3, 2, 2, 1])
                                     with cols[0]:
@@ -1375,16 +1375,16 @@ def main():
                                         st.markdown("**Team**")
                                     with cols[4]:
                                         st.markdown("**Runde**")
-                                    
+
                                     st.markdown("---")
-                                    
+
                                     # Zeige jeden Draft Pick
                                     for i, (_, pick) in enumerate(year_drafts.iterrows()):
                                         cols = st.columns([1, 3, 2, 2, 1])
-                                        
+
                                         # Styling für die ersten 3 Picks (Dark Mode kompatibel)
                                         is_top_3 = i < 3
-                                        
+
                                         with cols[0]:
                                             if is_top_3:
                                                 # Top 3 Picks mit Highlight
@@ -1397,7 +1397,7 @@ def main():
                                                     st.markdown(f'<div style="background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 14px; border: 2px solid #CD7F32;">{pick_display}</div>', unsafe_allow_html=True)
                                             else:
                                                 st.write(f"#{i+1}")
-                                        
+
                                         # Spielername
                                         player_name = pick.get('Player', pick.get('Spieler', 'Unbekannt'))
                                         with cols[1]:
@@ -1405,7 +1405,7 @@ def main():
                                                 st.markdown(f"**{player_name}**")
                                             else:
                                                 st.write(player_name)
-                                        
+
                                         # Position
                                         position = pick.get('Position', pick.get('Pos', 'N/A'))
                                         with cols[2]:
@@ -1413,7 +1413,7 @@ def main():
                                                 st.markdown(f"**{position}**")
                                             else:
                                                 st.write(position)
-                                        
+
                                         # Team
                                         team = pick.get('Team', pick.get('NFL_Team', 'N/A'))
                                         with cols[3]:
@@ -1421,7 +1421,7 @@ def main():
                                                 st.markdown(f"**{team}**")
                                             else:
                                                 st.write(team)
-                                        
+
                                         # Runde
                                         draft_round = pick.get(round_col, pick.get('Round', 'N/A')) if round_col else 'N/A'
                                         with cols[4]:
@@ -1429,18 +1429,18 @@ def main():
                                                 st.markdown(f"**{draft_round}**")
                                             else:
                                                 st.write(draft_round)
-                                    
-                                    st.markdown("---")
-                        
+
+                                        st.markdown("---")
+
                         # 5. Zusammenfassende Statistiken
                         st.subheader("📊 Draft-Zusammenfassung")
-                        
+
                         col1, col2, col3, col4 = st.columns(4)
-                        
+
                         with col1:
                             total_picks = len(manager_drafts)
                             st.metric("Gesamt Picks", total_picks)
-                        
+
                         with col2:
                             if year_col:
                                 seasons_count = manager_drafts[year_col].nunique()
@@ -1448,7 +1448,7 @@ def main():
                                 st.metric("Ø Picks/Saison", f"{avg_picks_per_season:.1f}")
                             else:
                                 st.metric("Ø Picks/Saison", "N/A")
-                        
+
                         with col3:
                             # Lieblings-Position
                             if 'Position' in manager_drafts.columns:
@@ -1459,7 +1459,7 @@ def main():
                                     st.metric("Lieblings-Position", "N/A")
                             else:
                                 st.metric("Lieblings-Position", "N/A")
-                        
+
                         with col4:
                             # Durchschnittliche Draft-Runde
                             if round_col and manager_drafts[round_col].notna().any():
@@ -1467,14 +1467,14 @@ def main():
                                 st.metric("Ø Draft-Runde", f"{avg_round:.1f}")
                             else:
                                 st.metric("Ø Draft-Runde", "N/A")
-                        
+
                         # 6. Top gedraftete Spieler dieses Managers
                         st.subheader("⭐ Häufig gedraftete Spieler")
-                        
+
                         if 'Player' in manager_drafts.columns or 'Spieler' in manager_drafts.columns:
                             player_col = 'Player' if 'Player' in manager_drafts.columns else 'Spieler'
                             top_players = manager_drafts[player_col].value_counts().head(5)
-                            
+
                             if len(top_players) > 0:
                                 for i, (player, count) in enumerate(top_players.items()):
                                     if count > 1:  # Nur Spieler die mehrfach gedraftet wurden
@@ -1485,21 +1485,21 @@ def main():
                                             years_str = ", ".join(map(str, sorted(player_years, reverse=True)))
                                         else:
                                             years_str = "Unbekannt"
-                                        
+
                                         st.markdown(f"""
                                         <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin: 5px 0; border-left: 4px solid #4CAF50;">
                                             <h5 style="margin: 0;">#{i+1} {player}</h5>
                                             <p style="margin: 2px 0; color: #888;"><strong>{count}x</strong> gedraftet in: {years_str}</p>
                                         </div>
                                         """, unsafe_allow_html=True)
-                                else:
-                                    st.info("Keine mehrfach gedrafteten Spieler gefunden")
                             else:
-                                st.info("Player-Spalte nicht in den Draft-Daten gefunden")
-                    
+                                st.info("Keine mehrfach gedrafteten Spieler gefunden")
+                        else:
+                            st.info("Player-Spalte nicht in den Draft-Daten gefunden")
+
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
-        
+
         else:
             st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
 
