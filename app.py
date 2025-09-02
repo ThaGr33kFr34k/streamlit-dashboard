@@ -1515,11 +1515,11 @@ def main():
                             def highlight_clutches(val):
                                 if isinstance(val, (int, float)):
                                     if val > 6:  # Very positive = very good clutching
-                                        return 'background-color: #4CAF50; color: #4CAF50; font-weight: bold'
+                                        return 'background-color: #A5D6A7; color: #A5D6A7; font-weight: bold'
                                     elif val > 3:
-                                        return 'background-color: #81C784; color: #81C784'
-                                    elif val > 0:
                                         return 'background-color: #C5E1A5; color: #C5E1A5'
+                                    elif val > 0:
+                                        return 'background-color: #E6EE9C; color: #E6EE9C'
                                 return ''
                             
                             styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Total Sum'])
