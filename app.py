@@ -1476,14 +1476,12 @@ def main():
                         def style_choke_table(df):
                             def highlight_chokes(val):
                                 if isinstance(val, (int, float)):
-                                    # Heller, gut sichtbarer Hintergrund (dunkelrot) mit weißer Schrift
-                                    return 'background-color: var(--secondary-background-color); border-left: 4px solid #F44336; color: #F44336; font-weight: bold;'
+                                    if val < -6:  # Very negative = very bad choking
+                                        return 'background-color: #ffebee; color: #c62828; font-weight: bold'
                                     elif val < -3:
-                                        # Heller, gut sichtbarer Hintergrund (mittelrot) mit weißer Schrift
-                                        return 'background-color: var(--secondary-background-color); border-left: 4px solid #EF5350; color: #EF5350;'
+                                        return 'background-color: #ffcdd2; color: #d32f2f'
                                     elif val < 0:
-                                        # Heller, gut sichtbarer Hintergrund (orangerot) mit weißer Schrift
-                                        return 'background-color: var(--secondary-background-color); border-left: 4px solid #FFCDD2; color: #FFCDD2;'
+                                        return 'background-color: #ffecb3; color: #ef6c00'
                                 return ''
                             
                             styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Total Sum'])
@@ -1517,11 +1515,11 @@ def main():
                             def highlight_clutches(val):
                                 if isinstance(val, (int, float)):
                                     if val > 6:  # Very positive = very good clutching
-                                        return 'background-color: #A5D6A7; color: #000000; font-weight: bold'
+                                        return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
                                     elif val > 3:
-                                        return 'background-color: #C5E1A5; color: #000000'
+                                        return 'background-color: #c8e6c9; color: #388e3c'
                                     elif val > 0:
-                                        return 'background-color: #E6EE9C; color: #000000'
+                                        return 'background-color: #dcedc8; color: #689f38'
                                 return ''
                             
                             styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Total Sum'])
