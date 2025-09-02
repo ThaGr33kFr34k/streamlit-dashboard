@@ -1476,12 +1476,14 @@ def main():
                         def style_choke_table(df):
                             def highlight_chokes(val):
                                 if isinstance(val, (int, float)):
-                                    if val < -6:  # Very negative = very bad choking
-                                        return 'background-color: #ffebee; color: #000000; font-weight: bold'
+                                    # Heller, gut sichtbarer Hintergrund (dunkelrot) mit weißer Schrift
+                                    return 'background-color: var(--secondary-background-color); border-left: 4px solid #F44336; color: #F44336; font-weight: bold;'
                                     elif val < -3:
-                                        return 'background-color: #F44336; color: #000000'
+                                        # Heller, gut sichtbarer Hintergrund (mittelrot) mit weißer Schrift
+                                        return 'background-color: var(--secondary-background-color); border-left: 4px solid #EF5350; color: #EF5350;'
                                     elif val < 0:
-                                        return 'background-color: #EF6C00; color: #000000'
+                                        # Heller, gut sichtbarer Hintergrund (orangerot) mit weißer Schrift
+                                        return 'background-color: var(--secondary-background-color); border-left: 4px solid #FFCDD2; color: #FFCDD2;'
                                 return ''
                             
                             styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Total Sum'])
