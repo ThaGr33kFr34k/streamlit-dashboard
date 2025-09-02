@@ -1479,9 +1479,9 @@ def main():
                                     if val < -6:  # Very negative = very bad choking
                                         return 'background-color: #ffebee; color: #000000; font-weight: bold'
                                     elif val < -3:
-                                        return 'background-color: #F44336; color: #F44336'
+                                        return 'background-color: #F44336; color: #000000'
                                     elif val < 0:
-                                        return 'background-color: #EF6C00; color: #EF6C00'
+                                        return 'background-color: #EF6C00; color: #000000'
                                 return ''
                             
                             styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Total Sum'])
@@ -1515,11 +1515,11 @@ def main():
                             def highlight_clutches(val):
                                 if isinstance(val, (int, float)):
                                     if val > 6:  # Very positive = very good clutching
-                                        return 'background-color: #A5D6A7; color: #A5D6A7; font-weight: bold'
+                                        return 'background-color: #A5D6A7; color: #000000; font-weight: bold'
                                     elif val > 3:
-                                        return 'background-color: #C5E1A5; color: #C5E1A5'
+                                        return 'background-color: #C5E1A5; color: #000000'
                                     elif val > 0:
-                                        return 'background-color: #E6EE9C; color: #E6EE9C'
+                                        return 'background-color: #E6EE9C; color: #000000'
                                 return ''
                             
                             styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Total Sum'])
