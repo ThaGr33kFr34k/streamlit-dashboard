@@ -1006,11 +1006,11 @@ def main():
     analysis_type = st.session_state.analysis_type
     
     # Main content based on selection
-if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
-    # Erstelle die zwei Tabs für Team-View
-    tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
+    if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
+        # Erstelle die zwei Tabs für Team-View
+        tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
 
-    with tab1:
+        with tab1:
         st.header("Team-View - Manager Dashboard")
 
         # Überprüfe, ob die Daten geladen wurden
@@ -1283,19 +1283,19 @@ if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
         else:
             st.warning("Die Seasons-Daten konnten nicht geladen werden.")
 
-    with tab2:
-        st.header("Historic Drafts - Manager Draft Historie")
+        with tab2:
+            st.header("Historic Drafts - Manager Draft Historie")
 
-        # Überprüfe, ob die Draft-Daten geladen wurden
-        if drafts_df is not None and not drafts_df.empty:
+            # Überprüfe, ob die Draft-Daten geladen wurden
+            if drafts_df is not None and not drafts_df.empty:
 
-            # 1. Manager-Dropdown erstellen (identisch zum ersten Tab)
-            st.subheader("Manager auswählen")
+                # 1. Manager-Dropdown erstellen (identisch zum ersten Tab)
+                st.subheader("Manager auswählen")
 
-            # Erstelle Liste aller einzigartigen Manager-Namen aus drafts_df
-            manager_names = sorted(drafts_df['Manager'].dropna().unique()) if 'Manager' in drafts_df.columns else []
+                # Erstelle Liste aller einzigartigen Manager-Namen aus drafts_df
+                manager_names = sorted(drafts_df['Manager'].dropna().unique()) if 'Manager' in drafts_df.columns else []
 
-            if not manager_names:
+                if not manager_names:
                 st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
             else:
                 # Manager-Dropdown
@@ -1500,9 +1500,8 @@ if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
 
-        else:
-            st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
-
+            else:
+                st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
 
 # Hilfsfunktion für die Year-Normalisierung (falls benötigt)
 def normalize_year_column(df):
