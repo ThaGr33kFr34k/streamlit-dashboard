@@ -1498,8 +1498,8 @@ def main():
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
 
-            else:
-                st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
+                else:
+                    st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
 
 # Hilfsfunktion für die Year-Normalisierung (falls benötigt)
 def normalize_year_column(df):
