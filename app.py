@@ -1226,6 +1226,9 @@ def main():
                                 (timeline_data['Playoff Seed'] <= 8)  # Nur echte Playoff Teams
                             ]
 
+                            # Normalisiere die 'Year'-Spalte, bevor sie verwendet wird
+                            playoff_data = normalize_year_column(playoff_data)
+
                             if not playoff_data.empty:
                                 fig_performance = go.Figure()
 
