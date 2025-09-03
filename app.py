@@ -1009,39 +1009,39 @@ def main():
         tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
 
         with tab1:
-        st.header("Team-View - Manager Dashboard")
+            st.header("Team-View - Manager Dashboard")
 
-        # Überprüfe, ob die Daten geladen wurden
-        if seasons_df is not None and not seasons_df.empty:
+            # Überprüfe, ob die Daten geladen wurden
+            if seasons_df is not None and not seasons_df.empty:
 
-            # 1. Manager-Dropdown erstellen
-            st.subheader("Manager auswählen")
+                # 1. Manager-Dropdown erstellen
+                st.subheader("Manager auswählen")
 
-            # Erstelle Liste aller einzigartigen Manager-Namen
-            manager_names = sorted(seasons_df['First Name'].dropna().unique())
+                # Erstelle Liste aller einzigartigen Manager-Namen
+                manager_names = sorted(seasons_df['First Name'].dropna().unique())
 
-            # Manager-Dropdown
-            selected_manager = st.selectbox(
+                # Manager-Dropdown
+                selected_manager = st.selectbox(
                 "Wählen Sie einen Manager:",
-                options=manager_names,
-                key="team_view_manager_select"
-            )
+                    options=manager_names,
+                    key="team_view_manager_select"
+                )
 
-            if selected_manager:
-                st.markdown(f"### Dashboard für **{selected_manager}**")
+                if selected_manager:
+                    st.markdown(f"### Dashboard für **{selected_manager}**")
 
-                # 2. Filtere Daten für den ausgewählten Manager
-                manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
+                    # 2. Filtere Daten für den ausgewählten Manager
+                    manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
 
-                if not manager_data.empty:
-                    # 3. Erstelle Tabelle mit den gewünschten Spalten
-                    st.subheader("📈 Saison-Historie")
+                    if not manager_data.empty:
+                        # 3. Erstelle Tabelle mit den gewünschten Spalten
+                        st.subheader("📈 Saison-Historie")
 
-                    # Definiere die gewünschten Spalten
-                    table_columns = [
+                        # Definiere die gewünschten Spalten
+                        table_columns = [
                         'Year', 'Team Name', 'Wins', 'Losses', 'Ties',
                         'Win-Percentage %', 'Playoff Seed', 'Final Rank'
-                    ]
+                        ]
 
                     # Überprüfe welche Spalten tatsächlich existieren
                     available_columns = [col for col in table_columns if col in manager_data.columns]
