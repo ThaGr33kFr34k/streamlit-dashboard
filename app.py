@@ -1501,16 +1501,16 @@ def main():
                 else:
                     st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
 
-# Hilfsfunktion für die Year-Normalisierung (falls benötigt)
-def normalize_year_column(df):
-    """Stelle sicher, dass eine Year-Spalte existiert"""
-    if 'Year' not in df.columns:
-        year_alternatives = ['Season', 'season', 'Jahr', 'Saison', 'saison']
-        for alt in year_alternatives:
-            if alt in df.columns:
-                df['Year'] = df[alt]
-                break
-    return df
+    # Hilfsfunktion für die Year-Normalisierung (falls benötigt)
+    def normalize_year_column(df):
+        """Stelle sicher, dass eine Year-Spalte existiert"""
+        if 'Year' not in df.columns:
+            year_alternatives = ['Season', 'season', 'Jahr', 'Saison', 'saison']
+            for alt in year_alternatives:
+                if alt in df.columns:
+                    df['Year'] = df[alt]
+                    break
+        return df
             
     elif analysis_type == "🥊 Head-to-Head":
         st.header("Head-to-Head Analysis")
