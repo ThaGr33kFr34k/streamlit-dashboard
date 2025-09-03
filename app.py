@@ -1428,7 +1428,7 @@ if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
                                             else:
                                                 st.write(draft_round)
 
-                                        st.markdown("---")
+                                    st.markdown("---")
 
                         # 5. Zusammenfassende Statistiken
                         st.subheader("📊 Draft-Zusammenfassung")
@@ -1490,8 +1490,10 @@ if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
                                             <p style="margin: 2px 0; color: #888;"><strong>{count}x</strong> gedraftet in: {years_str}</p>
                                         </div>
                                         """, unsafe_allow_html=True)
+                                else:
+                                    st.info("Keine mehrfach gedrafteten Spieler gefunden")
                             else:
-                                st.info("Keine mehrfach gedrafteten Spieler gefunden")
+                                st.info("Keine Spieler-Daten verfügbar")
                         else:
                             st.info("Player-Spalte nicht in den Draft-Daten gefunden")
 
