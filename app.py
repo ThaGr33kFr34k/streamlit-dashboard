@@ -1307,13 +1307,13 @@ def main():
 
                 if not manager_names:
                     st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
-            else:
-                # Manager-Dropdown
-                selected_manager = st.selectbox(
-                    "Wählen Sie einen Manager:",
-                    options=manager_names,
-                    key="historic_drafts_manager_select"
-                )
+                else:
+                    # Manager-Dropdown
+                    selected_manager = st.selectbox(
+                        "Wählen Sie einen Manager:",
+                        options=manager_names,
+                        key="historic_drafts_manager_select"
+                    )
 
                 if selected_manager:
                     st.markdown(f"### Draft-Historie für **{selected_manager}**")
