@@ -1006,28 +1006,28 @@ def main():
     analysis_type = st.session_state.analysis_type
     
     # Main content based on selection
-    if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
-        # Erstelle die zwei Tabs für Team-View
-        tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
+if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
+    # Erstelle die zwei Tabs für Team-View
+    tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
 
-        with tab1:
-            st.header("Team-View - Manager Dashboard")
+    with tab1:
+        st.header("Team-View - Manager Dashboard")
 
-            # Überprüfe, ob die Daten geladen wurden
-            if seasons_df is not None and not seasons_df.empty:
+        # Überprüfe, ob die Daten geladen wurden
+        if seasons_df is not None and not seasons_df.empty:
 
             # 1. Manager-Dropdown erstellen
-                st.subheader("Manager auswählen")
+            st.subheader("Manager auswählen")
 
             # Erstelle Liste aller einzigartigen Manager-Namen
-                manager_names = sorted(seasons_df['First Name'].dropna().unique())
+            manager_names = sorted(seasons_df['First Name'].dropna().unique())
 
             # Manager-Dropdown
-                selected_manager = st.selectbox(
-                    "Wählen Sie einen Manager:",
-                    options=manager_names,
-                    key="team_view_manager_select"
-                )
+            selected_manager = st.selectbox(
+                "Wählen Sie einen Manager:",
+                options=manager_names,
+                key="team_view_manager_select"
+            )
 
             if selected_manager:
                 st.markdown(f"### Dashboard für **{selected_manager}**")
@@ -1212,8 +1212,6 @@ def main():
                                     )
 
                                     st.plotly_chart(fig_rank, use_container_width=True)
-                            else:
-                                st.info("Keine Final Rank Daten verfügbar")
 
                         # 6. Kombinierte Performance Grafik (wenn beide Daten vorhanden)
                         if ('Final Rank' in timeline_data.columns and
@@ -1275,12 +1273,12 @@ def main():
                             else:
                                 st.info("Nicht genügend Playoff-Daten für Vergleich verfügbar")
 
-                else:
-                    st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
-                    st.info("Verfügbare Spalten: " + ", ".join(manager_data.columns.tolist()))
+                    else:
+                        st.warning("Die benötigten Spalten wurden im Datensatz nicht gefunden.")
+                        st.info("Verfügbare Spalten: " + ", ".join(manager_data.columns.tolist()))
 
-            else:
-                st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
+                else:
+                    st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
 
         else:
             st.warning("Die Seasons-Daten konnten nicht geladen werden.")
