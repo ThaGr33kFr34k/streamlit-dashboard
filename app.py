@@ -1278,8 +1278,8 @@ def main():
                 else:
                     st.warning(f"Keine Daten für Manager '{selected_manager}' gefunden.")
 
-        else:
-            st.warning("Die Seasons-Daten konnten nicht geladen werden.")
+            else:
+                st.warning("Die Seasons-Daten konnten nicht geladen werden.")
 
         with tab2:
             st.header("Historic Drafts - Manager Draft Historie")
