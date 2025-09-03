@@ -1294,7 +1294,7 @@ def main():
                 manager_names = sorted(drafts_df['Manager'].dropna().unique()) if 'Manager' in drafts_df.columns else []
 
                 if not manager_names:
-                st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
+                    st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
             else:
                 # Manager-Dropdown
                 selected_manager = st.selectbox(
