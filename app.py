@@ -982,6 +982,10 @@ def main():
     
     # Sidebar with button navigation
     st.sidebar.title("Navigation")
+
+    # Initialize session state if not exists
+    if 'analysis_type' not in st.session_state:
+        st.session_state.analysis_type = "👥 Team-View"
     
     # Create navigation buttons instead of selectbox
     if st.sidebar.button("⛹🏽‍♂️ Team-View", use_container_width=True):
@@ -998,13 +1002,7 @@ def main():
         st.session_state.analysis_type = "👨‍💼 Player Analysis"
     if st.sidebar.button("📊 Categories", use_container_width=True):
         st.session_state.analysis_type = "📊 Categories"
-    
-    # Initialize session state if not exists
-    if 'analysis_type' not in st.session_state:
-        st.session_state.analysis_type = "👥 Team-View"
-    
-    analysis_type = st.session_state.analysis_type
-    
+        
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
         # Erstelle die zwei Tabs für Team-View
