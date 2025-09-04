@@ -973,26 +973,23 @@ def _display_season_draft(manager_drafts, year, year_col):
             year_drafts = year_drafts.sort_values(pick_col, ascending=True)
 
         # Container für jede Saison (kompakter)
-        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=True):
+        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=False):
             
-            # Erstelle kompakte Draft-Tabelle (nur Pick, Spieler, Position)
-            st.markdown("### Draft Picks")
-
             # Header (kompakt - nur 3 Spalten)
-            cols = st.columns([1, 4, 2])
+            cols = st.columns([0.8, 4.2, 1.5])
             with cols[0]:
-                st.markdown("**#**")
+                st.markdown("**Pick**")
             with cols[1]:
                 st.markdown("**Spieler**")
             with cols[2]:
-                st.markdown("**Pos**")
+                st.markdown("**Draft Position**")
 
-            st.markdown("---")
+            st.markdown('<hr style="margin: 5px 0; height: 1px; background-color: #333; border: none;">', unsafe_allow_html=True)
 
             # Zeige jeden Draft Pick (kompakt)
             for i, (_, pick) in enumerate(year_drafts.iterrows()):
-                cols = st.columns([1, 4, 2])
-
+                cols = st.columns([0.8, 4.2, 1.5])
+                
                 # Styling für die ersten 3 Picks
                 is_top_3 = i < 3
 
@@ -1000,31 +997,27 @@ def _display_season_draft(manager_drafts, year, year_col):
                     if is_top_3:
                         pick_display = f"#{i+1}"
                         if i == 0:
-                            st.markdown(f'<div style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; border: 2px solid #FFD700;">{pick_display}</div>', unsafe_allow_html=True)
+                            st.markdown(f'<div style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 2px 6px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0;">{pick_display}</div>', unsafe_allow_html=True)
                         elif i == 1:
-                            st.markdown(f'<div style="background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; border: 2px solid #C0C0C0;">{pick_display}</div>', unsafe_allow_html=True)
+                            st.markdown(f'<div style="background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; padding: 2px 6px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0;">{pick_display}</div>', unsafe_allow_html=True)
                         elif i == 2:
-                            st.markdown(f'<div style="background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; border: 2px solid #CD7F32;">{pick_display}</div>', unsafe_allow_html=True)
+                            st.markdown(f'<div style="background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; padding: 2px 6px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0;">{pick_display}</div>', unsafe_allow_html=True)
                     else:
-                        st.write(f"#{i+1}")
+                        st.markdown(f'<p style="margin: 0; padding: 1px 0; font-size: 12px;">#{i+1}</p>', unsafe_allow_html=True)
 
                 # Spielername
                 player_name = pick.get('PlayerName', pick.get('Spieler', 'Unbekannt'))
                 with cols[1]:
                     if is_top_3:
-                        st.markdown(f"**{player_name}**")
+                        st.markdown(f'<p style="font-weight: bold; margin: 0; padding: 1px 0; font-size: 12px;">{player_name}</p>', unsafe_allow_html=True)
                     else:
-                        st.write(player_name)
+                        st.markdown(f'<p style="margin: 0; padding: 1px 0; font-size: 12px;">{player_name}</p>', unsafe_allow_html=True)
 
                 # Position (kompakter)
                 position = pick.get('Pick', pick.get('Pos', 'N/A'))
                 with cols[2]:
-                    if is_top_3:
-                        st.markdown(f"**{position}**")
-                    else:
-                        st.write(position)
-
-            st.markdown("---")
+                    # GEÄNDERT: Alle Positionen haben jetzt die gleiche Schriftfarbe und Formatierung
+                    st.markdown(f'<p style="margin: 0; padding: 1px 0; font-size: 12px; color: #888;">{position}</p>', unsafe_allow_html=True)
 # Main app
 def main():
     st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
