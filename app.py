@@ -952,14 +952,14 @@ def normalize_dataframes(*dataframes):
     return normalized
 
 def _display_season_draft(manager_drafts, year, year_col):
-    """Hilfsfunktion zur Anzeige einer einzelnen Saison-Draft-Tabelle (kompakt)"""
+    """Hilfsfunktion zur Anzeige einer einzelnen Saison-Draft-Tabelle (mobile-optimiert)"""
     if year_col:
         year_drafts = manager_drafts[manager_drafts[year_col] == year]
         year_display = str(year)
     else:
         year_drafts = manager_drafts
         year_display = "Alle Jahre"
-
+        
     if not year_drafts.empty:
         # Sortiere nach Draft-Position/Pick
         pick_col = None
@@ -967,57 +967,100 @@ def _display_season_draft(manager_drafts, year, year_col):
             if col in year_drafts.columns:
                 pick_col = col
                 break
-
+        
         # Sortiere nach verfügbarer Spalte
         if pick_col:
             year_drafts = year_drafts.sort_values(pick_col, ascending=True)
-
-        # Container für jede Saison (kompakter)
-        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=False):
+        
+        # Container für jede Saison (kompakt)
+        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=True):
             
-            # Header (kompakt - nur 3 Spalten)
-            cols = st.columns([0.8, 4.2, 1.5])
-            with cols[0]:
-                st.markdown("**Pick**")
-            with cols[1]:
-                st.markdown("**Spieler**")
-            with cols[2]:
-                st.markdown("**Draft Position**")
-
-            st.markdown('<hr style="margin: 5px 0; height: 1px; background-color: #333; border: none;">', unsafe_allow_html=True)
-
-            # Zeige jeden Draft Pick (kompakt)
+            # GEÄNDERT: Erstelle HTML-Tabelle für bessere Mobile-Darstellung
+            table_html = """
+            <style>
+                .draft-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-family: sans-serif;
+                    margin: 10px 0;
+                }
+                .draft-table th {
+                    background-color: #262730;
+                    color: white;
+                    padding: 8px 6px;
+                    text-align: left;
+                    font-size: 13px;
+                    font-weight: bold;
+                    border-bottom: 2px solid #444;
+                }
+                .draft-table td {
+                    padding: 6px 6px;
+                    border-bottom: 1px solid #333;
+                    font-size: 12px;
+                }
+                .draft-table tr:hover {
+                    background-color: rgba(255,255,255,0.05);
+                }
+                .pick-number {
+                    font-weight: bold;
+                    color: #888;
+                    width: 40px;
+                }
+                .player-name {
+                    color: #fff;
+                    min-width: 200px;
+                }
+                .draft-position {
+                    color: #888;
+                    text-align: center;
+                    width: 60px;
+                }
+                /* Top 3 Picks Highlighting */
+                .top-pick-1 { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; font-weight: bold; }
+                .top-pick-2 { background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; font-weight: bold; }
+                .top-pick-3 { background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; font-weight: bold; }
+            </style>
+            <table class="draft-table">
+                <thead>
+                    <tr>
+                        <th class="pick-number">#</th>
+                        <th class="player-name">Spieler</th>
+                        <th class="draft-position">Pick</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            
+            # GEÄNDERT: Erstelle Tabellenzeilen für jeden Pick
             for i, (_, pick) in enumerate(year_drafts.iterrows()):
-                cols = st.columns([0.8, 4.2, 1.5])
-                
-                # Styling für die ersten 3 Picks
-                is_top_3 = i < 3
-
-                with cols[0]:
-                    if is_top_3:
-                        pick_display = f"#{i+1}"
-                        if i == 0:
-                            st.markdown(f'<div style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 2px 6px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0;">{pick_display}</div>', unsafe_allow_html=True)
-                        elif i == 1:
-                            st.markdown(f'<div style="background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; padding: 2px 6px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0;">{pick_display}</div>', unsafe_allow_html=True)
-                        elif i == 2:
-                            st.markdown(f'<div style="background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; padding: 2px 6px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0;">{pick_display}</div>', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f'<p style="margin: 0; padding: 1px 0; font-size: 12px;">#{i+1}</p>', unsafe_allow_html=True)
-
-                # Spielername
                 player_name = pick.get('PlayerName', pick.get('Spieler', 'Unbekannt'))
-                with cols[1]:
-                    if is_top_3:
-                        st.markdown(f'<p style="font-weight: bold; margin: 0; padding: 1px 0; font-size: 12px;">{player_name}</p>', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f'<p style="margin: 0; padding: 1px 0; font-size: 12px;">{player_name}</p>', unsafe_allow_html=True)
-
-                # Position (kompakter)
                 position = pick.get('Pick', pick.get('Pos', 'N/A'))
-                with cols[2]:
-                    # GEÄNDERT: Alle Positionen haben jetzt die gleiche Schriftfarbe und Formatierung
-                    st.markdown(f'<p style="margin: 0; padding: 1px 0; font-size: 12px; color: #888;">{position}</p>', unsafe_allow_html=True)
+                
+                # Top 3 Pick Styling
+                row_class = ""
+                if i == 0:
+                    row_class = "top-pick-1"
+                elif i == 1:
+                    row_class = "top-pick-2"
+                elif i == 2:
+                    row_class = "top-pick-3"
+                
+                table_html += f"""
+                    <tr class="{row_class}">
+                        <td class="pick-number">#{i+1}</td>
+                        <td class="player-name">{player_name}</td>
+                        <td class="draft-position">{position}</td>
+                    </tr>
+                """
+            
+            table_html += """
+                </tbody>
+            </table>
+            """
+            
+            # GEÄNDERT: Zeige HTML-Tabelle an
+            st.markdown(table_html, unsafe_allow_html=True)
+                    
 # Main app
 def main():
     st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
