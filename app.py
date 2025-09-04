@@ -1018,15 +1018,6 @@ def main():
     # Load data
     with st.spinner("Loading data..."):
         teams_df, matchups_df, drafts_df, categories_df, seasons_df = load_data()
-
-    # --- DEBUGGING CODE START ---
-    st.write("### Debugging: drafts_df nach dem Laden")
-    st.write("Spalten in drafts_df:", drafts_df.columns.tolist())
-    st.write("Erste 5 Zeilen von drafts_df:")
-    st.dataframe(drafts_df.head())
-    st.write("Anzahl der Zeilen in drafts_df:", len(drafts_df))
-    st.write("Anzahl der einzigartigen Manager in drafts_df:", drafts_df['Manager'].nunique())
-    # --- DEBUGGING CODE END ---
     
     if teams_df is None or matchups_df is None:
         st.error("Please update the Google Sheets URLs in the code with your actual sheet URLs.")
