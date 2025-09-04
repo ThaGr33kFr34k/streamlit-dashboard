@@ -951,6 +951,80 @@ def normalize_dataframes(*dataframes):
         normalized.append(normalize_year_column(df))
     return normalized
 
+def _display_season_draft(self, manager_drafts, year, year_col):
+    """Hilfsfunktion zur Anzeige einer einzelnen Saison-Draft-Tabelle (kompakt)"""
+    if year_col:
+        year_drafts = manager_drafts[manager_drafts[year_col] == year]
+        year_display = str(year)
+    else:
+        year_drafts = manager_drafts
+        year_display = "Alle Jahre"
+
+    if not year_drafts.empty:
+        # Sortiere nach Draft-Position/Pick
+        pick_col = None
+        for col in ['Pick', 'Draft_Pick', 'Position', 'Draft_Position']:
+            if col in year_drafts.columns:
+                pick_col = col
+                break
+
+        # Sortiere nach verfügbarer Spalte
+        if pick_col:
+            year_drafts = year_drafts.sort_values(pick_col, ascending=True)
+
+        # Container für jede Saison (kompakter)
+        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=True):
+            
+            # Erstelle kompakte Draft-Tabelle (nur Pick, Spieler, Position)
+            st.markdown("### Draft Picks")
+
+            # Header (kompakt - nur 3 Spalten)
+            cols = st.columns([1, 4, 2])
+            with cols[0]:
+                st.markdown("**#**")
+            with cols[1]:
+                st.markdown("**Spieler**")
+            with cols[2]:
+                st.markdown("**Pos**")
+
+            st.markdown("---")
+
+            # Zeige jeden Draft Pick (kompakt)
+            for i, (_, pick) in enumerate(year_drafts.iterrows()):
+                cols = st.columns([1, 4, 2])
+
+                # Styling für die ersten 3 Picks
+                is_top_3 = i < 3
+
+                with cols[0]:
+                    if is_top_3:
+                        pick_display = f"#{i+1}"
+                        if i == 0:
+                            st.markdown(f'<div style="background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; border: 2px solid #FFD700;">{pick_display}</div>', unsafe_allow_html=True)
+                        elif i == 1:
+                            st.markdown(f'<div style="background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; border: 2px solid #C0C0C0;">{pick_display}</div>', unsafe_allow_html=True)
+                        elif i == 2:
+                            st.markdown(f'<div style="background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; padding: 4px 8px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; border: 2px solid #CD7F32;">{pick_display}</div>', unsafe_allow_html=True)
+                    else:
+                        st.write(f"#{i+1}")
+
+                # Spielername
+                player_name = pick.get('Player', pick.get('Spieler', 'Unbekannt'))
+                with cols[1]:
+                    if is_top_3:
+                        st.markdown(f"**{player_name}**")
+                    else:
+                        st.write(player_name)
+
+                # Position (kompakter)
+                position = pick.get('Position', pick.get('Pos', 'N/A'))
+                with cols[2]:
+                    if is_top_3:
+                        st.markdown(f"**{position}**")
+                    else:
+                        st.write(position)
+
+            st.markdown("---")
 # Main app
 def main():
     st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
