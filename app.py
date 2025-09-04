@@ -1429,12 +1429,12 @@ def main():
                     
                             # Erste Saison (linke Spalte)
                             with col1:
-                                self._display_season_draft(manager_drafts, year1, year_col)
+                                _display_season_draft(manager_drafts, year1, year_col)
                     
                             # Zweite Saison (rechte Spalte), falls vorhanden
                             with col2:
                                 if year2:
-                                    self._display_season_draft(manager_drafts, year2, year_col)
+                                    _display_season_draft(manager_drafts, year2, year_col)
 
                         # 5. Zusammenfassende Statistiken
                         st.subheader("📊 Draft-Zusammenfassung")
