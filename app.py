@@ -995,7 +995,7 @@ def _display_season_draft(manager_drafts, year, year_col):
                         pick_display = f"🥉 #{i+1}"
                 
                 display_data.append({
-                    "#": pick_display,
+                    "Round": pick_display,
                     "Spieler": player_name,
                     "Pick": str(position)
                 })
