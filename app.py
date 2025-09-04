@@ -1515,7 +1515,7 @@ def main():
                 else:
                     st.warning("Die Draft-Daten konnten nicht geladen werden. Überprüfen Sie drafts_df.")
             
-    elif analysis_type == "🥊 Head-to-Head":
+    elif st.session_state.analysis_type == "🥊 Head-to-Head":
         st.header("Head-to-Head Analysis")
         
         managers = sorted(teams_df['First Name'].unique())
