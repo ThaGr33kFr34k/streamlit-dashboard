@@ -973,93 +973,43 @@ def _display_season_draft(manager_drafts, year, year_col):
             year_drafts = year_drafts.sort_values(pick_col, ascending=True)
         
         # Container für jede Saison (kompakt)
-        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=True):
+        with st.expander(f"**{year_display}** ({len(year_drafts)} Picks)", expanded=False):
             
-            # GEÄNDERT: Erstelle HTML-Tabelle für bessere Mobile-Darstellung
-            table_html = """
-            <style>
-                .draft-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-family: sans-serif;
-                    margin: 10px 0;
-                }
-                .draft-table th {
-                    background-color: #262730;
-                    color: white;
-                    padding: 8px 6px;
-                    text-align: left;
-                    font-size: 13px;
-                    font-weight: bold;
-                    border-bottom: 2px solid #444;
-                }
-                .draft-table td {
-                    padding: 6px 6px;
-                    border-bottom: 1px solid #333;
-                    font-size: 12px;
-                }
-                .draft-table tr:hover {
-                    background-color: rgba(255,255,255,0.05);
-                }
-                .pick-number {
-                    font-weight: bold;
-                    color: #888;
-                    width: 40px;
-                }
-                .player-name {
-                    color: #fff;
-                    min-width: 200px;
-                }
-                .draft-position {
-                    color: #888;
-                    text-align: center;
-                    width: 60px;
-                }
-                /* Top 3 Picks Highlighting */
-                .top-pick-1 { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; font-weight: bold; }
-                .top-pick-2 { background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: #000; font-weight: bold; }
-                .top-pick-3 { background: linear-gradient(45deg, #CD7F32, #B8860B); color: #FFF; font-weight: bold; }
-            </style>
-            <table class="draft-table">
-                <thead>
-                    <tr>
-                        <th class="pick-number">#</th>
-                        <th class="player-name">Spieler</th>
-                        <th class="draft-position">Pick</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
+            # GEÄNDERT: Verwende st.dataframe für bessere Mobile-Darstellung
+            # Erstelle DataFrame für die Anzeige
+            display_data = []
             
-            # GEÄNDERT: Erstelle Tabellenzeilen für jeden Pick
             for i, (_, pick) in enumerate(year_drafts.iterrows()):
                 player_name = pick.get('PlayerName', pick.get('Spieler', 'Unbekannt'))
                 position = pick.get('Pick', pick.get('Pos', 'N/A'))
                 
-                # Top 3 Pick Styling
-                row_class = ""
-                if i == 0:
-                    row_class = "top-pick-1"
-                elif i == 1:
-                    row_class = "top-pick-2"
-                elif i == 2:
-                    row_class = "top-pick-3"
+                # Top 3 Picks markieren
+                pick_display = f"#{i+1}"
+                if i < 3:
+                    # Füge Emoji für Top 3 hinzu
+                    if i == 0:
+                        pick_display = f"🥇 #{i+1}"
+                    elif i == 1:
+                        pick_display = f"🥈 #{i+1}"
+                    elif i == 2:
+                        pick_display = f"🥉 #{i+1}"
                 
-                table_html += f"""
-                    <tr class="{row_class}">
-                        <td class="pick-number">#{i+1}</td>
-                        <td class="player-name">{player_name}</td>
-                        <td class="draft-position">{position}</td>
-                    </tr>
-                """
+                display_data.append({
+                    "#": pick_display,
+                    "Spieler": player_name,
+                    "Pick": str(position)
+                })
             
-            table_html += """
-                </tbody>
-            </table>
-            """
+            # GEÄNDERT: Erstelle DataFrame und zeige als Tabelle
+            df_display = pd.DataFrame(display_data)
             
-            # GEÄNDERT: Zeige HTML-Tabelle an
-            st.markdown(table_html, unsafe_allow_html=True)
+            # GEÄNDERT: Verwende st.dataframe mit angepassten Einstellungen
+            st.dataframe(
+                df_display,
+                use_container_width=True,  # Nutzt volle Breite
+                hide_index=True,  # Versteckt Index
+                height=min(400, len(df_display) * 35 + 50)  # Dynamische Höhe
+            )
                     
 # Main app
 def main():
