@@ -951,7 +951,7 @@ def normalize_dataframes(*dataframes):
         normalized.append(normalize_year_column(df))
     return normalized
 
-def _display_season_draft(self, manager_drafts, year, year_col):
+def _display_season_draft(manager_drafts, year, year_col):
     """Hilfsfunktion zur Anzeige einer einzelnen Saison-Draft-Tabelle (kompakt)"""
     if year_col:
         year_drafts = manager_drafts[manager_drafts[year_col] == year]
