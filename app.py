@@ -1009,7 +1009,7 @@ def _display_season_draft(manager_drafts, year, year_col):
                         st.write(f"#{i+1}")
 
                 # Spielername
-                player_name = pick.get('Player', pick.get('Spieler', 'Unbekannt'))
+                player_name = pick.get('PlayerName', pick.get('Spieler', 'Unbekannt'))
                 with cols[1]:
                     if is_top_3:
                         st.markdown(f"**{player_name}**")
@@ -1017,7 +1017,7 @@ def _display_season_draft(manager_drafts, year, year_col):
                         st.write(player_name)
 
                 # Position (kompakter)
-                position = pick.get('Position', pick.get('Pos', 'N/A'))
+                position = pick.get('Pick', pick.get('Pos', 'N/A'))
                 with cols[2]:
                     if is_top_3:
                         st.markdown(f"**{position}**")
