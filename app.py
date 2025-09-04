@@ -1602,7 +1602,7 @@ def main():
             else:
                 st.info("Please select two different managers.")
 
-    elif analysis_type == "🏆 Playoff Performance":
+    elif st.session_state.analysis_type == "🏆 Playoff Performance":
         st.header("Playoff Performance Analysis")
         
         # Create tabs
@@ -1798,7 +1798,7 @@ def main():
             else:
                 st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
         
-    elif analysis_type == "🏅 Medal Overview":
+    elif st.session_state.analysis_type == "🏅 Medal Overview":
         st.header("Medal Overview")
     
         # Create tabs
@@ -1959,7 +1959,7 @@ def main():
             else:
                 st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
     
-    elif analysis_type == "🎯 Drafts":
+    elif st.session_state.analysis_type == "🎯 Drafts":
         st.header("Draft Analysis")
         
         # Process draft data
@@ -2249,7 +2249,7 @@ def main():
         else:
             st.info("Draft data not available or could not be processed. Please check your mDrafts sheet URL and data format.")
 
-    elif analysis_type == "👨‍💼 Player Analysis":
+    elif st.session_state.analysis_type == "👨‍💼 Player Analysis":
         st.header("Player Analysis")
         
         # Tabs for different player analyses
@@ -2477,7 +2477,7 @@ def main():
                 Sobald diese Daten verfügbar sind, werden hier automatisch echte Insights angezeigt!
                 """)
 
-    elif analysis_type == "📊 Categories":
+    elif st.session_state.analysis_type == "📊 Categories":
         st.header("Statistik-Kategorien")
     
         # Überprüfe, ob die Daten geladen wurden
