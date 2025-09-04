@@ -1435,12 +1435,6 @@ def main():
                             with col2:
                                 if year2:
                                     _display_season_draft(manager_drafts, year2, year_col)
-                                else:
-                                    st.info("Keine mehrfach gedrafteten Spieler gefunden")
-                            else:
-                                st.info("Keine Spieler-Daten verfügbar")
-                        else:
-                            st.info("Player-Spalte nicht in den Draft-Daten gefunden")
 
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
