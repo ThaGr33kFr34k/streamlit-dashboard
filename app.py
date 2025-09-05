@@ -2298,7 +2298,7 @@ def main():
                         st.markdown(f"""
                         <div class="legend-player">
                             <h4>#{i+1} {player['Player']}</h4>
-                            <p><strong>{player['Playoff_Appearances']}</strong> Playoff Appearances</p>
+                            <p><strong>{player['Playoff_Hero_Seasons']}</strong> Playoff_Hero_Seasons</p>
                             <p>Ø Pick {player['Avg_Draft_Position']} | {player['Playoff_Rate']:.0%} Rate | Score: {player['Hidden_Gem_Score']}</p>
                         </div>
                         """, unsafe_allow_html=True)
