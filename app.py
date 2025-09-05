@@ -500,7 +500,7 @@ def process_player_draft_data(drafts_df, teams_df):
                     'TeamID': team_id,
                     'Draft_Position': draft_position,
                     'Final_Rank': final_rank,
-                    'Made_Playoffs': final_rank <= 6,  # Assuming top 6 make playoffs
+                    'Made_Playoffs': final_rank <= 8,  # Assuming top 8 make playoffs
                     'Won_Championship': final_rank == 1,
                     'Made_Finals': final_rank <= 2
                 })
@@ -562,10 +562,36 @@ def calculate_championship_dna(drafts_df, teams_df):
         })
     
     finals_df = pd.DataFrame(finals_data).sort_values(['Finals_Appearances', 'Championships'], ascending=False) if finals_data else None
-    
-    return champ_df, finals_df
 
-def calculate_legend_analysis(drafts_df, teams_df):
+    # Filter for players on teams with a final rank between 3 and 8
+    contender_players = player_data[
+        (player_data['Final_Rank'] >= 3) & (player_data['Final_Rank'] <= 8)
+    ]
+    contender_counts = contender_players['Player'].value_counts().reset_index()
+    contender_counts.columns = ['Player', 'Contending_Seasons']
+    
+    # Build a DataFrame with details for contending players
+    contender_data = []
+    for _, player_row in contender_counts.iterrows():
+        player_name = player_row['Player']
+        contending_seasons_count = player_row['Contending_Seasons']
+        
+        # Get the years this player was on a contending team
+        contending_years = contender_players[contender_players['Player'] == player_name]['Season'].tolist()
+        contending_years_str = ', '.join(map(str, sorted(contending_years)))
+        
+        contender_data.append({
+            'Player': player_name,
+            'Contending_Seasons': contending_seasons_count,
+            'Contending_Years': contending_years_str
+        })
+        
+    contender_df = pd.DataFrame(contender_data).sort_values('Contending_Seasons', ascending=False) if contender_data else None
+
+    return champ_df, finals_df, contender_df
+    
+
+def calculate_legend_analysis(drafts_df, teams_df, contender_df):
     """Calculate legend analysis - first round superstars and playoff heroes"""
     
     if drafts_df is None or drafts_df.empty:
@@ -608,8 +634,22 @@ def calculate_legend_analysis(drafts_df, teams_df):
     
     first_round_df = pd.DataFrame(first_round_data).sort_values('First_Round_Picks', ascending=False) if first_round_data else None
     
-    # Keep the playoff heroes part as is, or simplify it similarly
-    playoff_heroes_df = None  # Simplified for now
+    # Anpassung für Playoff Heroes mit contender_df
+    if contender_df is None or contender_df.empty:
+        playoff_heroes_df = None
+    else:
+        # We assume that players on consistently contending teams are 'Playoff Heroes'.
+        # We use the already calculated contender_df directly.
+        playoff_heroes_df = contender_df.copy()
+        
+        # We rename the columns to fit the 'Playoff Heroes' title.
+        playoff_heroes_df.rename(
+            columns={
+                'Contending_Seasons': 'Playoff_Hero_Seasons',
+                'Contending_Years': 'Playoff_Hero_Years'
+            },
+            inplace=True
+        )
     
     return first_round_df, playoff_heroes_df
 
