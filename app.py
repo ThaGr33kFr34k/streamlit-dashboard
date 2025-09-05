@@ -2204,7 +2204,7 @@ def main():
             st.markdown("*Welche Spieler standen am häufigsten in Championship-Teams?*")
             
             # Calculate championship DNA
-            champ_df, finals_df = calculate_championship_dna(drafts_df, teams_df)
+            champ_df, finals_df, contender_df = calculate_championship_dna(drafts_df, teams_df)
             
             col1, col2 = st.columns(2)
             
