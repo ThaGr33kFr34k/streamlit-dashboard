@@ -2257,7 +2257,7 @@ def main():
             st.subheader("Legenden")
             
             # Calculate legend analysis
-            first_round_df, playoff_heroes_df = calculate_legend_analysis(drafts_df, teams_df)
+            first_round_df, playoff_heroes_df = calculate_legend_analysis(drafts_df, teams_df, contender_df)
             
             col1, col2 = st.columns(2)
             
