@@ -1764,7 +1764,13 @@ def main():
             Sortiert nach den meisten Siegen. Bei Gleichstand wird die Win-Percentage % verglichen.
             Notiz: 2 Ties ergeben 1 Win (Default Berechnung von ESPN)
             """)
-    
+
+
+        # Debug: Check what columns actually exist
+            st.write("Available columns in seasons_df:")
+            st.write(list(seasons_df.columns))
+            st.write("First few rows:")
+            st.write(seasons_df.head())
         # Create eternal table from seasons_df
         if 'seasons_df' in locals() or 'seasons_df' in globals():
             # Now we know the correct column names: Year, Wins, Losses, Ties, First Name
