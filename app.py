@@ -1774,23 +1774,21 @@ def main():
         # Create eternal table from seasons_df
         if 'seasons_df' in locals() or 'seasons_df' in globals():
             # Now we know the correct column names: Year, Wins, Losses, Ties, First Name
-            if all(col in seasons_df.columns for col in ['First Name', 'Wins', 'Losses', 'Ties', 'Year']):
+            if all(col in seasons_df.columns for col in ['First Name', 'Wins', 'Losses', 'Ties', 'Saison']):
                 # Group by First Name and calculate statistics
                 eternal_stats = seasons_df.groupby('First Name').agg({
                     'Wins': 'sum',
                     'Losses': 'sum', 
                     'Ties': 'sum',
-                    'Year': 'count'  # Count of seasons played
+                    'Saison': 'count'  # Count of seasons played
                 }).reset_index()
             
                 # Rename columns for consistency
                 eternal_stats = eternal_stats.rename(columns={
                     'First Name': 'Manager',
-                    'Year': 'Gespielte Saisons'
+                    'Saison': 'Gespielte Saisons'
                 })
-            
-                # REMOVED THE PROBLEMATIC LINE - no need to rename 'Season' column
-            
+                        
                 # Berechnung der Gesamtzahl der Spiele
                 total_games = eternal_stats['Wins'] + eternal_stats['Losses'] + eternal_stats['Ties']
 
