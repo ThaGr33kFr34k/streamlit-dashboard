@@ -1099,21 +1099,33 @@ def main():
 
                         # Definiere die gewünschten Spalten
                         table_columns = [
-                        'Year', 'Team Name', 'Wins', 'Losses', 'Ties',
+                        'Saison', 'Team Name', 'Wins', 'Losses', 'Ties',
                         'Win-Percentage %', 'Playoff Seed', 'Final Rank'
                         ]
 
                     # Überprüfe welche Spalten tatsächlich existieren
                     available_columns = [col for col in table_columns if col in manager_data.columns]
 
+                    # Falls 'Saison' nicht existiert, aber 'Year' verfügbar ist, verwende 'Year'
+                    if 'Saison' not in available_columns and 'Year' in manager_data.columns:
+                        # Ersetze 'Saison' durch 'Year' in der Liste
+                        available_columns = ['Year' if col == 'Saison' else col for col in available_columns]
+                    
                     if available_columns:
                         # Erstelle Display-Tabelle mit verfügbaren Spalten
                         display_table = manager_data[available_columns].copy()
 
+                        # Bestimme die Jahr-Spalte für die Sortierung
+                        year_column = 'Saison' if 'Saison' in display_table.columns else 'Year'
+                
                         # Sortiere nach Year absteigend (neueste zuerst)
                         if 'Year' in display_table.columns:
                             display_table = display_table.sort_values('Year', ascending=False)
 
+                        # Benenne die Jahr-Spalte zu 'Saison' um, falls sie 'Year' heißt
+                        if 'Year' in display_table.columns and 'Saison' not in display_table.columns:
+                            display_table = display_table.rename(columns={'Year': 'Saison'})
+                        
                         # Formatiere Win-Percentage als Prozentwert falls vorhanden
                         if 'Win-Percentage %' in display_table.columns:
                             # Falls die Werte als Dezimalzahlen vorliegen (0.75 statt 75)
