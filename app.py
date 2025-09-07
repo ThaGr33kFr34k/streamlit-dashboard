@@ -1152,7 +1152,7 @@ def main():
                                 st.metric("Ø Win-Rate", f"{avg_win_pct:.1f}%")
 
                         # 5. Timeline-Grafiken
-                        st.subheader("📈 Performance Timeline")
+                        st.subheader("📈 Timelines")
 
                         # Sortiere Daten für Timeline chronologisch
                         timeline_data = manager_data.copy()
@@ -1209,7 +1209,7 @@ def main():
                                                 marker=dict(size=8, color='#ff6b6b')
                                             ))
                                             fig_draft.update_layout(
-                                                title=f'Draft Pick Entwicklung - {selected_manager}',
+                                            
                                                 xaxis_title='Jahr',
                                                 yaxis_title='Draft Pick Position',
                                                 yaxis=dict(autorange='reversed'),  # Niedrigere Picks (1, 2, 3) oben
@@ -1285,7 +1285,7 @@ def main():
                                     ))
 
                                     fig_rank.update_layout(
-                                        title=f'Final Rank Entwicklung - {selected_manager}',
+                                       
                                         xaxis_title='Jahr',
                                         yaxis_title='Final Rank Position',
                                         yaxis=dict(autorange='reversed'),  # Bessere Ranks (1, 2, 3) oben
@@ -1301,7 +1301,7 @@ def main():
                             timeline_data['Final Rank'].notna().any() and
                             timeline_data['Playoff Seed'].notna().any()):
 
-                            st.markdown("**📊 Playoff Performance: Seed vs. Final Rank**")
+                            st.markdown("**📊 Playoff Performance: Playoff-Seed vs. Final Rank**")
 
                             # Filtere Daten wo beide Werte vorhanden sind
                             playoff_data = timeline_data[
@@ -1337,7 +1337,7 @@ def main():
                                 ))
 
                                 fig_performance.update_layout(
-                                    title=f'Playoff Seed vs. Final Rank - {selected_manager}',
+                                    
                                     xaxis_title='Jahr',
                                     yaxis_title='Position',
                                     yaxis=dict(autorange='reversed'),
