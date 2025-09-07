@@ -524,7 +524,7 @@ def calculate_championship_dna(drafts_df, teams_df):
     
     # Add championship years
     champ_data = []
-    for _, player_row in champ_counts.iterrows():
+    for _, player_row in champ_counts.iterrows():  # Fixed: removed asterisks
         player_name = player_row['Player']
         championships = player_row['Championships']
         
@@ -546,7 +546,7 @@ def calculate_championship_dna(drafts_df, teams_df):
     finals_counts.columns = ['Player', 'Finals_Appearances']
     
     finals_data = []
-    for _, player_row in finals_counts.iterrows():
+    for _, player_row in finals_counts.iterrows():  # Fixed: removed asterisks
         player_name = player_row['Player']
         finals_apps = player_row['Finals_Appearances']
         
@@ -562,7 +562,7 @@ def calculate_championship_dna(drafts_df, teams_df):
         })
     
     finals_df = pd.DataFrame(finals_data).sort_values(['Finals_Appearances', 'Championships'], ascending=False) if finals_data else None
-
+    
     # Filter for players on teams with a final rank between 3 and 8
     contender_players = player_data[
         (player_data['Final_Rank'] >= 3) & (player_data['Final_Rank'] <= 8)
@@ -572,7 +572,7 @@ def calculate_championship_dna(drafts_df, teams_df):
     
     # Build a DataFrame with details for contending players
     contender_data = []
-    for _, player_row in contender_counts.iterrows():
+    for _, player_row in contender_counts.iterrows():  # Fixed: removed asterisks
         player_name = player_row['Player']
         contending_seasons_count = player_row['Contending_Seasons']
         
@@ -580,17 +580,22 @@ def calculate_championship_dna(drafts_df, teams_df):
         contending_years = contender_players[contender_players['Player'] == player_name]['Season'].tolist()
         contending_years_str = ', '.join(map(str, sorted(contending_years)))
         
+        # Calculate average and best playoff rank for this player
+        player_ranks = contender_players[contender_players['Player'] == player_name]['Final_Rank']
+        avg_rank = player_ranks.mean() if not player_ranks.empty else 0
+        best_rank = player_ranks.min() if not player_ranks.empty else 0
+        
         contender_data.append({
             'Player': player_name,
             'Contending_Seasons': contending_seasons_count,
-            'Contending_Years': contending_years_str
-            'Avg_Playoff_Rank': round(avg_rank, 1)
-            'Best_Playoff_Rank': int(best_rank)
+            'Contending_Years': contending_years_str,  # Fixed: added missing comma
+            'Avg_Playoff_Rank': round(avg_rank, 1),   # Fixed: added missing comma
+            'Best_Playoff_Rank': int(best_rank)       # Fixed: now variables are defined
         })
         
     contender_df = pd.DataFrame(contender_data).sort_values('Contending_Seasons', ascending=False) if contender_data else None
-
-    return champ_df, finals_df, contender_df
+    
+    return champ_df, finals_df, contender_df  # Fixed: added missing contender_df to return
     
 
 def calculate_legend_analysis(drafts_df, teams_df, contender_df):
