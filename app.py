@@ -1157,7 +1157,7 @@ def main():
 
                         # Sortiere Daten für Timeline chronologisch
                         timeline_data = manager_data.copy()
-                        if 'Year' in timeline_data.columns:
+                        if 'Season' in timeline_data.columns:
                             timeline_data = timeline_data.sort_values('Year', ascending=True)
 
                         # Erstelle zwei Spalten für die Grafiken nebeneinander
@@ -1189,8 +1189,8 @@ def main():
                                     # Try to find the correct year column
                                     if 'Year' in manager_draft_data.columns:
                                         year_col = 'Year'
-                                    elif 'Saison' in manager_draft_data.columns:
-                                        year_col = 'Saison'
+                                    elif 'Season' in manager_draft_data.columns:
+                                        year_col = 'Season'
                                     elif year_columns:
                                         year_col = year_columns[0]
                                     else:
