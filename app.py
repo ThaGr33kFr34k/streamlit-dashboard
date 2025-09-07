@@ -1168,12 +1168,6 @@ def main():
                             st.markdown("**🎯 Draft Pick Timeline**")
                             
                             try:
-                                # Debug: Zeige verfügbare Spalten
-                                st.write("**Debug - draft_analysis_df Spalten:**")
-                                st.write(list(draft_analysis_df.columns))
-                                st.write("**Debug - Erste Zeilen:**")
-                                st.write(draft_analysis_df.head())
-                                
                                 # Filter draft data for the selected manager
                                 manager_draft_data = draft_analysis_df[draft_analysis_df['Manager'] == selected_manager]
                                 
