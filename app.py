@@ -1030,6 +1030,12 @@ def main():
     # Process data
     team_mapping = create_team_mapping(teams_df)
     processed_df = process_matchup_data(matchups_df, team_mapping)
+
+    # Draft Analysis für alle Bereiche verfügbar machen
+    if drafts_df is not None:
+            draft_analysis_df = process_draft_data(drafts_df, teams_df)
+        else:
+            draft_analysis_df = None    
     
     if processed_df is None:
         st.error("Error processing matchup data.")
@@ -1855,8 +1861,6 @@ def main():
     elif st.session_state.analysis_type == "🎯 Drafts":
         st.header("Draft Analysis")
         
-        # Process draft data
-        draft_analysis_df = process_draft_data(drafts_df, teams_df)
         
         if draft_analysis_df is not None and not draft_analysis_df.empty:
             # Tabs for different draft analyses
