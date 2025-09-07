@@ -932,7 +932,6 @@ def normalize_year_column(df):
         if col in df.columns:
             if col != 'Year':
                 df = df.rename(columns={col: 'Year'})
-                st.info(f"Spalte '{col}' wurde zu 'Year' umbenannt")
             return df
     
     # Falls keine Jahr-Spalte gefunden wird, gib DataFrame unverändert zurück
