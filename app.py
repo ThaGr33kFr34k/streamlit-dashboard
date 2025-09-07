@@ -1157,6 +1157,26 @@ def main():
                         chart_col1, chart_col2 = st.columns(2)
 
                         with chart_col1:
+                            # Debug: Show what columns are available
+                            st.write("**Debug - Available columns in timeline_data:**")
+                            st.write(list(timeline_data.columns))
+    
+                            # Debug: Check if timeline_data has any data
+                            st.write(f"**Debug - Timeline data shape:** {timeline_data.shape}")
+                            st.write("**Debug - First few rows:**")
+                            st.write(timeline_data.head())
+    
+                            # Draft Pick Timeline (falls vorhanden)
+                            st.write("**Debug - Checking for draft columns:**")
+                            draft_columns_found = [col for col in timeline_data.columns if 'draft' in col.lower()]
+                            st.write(f"Draft columns found: {draft_columns_found}")
+    
+                            # Check the original condition
+                            condition1 = 'Draft Pick' in timeline_data.columns
+                            condition2 = any('draft' in col.lower() for col in timeline_data.columns)
+                            st.write(f"'Draft Pick' in columns: {condition1}")
+                            st.write(f"Any 'draft' in column names: {condition2}")
+
                             # Draft Pick Timeline (falls vorhanden)
                             if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
                                 # Finde die richtige Draft Pick Spalte
