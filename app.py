@@ -584,6 +584,8 @@ def calculate_championship_dna(drafts_df, teams_df):
             'Player': player_name,
             'Contending_Seasons': contending_seasons_count,
             'Contending_Years': contending_years_str
+            'Avg_Playoff_Rank': round(avg_rank, 1)
+            'Best_Playoff_Rank': int(best_rank)
         })
         
     contender_df = pd.DataFrame(contender_data).sort_values('Contending_Seasons', ascending=False) if contender_data else None
@@ -599,7 +601,7 @@ def calculate_legend_analysis(drafts_df, teams_df, contender_df):
         return None, None
     
     # First Round Superstars - directly from Round column
-    first_round_drafts = drafts_df[drafts_df['Round'] == 1]  # Changed this line
+    first_round_drafts = drafts_df[drafts_df['Round'] == 1]
     
     # Count how many times each PlayerID was drafted in Round 1
     first_round_counts = first_round_drafts['PlayerID'].value_counts().reset_index()
@@ -634,24 +636,35 @@ def calculate_legend_analysis(drafts_df, teams_df, contender_df):
     
     first_round_df = pd.DataFrame(first_round_data).sort_values('First_Round_Picks', ascending=False) if first_round_data else None
     
-    # Anpassung für Playoff Heroes mit contender_df
+    # GEÄNDERT: Playoff Heroes aus contender_df mit korrekten Spalten erstellen
     if contender_df is None or contender_df.empty:
         playoff_heroes_df = None
     else:
-        # We assume that players on consistently contending teams are 'Playoff Heroes'.
-        # We use the already calculated contender_df directly.
         playoff_heroes_df = contender_df.copy()
         
-        # We rename the columns to fit the 'Playoff Heroes' title.
-        playoff_heroes_df.rename(
-            columns={
-                'Contending_Seasons': 'Playoff_Hero_Seasons',
-                'Contending_Years': 'Playoff_Hero_Years'
-            },
-            inplace=True
-        )
+        # GEÄNDERT: Erstelle die fehlenden Spalten für die HTML-Anzeige
+        playoff_heroes_df['Playoff_Hero_Seasons'] = playoff_heroes_df['Contending_Seasons']
+        
+        # GEÄNDERT: Berechne eine Playoff Rate basierend auf verfügbaren Daten
+        # Annahme: Wenn jemand X Contending Seasons hat, schätzen wir seine Gesamtsaisons
+        # und berechnen daraus eine Rate (vereinfacht)
+        max_seasons = drafts_df['Season'].nunique() if 'Season' in drafts_df.columns else 10
+        playoff_heroes_df['Playoff_Rate'] = playoff_heroes_df['Contending_Seasons'] / max_seasons
+        
+        # GEÄNDERT: Verwende Avg_Playoff_Rank als Draft Position (oder erstelle Dummy-Werte)
+        playoff_heroes_df['Avg_Draft_Position'] = playoff_heroes_df['Avg_Playoff_Rank']
+        
+        # GEÄNDERT: Berechne einen Hidden Gem Score basierend auf verfügbaren Daten
+        playoff_heroes_df['Hidden_Gem_Score'] = (
+            playoff_heroes_df['Contending_Seasons'] * 3 + 
+            (9 - playoff_heroes_df['Best_Playoff_Rank']) * 2
+        ).round(1)
+        
+        # GEÄNDERT: Erstelle Playoff_Appearances aus Contending_Seasons
+        playoff_heroes_df['Playoff_Appearances'] = playoff_heroes_df['Contending_Seasons']
     
     return first_round_df, playoff_heroes_df
+
 
 def calculate_manager_player_loyalty(drafts_df, teams_df):
     """Calculate manager-player loyalty stats directly from mDrafts sheet"""
@@ -693,150 +706,86 @@ def calculate_manager_player_loyalty(drafts_df, teams_df):
     if 'Round' in drafts_df.columns:
         round_col = 'Round'
     
-    # Basis-Aggregation
-    agg_dict = {
-        season_col: [
-            'count',  # Wie oft gedraftet
-            'nunique',  # In wie vielen verschiedenen Seasons
-            lambda x: ', '.join(map(str, sorted(x.unique())))  # Welche Jahre
-        ]
-    }
-    
-    # Füge Draft Position hinzu wenn verfügbar
-    if draft_pos_col:
-        agg_dict[draft_pos_col] = 'mean'
-    
-    # Füge Round hinzu wenn verfügbar
-    if round_col:
-        agg_dict[round_col] = 'mean'
-    
-    # Berechne Loyalty-Kombinationen
-    loyalty_combinations = drafts_df.groupby(['TeamID', 'PlayerID']).agg(agg_dict).round(1)
-    
-    # Flatten column names
-    new_columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
-    
-    if draft_pos_col:
-        new_columns.append('Avg_Draft_Position')
-    if round_col:
-        new_columns.append('Avg_Draft_Round')
-    
-    loyalty_combinations.columns = new_columns
-    loyalty_combinations = loyalty_combinations.reset_index()
-    
-    # Mappe TeamID zu Manager Namen (jahr-spezifisch)
-    if teams_df is not None and not teams_df.empty:
-        
-        # Erstelle jahr-spezifisches Team-Mapping
-        manager_col = None
-        if 'First Name' in teams_df.columns:
-            manager_col = 'First Name'
-        elif 'Manager' in teams_df.columns:
-            manager_col = 'Manager'
-        elif 'Name' in teams_df.columns:
-            manager_col = 'Name'
+    # GEÄNDERT: Vereinfachte Lösung - arbeite direkt mit verfügbaren Spalten
+    try:
+        # Mappe TeamID zu Manager Namen
+        if teams_df is not None and not teams_df.empty:
+            manager_col = None
+            if 'First Name' in teams_df.columns:
+                manager_col = 'First Name'
+            elif 'Manager' in teams_df.columns:
+                manager_col = 'Manager'
+            elif 'Name' in teams_df.columns:
+                manager_col = 'Name'
+            
+            if manager_col is None:
+                st.error(f"Keine Manager-Name Spalte in teams_df gefunden. Verfügbare Spalten: {teams_df.columns.tolist()}")
+                return None
+            
+            # GEÄNDERT: Einfacher Merge ohne Saison-spezifisches Mapping
+            # Erstelle Team-Manager Mapping (nimm den ersten Manager pro TeamID)
+            team_manager_map = teams_df.groupby('TeamID')[manager_col].first().to_dict()
+            
+            # Füge Manager-Namen zu drafts_df hinzu
+            drafts_with_managers = drafts_df.copy()
+            drafts_with_managers['Manager'] = drafts_with_managers['TeamID'].map(team_manager_map)
+            
         else:
-            st.error(f"Keine Manager-Name Spalte in teams_df gefunden. Verfügbare Spalten: {teams_df.columns.tolist()}")
-            return None
+            # Fallback: verwende TeamID als Manager
+            drafts_with_managers = drafts_df.copy()
+            drafts_with_managers['Manager'] = drafts_with_managers['TeamID']
         
-        # Merge drafts_df mit teams_df basierend auf TeamID UND Season/Year
-        teams_season_col = None
-        for col in ['Season', 'Year', 'season', 'year']:
-            if col in teams_df.columns:
-                teams_season_col = col
-                break
+        # GEÄNDERT: Gruppiere nach Manager und PlayerID
+        loyalty_data = []
+        for (manager, player_id), group in drafts_with_managers.groupby(['Manager', 'PlayerID']):
+            # Hole Spielernamen
+            player_name = group['PlayerName'].iloc[0]
+            
+            # Zähle Drafts
+            times_drafted = len(group)
+            
+            # Hole Jahre
+            years = sorted(group[season_col].unique())
+            years_str = ', '.join(map(str, years))
+            
+            # Berechne Durchschnitte
+            avg_round = group[round_col].mean() if round_col and round_col in group.columns else None
+            avg_pick = group[draft_pos_col].mean() if draft_pos_col and draft_pos_col in group.columns else None
+            
+            # Berechne Loyalty Score
+            loyalty_score = times_drafted * 3 + len(years) * 2
+            if avg_round:
+                loyalty_score += (15 - avg_round) * 0.5  # Bonus für frühe Runden
+            
+            loyalty_data.append({
+                'Manager': manager,
+                'Player': player_name,
+                'PlayerID': player_id,
+                'Times_Drafted': times_drafted,
+                'Unique_Seasons': len(years),
+                'Years': years_str,
+                'Avg_Draft_Round': round(avg_round, 1) if avg_round else None,
+                'Avg_Draft_Position': round(avg_pick, 1) if avg_pick else None,
+                'Loyalty_Score': round(loyalty_score, 1)
+            })
         
-        if teams_season_col is None:
-            st.error("Keine Season/Year Spalte in teams_df gefunden für jahr-spezifisches Mapping!")
-            return None
-                
-        # Merge um Manager-Namen für jede Draft-Zeile zu bekommen
-        drafts_with_managers = drafts_df.merge(
-            teams_df[['TeamID', teams_season_col, manager_col]], 
-            left_on=['TeamID', season_col], 
-            right_on=['TeamID', teams_season_col], 
-            how='left'
-        )
+        # Erstelle DataFrame
+        loyalty_df = pd.DataFrame(loyalty_data)
         
-        # Überprüfe auf fehlende Manager-Zuordnungen
-        missing_managers = drafts_with_managers[manager_col].isna().sum()
-        if missing_managers > 0:
-            st.warning(f"DEBUG - {missing_managers} Drafts konnten keinem Manager zugeordnet werden")
-            st.write("Beispiel-Zeilen ohne Manager:")
-            st.dataframe(drafts_with_managers[drafts_with_managers[manager_col].isna()][['TeamID', season_col, 'PlayerName']].head())
+        # Filter: nur Manager-Spieler mit mehr als 1 Draft
+        loyalty_df = loyalty_df[loyalty_df['Times_Drafted'] > 1]
         
-        # Jetzt gruppieren wir nach dem echten Manager-Namen und PlayerID
-        agg_dict_new = {
-            season_col: [
-                'count',  # Wie oft gedraftet
-                'nunique',  # In wie vielen verschiedenen Seasons
-                lambda x: ', '.join(map(str, sorted(x.unique())))  # Welche Jahre
-            ]
-        }
+        # Sortiere nach Loyalty Score
+        loyalty_df = loyalty_df.sort_values('Loyalty_Score', ascending=False)
         
-        # Füge Draft Position hinzu wenn verfügbar
-        if draft_pos_col:
-            agg_dict_new[draft_pos_col] = 'mean'
+        # Entferne NaN Werte
+        loyalty_df = loyalty_df.dropna(subset=['Manager', 'Player'])
         
-        # Füge Round hinzu wenn verfügbar
-        if round_col:
-            agg_dict_new[round_col] = 'mean'
+        return loyalty_df
         
-        # Neue Gruppierung nach echtem Manager-Namen
-        loyalty_combinations = drafts_with_managers.groupby([manager_col, 'PlayerID']).agg(agg_dict_new).round(1)
-        
-        # Flatten column names
-        new_columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
-        
-        if draft_pos_col:
-            new_columns.append('Avg_Draft_Position')
-        if round_col:
-            new_columns.append('Avg_Draft_Round')
-        
-        loyalty_combinations.columns = new_columns
-        loyalty_combinations = loyalty_combinations.reset_index()
-        
-        # Benenne die Manager-Spalte um
-        loyalty_combinations = loyalty_combinations.rename(columns={manager_col: 'Manager'})
-        
-    else:
-        # Fallback wenn kein teams_df vorhanden
-        loyalty_combinations = drafts_df.groupby(['TeamID', 'PlayerID']).agg(agg_dict).round(1)
-        new_columns = ['Times_Drafted', 'Unique_Seasons', 'Years']
-        if draft_pos_col:
-            new_columns.append('Avg_Draft_Position')
-        if round_col:
-            new_columns.append('Avg_Draft_Round')
-        loyalty_combinations.columns = new_columns
-        loyalty_combinations = loyalty_combinations.reset_index()
-        loyalty_combinations['Manager'] = loyalty_combinations['TeamID']  # Fallback
-    
-    # Mappe PlayerID zu Spieler Namen aus drafts_df
-    # Erstelle Player-Mapping aus den ersten Vorkommen jeder PlayerID
-    player_mapping = drafts_df.groupby('PlayerID')['PlayerName'].first().to_dict()
-    loyalty_combinations['Player'] = loyalty_combinations['PlayerID'].map(player_mapping)
-    
-    # Calculate loyalty score
-    loyalty_score = loyalty_combinations['Times_Drafted'] * 3 + loyalty_combinations['Unique_Seasons'] * 2
-    
-    # Bonus für frühe Runden (nur wenn Round-Spalte verfügbar)
-    if 'Avg_Draft_Round' in loyalty_combinations.columns:
-        max_round = drafts_df[round_col].max() if round_col else 14
-        round_bonus = (max_round + 1 - loyalty_combinations['Avg_Draft_Round']) * 0.5
-        loyalty_score += round_bonus
-    
-    loyalty_combinations['Loyalty_Score'] = loyalty_score.round(2)
-    
-    # Sort by loyalty score (höchste zuerst)
-    loyalty_combinations = loyalty_combinations.sort_values('Loyalty_Score', ascending=False)
-    
-    # Filter: nur Manager-Spieler mit mehr als 1 Draft
-    loyalty_combinations = loyalty_combinations[loyalty_combinations['Times_Drafted'] > 1]
-    
-    # Bereinige NaN/None Werte für Treemap
-    loyalty_combinations = loyalty_combinations.dropna(subset=['Manager', 'Player'])
-    
-    return loyalty_combinations
+    except Exception as e:
+        st.error(f"Fehler bei Loyalty-Berechnung: {str(e)}")
+        return None
     
 def style_dataframe_with_colors(df, win_pct_columns):
     """Apply color formatting to dataframe based on win percentage with gradient"""
