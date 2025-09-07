@@ -1173,12 +1173,6 @@ def main():
                                 
                                 st.write(f"**Debug - Manager data shape:** {manager_draft_data.shape}")
                                 if not manager_draft_data.empty:
-                                    st.write("**Debug - Manager data columns:**")
-                                    st.write(list(manager_draft_data.columns))
-                                    
-                                    # Check for possible year columns
-                                    year_columns = [col for col in manager_draft_data.columns if 'year' in col.lower() or 'saison' in col.lower()]
-                                    st.write(f"**Debug - Possible year columns:** {year_columns}")
                                     
                                     # Try to find the correct year column
                                     if 'Year' in manager_draft_data.columns:
@@ -1192,8 +1186,6 @@ def main():
                                         year_col = None
                                     
                                     if year_col:
-                                        st.write(f"**Debug - Using year column:** {year_col}")
-                                        
                                         # Sort by year for proper timeline
                                         manager_draft_data = manager_draft_data.sort_values(year_col)
                                         
