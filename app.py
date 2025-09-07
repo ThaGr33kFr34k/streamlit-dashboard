@@ -1034,8 +1034,8 @@ def main():
     # Draft Analysis für alle Bereiche verfügbar machen
     if drafts_df is not None:
             draft_analysis_df = process_draft_data(drafts_df, teams_df)
-        else:
-            draft_analysis_df = None    
+    else:
+        draft_analysis_df = None    
     
     if processed_df is None:
         st.error("Error processing matchup data.")
