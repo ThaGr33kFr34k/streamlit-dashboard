@@ -1007,6 +1007,7 @@ def _display_season_draft(manager_drafts, year, year_col):
                     
 # Main app
 def main():
+    global draft_analysis_df
     st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
     
     # Load data
