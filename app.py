@@ -1171,7 +1171,6 @@ def main():
                                 # Filter draft data for the selected manager
                                 manager_draft_data = draft_analysis_df[draft_analysis_df['Manager'] == selected_manager]
                                 
-                                st.write(f"**Debug - Manager data shape:** {manager_draft_data.shape}")
                                 if not manager_draft_data.empty:
                                     
                                     # Try to find the correct year column
@@ -1200,7 +1199,6 @@ def main():
                                             draft_col = None
                                         
                                         if draft_col:
-                                            st.write(f"**Debug - Using draft column:** {draft_col}")
                                             
                                             fig_draft = go.Figure()
                                             fig_draft.add_trace(go.Scatter(
