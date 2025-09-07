@@ -1164,85 +1164,85 @@ def main():
                         chart_col1, chart_col2 = st.columns(2)
 
                         with chart_col1:
-                        # Draft Pick Timeline - verwende globale draft_analysis_df Variable
-                        st.markdown("**🎯 Draft Pick Timeline**")
-                        
-                        try:
-                            # Debug: Zeige verfügbare Spalten
-                            st.write("**Debug - draft_analysis_df Spalten:**")
-                            st.write(list(draft_analysis_df.columns))
-                            st.write("**Debug - Erste Zeilen:**")
-                            st.write(draft_analysis_df.head())
+                            # Draft Pick Timeline - verwende globale draft_analysis_df Variable
+                            st.markdown("**🎯 Draft Pick Timeline**")
                             
-                            # Filter draft data for the selected manager
-                            manager_draft_data = draft_analysis_df[draft_analysis_df['Manager'] == selected_manager]
-                            
-                            st.write(f"**Debug - Manager data shape:** {manager_draft_data.shape}")
-                            if not manager_draft_data.empty:
-                                st.write("**Debug - Manager data columns:**")
-                                st.write(list(manager_draft_data.columns))
+                            try:
+                                # Debug: Zeige verfügbare Spalten
+                                st.write("**Debug - draft_analysis_df Spalten:**")
+                                st.write(list(draft_analysis_df.columns))
+                                st.write("**Debug - Erste Zeilen:**")
+                                st.write(draft_analysis_df.head())
                                 
-                                # Check for possible year columns
-                                year_columns = [col for col in manager_draft_data.columns if 'year' in col.lower() or 'saison' in col.lower()]
-                                st.write(f"**Debug - Possible year columns:** {year_columns}")
+                                # Filter draft data for the selected manager
+                                manager_draft_data = draft_analysis_df[draft_analysis_df['Manager'] == selected_manager]
                                 
-                                # Try to find the correct year column
-                                if 'Year' in manager_draft_data.columns:
-                                    year_col = 'Year'
-                                elif 'Saison' in manager_draft_data.columns:
-                                    year_col = 'Saison'
-                                elif year_columns:
-                                    year_col = year_columns[0]
-                                else:
-                                    st.error("Keine Jahr-Spalte gefunden!")
-                                    year_col = None
-                                
-                                if year_col:
-                                    st.write(f"**Debug - Using year column:** {year_col}")
+                                st.write(f"**Debug - Manager data shape:** {manager_draft_data.shape}")
+                                if not manager_draft_data.empty:
+                                    st.write("**Debug - Manager data columns:**")
+                                    st.write(list(manager_draft_data.columns))
                                     
-                                    # Sort by year for proper timeline
-                                    manager_draft_data = manager_draft_data.sort_values(year_col)
+                                    # Check for possible year columns
+                                    year_columns = [col for col in manager_draft_data.columns if 'year' in col.lower() or 'saison' in col.lower()]
+                                    st.write(f"**Debug - Possible year columns:** {year_columns}")
                                     
-                                    # Check for draft position column
-                                    draft_pos_columns = [col for col in manager_draft_data.columns if 'draft' in col.lower() and 'position' in col.lower()]
-                                    if 'Draft_Position' in manager_draft_data.columns:
-                                        draft_col = 'Draft_Position'
-                                    elif draft_pos_columns:
-                                        draft_col = draft_pos_columns[0]
+                                    # Try to find the correct year column
+                                    if 'Year' in manager_draft_data.columns:
+                                        year_col = 'Year'
+                                    elif 'Saison' in manager_draft_data.columns:
+                                        year_col = 'Saison'
+                                    elif year_columns:
+                                        year_col = year_columns[0]
                                     else:
-                                        st.error("Keine Draft Position Spalte gefunden!")
-                                        draft_col = None
+                                        st.error("Keine Jahr-Spalte gefunden!")
+                                        year_col = None
                                     
-                                    if draft_col:
-                                        st.write(f"**Debug - Using draft column:** {draft_col}")
+                                    if year_col:
+                                        st.write(f"**Debug - Using year column:** {year_col}")
                                         
-                                        fig_draft = go.Figure()
-                                        fig_draft.add_trace(go.Scatter(
-                                            x=manager_draft_data[year_col],
-                                            y=manager_draft_data[draft_col],
-                                            mode='lines+markers',
-                                            name='Draft Pick',
-                                            line=dict(color='#ff6b6b', width=3),
-                                            marker=dict(size=8, color='#ff6b6b')
-                                        ))
-                                        fig_draft.update_layout(
-                                            title=f'Draft Pick Entwicklung - {selected_manager}',
-                                            xaxis_title='Jahr',
-                                            yaxis_title='Draft Pick Position',
-                                            yaxis=dict(autorange='reversed'),  # Niedrigere Picks (1, 2, 3) oben
-                                            height=400,
-                                            showlegend=False
-                                        )
-                                        st.plotly_chart(fig_draft, use_container_width=True)
-                            else:
-                                st.info(f"Keine Draft Pick Daten für {selected_manager} verfügbar")
+                                        # Sort by year for proper timeline
+                                        manager_draft_data = manager_draft_data.sort_values(year_col)
+                                        
+                                        # Check for draft position column
+                                        draft_pos_columns = [col for col in manager_draft_data.columns if 'draft' in col.lower() and 'position' in col.lower()]
+                                        if 'Draft_Position' in manager_draft_data.columns:
+                                            draft_col = 'Draft_Position'
+                                        elif draft_pos_columns:
+                                            draft_col = draft_pos_columns[0]
+                                        else:
+                                            st.error("Keine Draft Position Spalte gefunden!")
+                                            draft_col = None
+                                        
+                                        if draft_col:
+                                            st.write(f"**Debug - Using draft column:** {draft_col}")
+                                            
+                                            fig_draft = go.Figure()
+                                            fig_draft.add_trace(go.Scatter(
+                                                x=manager_draft_data[year_col],
+                                                y=manager_draft_data[draft_col],
+                                                mode='lines+markers',
+                                                name='Draft Pick',
+                                                line=dict(color='#ff6b6b', width=3),
+                                                marker=dict(size=8, color='#ff6b6b')
+                                            ))
+                                            fig_draft.update_layout(
+                                                title=f'Draft Pick Entwicklung - {selected_manager}',
+                                                xaxis_title='Jahr',
+                                                yaxis_title='Draft Pick Position',
+                                                yaxis=dict(autorange='reversed'),  # Niedrigere Picks (1, 2, 3) oben
+                                                height=400,
+                                                showlegend=False
+                                            )
+                                            st.plotly_chart(fig_draft, use_container_width=True)
+                                else:
+                                    st.info(f"Keine Draft Pick Daten für {selected_manager} verfügbar")
                                 
-                        except NameError:
-                            st.info("Draft Analysis Daten nicht verfügbar (NameError)")
-                        except Exception as e:
-                            st.error(f"Fehler beim Laden der Draft Daten: {e}")
-                            import traceback
-                            st.text(traceback.format_exc())
+                            except NameError:
+                                st.info("Draft Analysis Daten nicht verfügbar (NameError)")
+                            except Exception as e:
+                                st.error(f"Fehler beim Laden der Draft Daten: {e}")
+                                import traceback
+                                st.text(traceback.format_exc())
 
                         with chart_col2:
                             # Final Rank Timeline
