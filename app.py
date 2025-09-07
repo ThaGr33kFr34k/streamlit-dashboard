@@ -1157,51 +1157,26 @@ def main():
                         chart_col1, chart_col2 = st.columns(2)
 
                         with chart_col1:
-                            # Debug: Show what columns are available
-                            st.write("**Debug - Available columns in timeline_data:**")
-                            st.write(list(timeline_data.columns))
-    
-                            # Debug: Check if timeline_data has any data
-                            st.write(f"**Debug - Timeline data shape:** {timeline_data.shape}")
-                            st.write("**Debug - First few rows:**")
-                            st.write(timeline_data.head())
-    
-                            # Draft Pick Timeline (falls vorhanden)
-                            st.write("**Debug - Checking for draft columns:**")
-                            draft_columns_found = [col for col in timeline_data.columns if 'draft' in col.lower()]
-                            st.write(f"Draft columns found: {draft_columns_found}")
-    
-                            # Check the original condition
-                            condition1 = 'Draft Pick' in timeline_data.columns
-                            condition2 = any('draft' in col.lower() for col in timeline_data.columns)
-                            st.write(f"'Draft Pick' in columns: {condition1}")
-                            st.write(f"Any 'draft' in column names: {condition2}")
-
-                            # Draft Pick Timeline (falls vorhanden)
-                            if 'Draft Pick' in timeline_data.columns or any('draft' in col.lower() for col in timeline_data.columns):
-                                # Finde die richtige Draft Pick Spalte
-                                draft_col = None
-                                for col in timeline_data.columns:
-                                    if 'draft pick' in col.lower() or col.lower() == 'draft pick':
-                                        draft_col = col
-                                        break
-
-                                if draft_col and timeline_data[draft_col].notna().any():
-                                    st.markdown("**🎯 Draft Pick Timeline**")
-
-                                    # Filtere nur Jahre mit Draft Pick Daten
-                                    draft_data = timeline_data[timeline_data[draft_col].notna()]
-
+                            # Draft Pick Timeline using draft_analysis_df data
+                            st.markdown("**🎯 Draft Pick Timeline**")
+                            
+                            # Filter draft data for the selected manager
+                            if 'draft_analysis_df' in locals() or 'draft_analysis_df' in globals():
+                                manager_draft_data = draft_analysis_df[draft_analysis_df['Manager'] == selected_manager]
+                                
+                                if not manager_draft_data.empty:
+                                    # Sort by year for proper timeline
+                                    manager_draft_data = manager_draft_data.sort_values('Year')
+                                    
                                     fig_draft = go.Figure()
                                     fig_draft.add_trace(go.Scatter(
-                                        x=draft_data['Year'],
-                                        y=draft_data[draft_col],
+                                        x=manager_draft_data['Year'],
+                                        y=manager_draft_data['Draft_Position'],
                                         mode='lines+markers',
                                         name='Draft Pick',
                                         line=dict(color='#ff6b6b', width=3),
                                         marker=dict(size=8, color='#ff6b6b')
                                     ))
-
                                     fig_draft.update_layout(
                                         title=f'Draft Pick Entwicklung - {selected_manager}',
                                         xaxis_title='Jahr',
@@ -1210,12 +1185,11 @@ def main():
                                         height=400,
                                         showlegend=False
                                     )
-
                                     st.plotly_chart(fig_draft, use_container_width=True)
                                 else:
-                                    st.info("Keine Draft Pick Daten verfügbar")
+                                    st.info(f"Keine Draft Pick Daten für {selected_manager} verfügbar")
                             else:
-                                st.info("Draft Pick Spalte nicht gefunden")
+                                st.info("Draft Analysis Daten nicht verfügbar")
 
                         with chart_col2:
                             # Final Rank Timeline
