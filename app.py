@@ -2279,33 +2279,62 @@ def main():
             # Calculate legend analysis
             first_round_df, playoff_heroes_df = calculate_legend_analysis(drafts_df, teams_df, contender_df)
             
+            # DEBUG: Remove after testing
             if first_round_df is not None:
                 st.write("DEBUG - first_round_df columns:", first_round_df.columns.tolist())
+                if 'Years_as_Superstar' in first_round_df.columns:
+                    st.write("DEBUG - Years_as_Superstar dtype:", first_round_df['Years_as_Superstar'].dtype)
+                    st.write("DEBUG - First 5 values:", first_round_df['Years_as_Superstar'].head().tolist())
+                    st.write("DEBUG - Any null values:", first_round_df['Years_as_Superstar'].isnull().sum())
             else:
                 st.write("DEBUG - first_round_df is None")
-                
+            
+            # FIX: Convert any year columns in legend dataframes - even more robust version
             if first_round_df is not None and 'Years_as_Superstar' in first_round_df.columns:
-                def fix_years_column(x):
-                    if pd.isna(x) or x == '' or str(x).lower() == 'nan':
-                        return x
+                def fix_years_column_safe(x):
                     try:
+                        # Handle various None/NaN cases
+                        if x is None or pd.isna(x):
+                            return x
+                        
+                        x_str = str(x)
+                        if x_str.lower() in ['nan', 'none', '']:
+                            return x
+                        
+                        # If it's already a clean string without decimals, return as is
+                        if '.' not in x_str:
+                            return x_str
+                        
                         # Split by comma and process each year
-                        years = str(x).split(', ')
+                        years = x_str.split(', ')
                         fixed_years = []
+                        
                         for year in years:
                             year = year.strip()
-                            if year and year.replace('.', '').replace('-', '').isdigit():
-                                try:
+                            if not year:
+                                continue
+                                
+                            # Try to convert decimal years to integers
+                            try:
+                                if '.' in year and year.replace('.', '').isdigit():
                                     fixed_years.append(str(int(float(year))))
-                                except (ValueError, TypeError):
-                                    fixed_years.append(year)  # Keep original if conversion fails
-                            elif year:  # Non-empty but not numeric
+                                else:
+                                    fixed_years.append(year)
+                            except (ValueError, TypeError):
                                 fixed_years.append(year)
+                        
                         return ', '.join(fixed_years) if fixed_years else str(x)
-                    except Exception:
-                        return str(x)  # Return original string if any error occurs
+                    
+                    except Exception as e:
+                        st.write(f"DEBUG - Error processing value '{x}': {str(e)}")
+                        return str(x)
                 
-                first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(fix_years_column)
+                try:
+                    first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(fix_years_column_safe)
+                    st.write("DEBUG - Years_as_Superstar conversion successful!")
+                except Exception as e:
+                    st.write(f"DEBUG - Error in apply: {str(e)}")
+                    # Keep original column if conversion fails
                 
             col1, col2 = st.columns(2)
             
