@@ -2822,7 +2822,7 @@ def main():
                 team_chart_df = team_chart_df.set_index('Team')
                 
                 st.write("**Aktivste Teams (Top 10):**")
-                st.bar_chart(team_counts)
+                st.bar_chart(team_chart_df['Anzahl Trades'])
             
             # Detailansicht einzelner Trades
             st.subheader("🔍 Trade-Details")
