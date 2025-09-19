@@ -2764,7 +2764,7 @@ def main():
                 
                 trade_summary.append({
                     'Saison': saison,
-                    'Beteiligte Teams': f"{teams_list[0]} ⚖️ {teams_list[1]}" if len(teams_list) == 2 else ", ".join(teams_list),
+                    'Beteiligte Teams': f"{teams_list[0]} 🤝 {teams_list[1]}" if len(teams_list) == 2 else ", ".join(teams_list),
                     'Getauschte Spieler': traded_players,
                     'Anzahl Spieler': len([p for players in team_players.values() for p in players]),
                     'TradeID': trade_id  # Versteckt für interne Verwendung
