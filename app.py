@@ -2718,23 +2718,55 @@ def main():
             for trade_id in filtered_trades['TradeID'].unique():
                 trade_data = filtered_trades[filtered_trades['TradeID'] == trade_id]
                 
-                # Teams und Spieler sammeln
+                # Teams und Spieler nach Teams gruppiert sammeln
                 teams = set()
-                players = []
+                team_players = {}
                 saison = trade_data['Saison'].iloc[0]
                 
                 for _, row in trade_data.iterrows():
-                    teams.add(row['Team1'])
-                    teams.add(row['Team2'])
-                    players.append(row['playerName'])
+                    from_team = row['Team1']
+                    to_team = row['Team2']
+                    player = row['playerName']
+                    
+                    teams.add(from_team)
+                    teams.add(to_team)
+                    
+                    # Spieler dem abgebenden Team zuordnen
+                    if from_team not in team_players:
+                        team_players[from_team] = []
+                    team_players[from_team].append(player)
                 
                 teams_list = list(teams)
+                
+                # Bessere Darstellung der getauschten Spieler
+                if len(teams_list) == 2:
+                    team1_players = team_players.get(teams_list[0], [])
+                    team2_players = team_players.get(teams_list[1], [])
+                    
+                    # Formatierung: Team1 Spieler ↔ Team2 Spieler
+                    team1_str = "\n".join(team1_players) if len(team1_players) > 1 else (team1_players[0] if team1_players else "")
+                    team2_str = "\n".join(team2_players) if len(team2_players) > 1 else (team2_players[0] if team2_players else "")
+                    
+                    if team1_str and team2_str:
+                        traded_players = f"{team1_str} ↔ {team2_str}"
+                    elif team1_str:
+                        traded_players = f"{team1_str} → {teams_list[1]}"
+                    elif team2_str:
+                        traded_players = f"{teams_list[0]} → {team2_str}"
+                    else:
+                        traded_players = "Keine Spielerdaten"
+                else:
+                    # Fallback für komplexere Trades
+                    all_players = []
+                    for team, players in team_players.items():
+                        all_players.extend(players)
+                    traded_players = "\n".join(all_players)
                 
                 trade_summary.append({
                     'Saison': saison,
                     'Beteiligte Teams': f"{teams_list[0]} ↔ {teams_list[1]}" if len(teams_list) == 2 else ", ".join(teams_list),
-                    'Getauschte Spieler': ", ".join(players),
-                    'Anzahl Spieler': len(players),
+                    'Getauschte Spieler': traded_players,
+                    'Anzahl Spieler': len([p for players in team_players.values() for p in players]),
                     'TradeID': trade_id  # Versteckt für interne Verwendung
                 })
             
@@ -2765,12 +2797,25 @@ def main():
                 st.bar_chart(chart_data)
             
             with col2:
-                # Aktivste Teams
-                team_activity = []
-                for _, row in filtered_trades.iterrows():
-                    team_activity.extend([row['Team1'], row['Team2']])
+                # Aktivste Teams - korrekte Zählung pro unique Trade
+                team_trade_counts = {}
                 
-                team_counts = pd.Series(team_activity).value_counts().head(10)
+                for trade_id in filtered_trades['TradeID'].unique():
+                    trade_data = filtered_trades[filtered_trades['TradeID'] == trade_id]
+                    involved_teams = set()
+                    
+                    for _, row in trade_data.iterrows():
+                        involved_teams.add(row['Team1'])
+                        involved_teams.add(row['Team2'])
+                    
+                    # Jedes beteiligte Team bekommt +1 für diesen Trade
+                    for team in involved_teams:
+                        if team not in team_trade_counts:
+                            team_trade_counts[team] = 0
+                        team_trade_counts[team] += 1
+                
+                # Sortierung nach Anzahl Trades (descending)
+                team_counts = pd.Series(team_trade_counts).sort_values(ascending=False).head(10)
                 
                 st.write("**Aktivste Teams (Top 10):**")
                 st.bar_chart(team_counts)
