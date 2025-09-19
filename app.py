@@ -602,6 +602,10 @@ def calculate_championship_dna(drafts_df, teams_df):
 
 def calculate_legend_analysis(drafts_df, teams_df, contender_df):
     """Calculate legend analysis - first round superstars and playoff heroes"""
+    if first_round_df is not None:
+        st.write("DEBUG - first_round_df columns:", first_round_df.columns.tolist())
+    else:
+        st.write("DEBUG - first_round_df is None")
     
     if drafts_df is None or drafts_df.empty:
         st.info("Keine Spielerdaten für Legend Analysis verfügbar.")
