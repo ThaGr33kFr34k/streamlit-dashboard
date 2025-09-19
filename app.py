@@ -2334,9 +2334,26 @@ def main():
             loyalty_df = calculate_manager_player_loyalty(drafts_df, teams_df)
            
             if loyalty_df is not None and 'Years' in loyalty_df.columns:
-                loyalty_df['Years'] = loyalty_df['Years'].apply(
-                    lambda x: ', '.join([str(int(float(year))) for year in str(x).split(', ') if year.replace('.', '').replace('-', '').isdigit()]) if pd.notna(x) else x
-                )
+                def fix_loyalty_years(x):
+                    if pd.isna(x) or x == '' or str(x).lower() == 'nan':
+                        return x
+                    try:
+                        years = str(x).split(', ')
+                        fixed_years = []
+                        for year in years:
+                            year = year.strip()
+                            if year and year.replace('.', '').replace('-', '').isdigit():
+                                try:
+                                    fixed_years.append(str(int(float(year))))
+                                except (ValueError, TypeError):
+                                    fixed_years.append(year)
+                            elif year:
+                                fixed_years.append(year)
+                        return ', '.join(fixed_years) if fixed_years else str(x)
+                    except Exception:
+                        return str(x)
+                
+                loyalty_df['Years'] = loyalty_df['Years'].apply(fix_loyalty_years)
                 
             if loyalty_df is not None and len(loyalty_df) > 0:
                 # Top loyalty combinations
