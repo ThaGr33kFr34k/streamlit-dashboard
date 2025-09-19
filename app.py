@@ -2744,8 +2744,8 @@ def main():
                     team2_players = team_players.get(teams_list[1], [])
                     
                     # Formatierung: Team1 Spieler ↔ Team2 Spieler
-                    team1_str = "\n".join(team1_players) if len(team1_players) > 1 else (team1_players[0] if team1_players else "")
-                    team2_str = "\n".join(team2_players) if len(team2_players) > 1 else (team2_players[0] if team2_players else "")
+                    team1_str = ", ".join(team1_players) if team1_players else ""
+                    team2_str = ", ".join(team2_players) if team2_players else ""
                     
                     if team1_str and team2_str:
                         traded_players = f"{team1_str} ↔ {team2_str}"
@@ -2814,8 +2814,12 @@ def main():
                             team_trade_counts[team] = 0
                         team_trade_counts[team] += 1
                 
-                # Sortierung nach Anzahl Trades (descending)
-                team_counts = pd.Series(team_trade_counts).sort_values(ascending=False).head(10)
+                # Sortierung nach Anzahl Trades (descending) und als DataFrame für bessere Kontrolle
+                team_counts_sorted = sorted(team_trade_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+                
+                # DataFrame für die Anzeige erstellen
+                team_chart_df = pd.DataFrame(team_counts_sorted, columns=['Team', 'Anzahl Trades'])
+                team_chart_df = team_chart_df.set_index('Team')
                 
                 st.write("**Aktivste Teams (Top 10):**")
                 st.bar_chart(team_counts)
