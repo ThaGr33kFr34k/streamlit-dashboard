@@ -2279,17 +2279,7 @@ def main():
             # Calculate legend analysis
             first_round_df, playoff_heroes_df = calculate_legend_analysis(drafts_df, teams_df, contender_df)
             
-            # DEBUG: Remove after testing
-            if first_round_df is not None:
-                st.write("DEBUG - first_round_df columns:", first_round_df.columns.tolist())
-                if 'Years_as_Superstar' in first_round_df.columns:
-                    st.write("DEBUG - Years_as_Superstar dtype:", first_round_df['Years_as_Superstar'].dtype)
-                    st.write("DEBUG - First 5 values:", first_round_df['Years_as_Superstar'].head().tolist())
-                    st.write("DEBUG - Any null values:", first_round_df['Years_as_Superstar'].isnull().sum())
-            else:
-                st.write("DEBUG - first_round_df is None")
-            
-            # FIX: Convert any year columns in legend dataframes - even more robust version
+            # FIX: Convert year ranges like "2015.0-2025.0" to "2015-2025"
             if first_round_df is not None and 'Years_as_Superstar' in first_round_df.columns:
                 def fix_years_column_safe(x):
                     try:
@@ -2305,10 +2295,15 @@ def main():
                         if '.' not in x_str:
                             return x_str
                         
-                        # Split by comma and process each year
-                        years = x_str.split(', ')
-                        fixed_years = []
+                        # Handle both comma-separated and dash-separated years
+                        if '-' in x_str:
+                            # Handle ranges like "2015.0-2025.0"
+                            years = x_str.split('-')
+                        else:
+                            # Handle comma-separated like "2015.0, 2016.0"
+                            years = x_str.split(', ')
                         
+                        fixed_years = []
                         for year in years:
                             year = year.strip()
                             if not year:
@@ -2323,18 +2318,15 @@ def main():
                             except (ValueError, TypeError):
                                 fixed_years.append(year)
                         
-                        return ', '.join(fixed_years) if fixed_years else str(x)
+                        # Rejoin with appropriate separator
+                        separator = '-' if '-' in x_str else ', '
+                        return separator.join(fixed_years) if fixed_years else str(x)
                     
-                    except Exception as e:
-                        st.write(f"DEBUG - Error processing value '{x}': {str(e)}")
+                    except Exception:
                         return str(x)
                 
-                try:
-                    first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(fix_years_column_safe)
-                    st.write("DEBUG - Years_as_Superstar conversion successful!")
-                except Exception as e:
-                    st.write(f"DEBUG - Error in apply: {str(e)}")
-                    # Keep original column if conversion fails
+                first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(fix_years_column_safe)
+            
                 
             col1, col2 = st.columns(2)
             
