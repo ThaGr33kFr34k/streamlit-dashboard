@@ -2205,10 +2205,27 @@ def main():
             champ_df, finals_df, contender_df = calculate_championship_dna(drafts_df, teams_df)
           
             if champ_df is not None and 'Championship_Years' in champ_df.columns:
-                # Fix decimal years in Championship_Years column
-                champ_df['Championship_Years'] = champ_df['Championship_Years'].apply(
-                    lambda x: ', '.join([str(int(float(year))) for year in str(x).split(', ') if year.replace('.', '').replace('-', '').isdigit()])
-                )
+                def fix_championship_years(x):
+                    if pd.isna(x) or x == '' or str(x).lower() == 'nan':
+                        return x
+                    try:
+                        years = str(x).split(', ')
+                        fixed_years = []
+                        for year in years:
+                            year = year.strip()
+                            if year and year.replace('.', '').replace('-', '').isdigit():
+                                try:
+                                    fixed_years.append(str(int(float(year))))
+                                except (ValueError, TypeError):
+                                    fixed_years.append(year)
+                            elif year:
+                                fixed_years.append(year)
+                        return ', '.join(fixed_years) if fixed_years else str(x)
+                    except Exception:
+                        return str(x)
+                
+                champ_df['Championship_Years'] = champ_df['Championship_Years'].apply(fix_championship_years)
+                
             col1, col2 = st.columns(2)
             
             with col1:
@@ -2263,9 +2280,28 @@ def main():
             first_round_df, playoff_heroes_df = calculate_legend_analysis(drafts_df, teams_df, contender_df)
             
             if first_round_df is not None and 'Years_as_Superstar' in first_round_df.columns:
-                first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(
-                    lambda x: ', '.join([str(int(float(year))) for year in str(x).split(', ') if year.replace('.', '').replace('-', '').isdigit()]) if pd.notna(x) else x
-                )
+                def fix_years_column(x):
+                    if pd.isna(x) or x == '' or str(x).lower() == 'nan':
+                        return x
+                    try:
+                        # Split by comma and process each year
+                        years = str(x).split(', ')
+                        fixed_years = []
+                        for year in years:
+                            year = year.strip()
+                            if year and year.replace('.', '').replace('-', '').isdigit():
+                                try:
+                                    fixed_years.append(str(int(float(year))))
+                                except (ValueError, TypeError):
+                                    fixed_years.append(year)  # Keep original if conversion fails
+                            elif year:  # Non-empty but not numeric
+                                fixed_years.append(year)
+                        return ', '.join(fixed_years) if fixed_years else str(x)
+                    except Exception:
+                        return str(x)  # Return original string if any error occurs
+                
+                first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(fix_years_column)
+                
             col1, col2 = st.columns(2)
             
             with col1:
