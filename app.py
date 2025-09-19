@@ -2455,6 +2455,21 @@ def main():
                 # Full loyalty table
                 st.markdown("### 📋 Vollständige Loyalty-Tabelle")
                 
+                # Prepare DataFrame for display - remove unwanted columns and round values
+                display_loyalty_df = loyalty_df.copy()
+                
+                # Remove unwanted columns if they exist
+                columns_to_remove = ['PlayerID', 'Unique_Seasons']
+                for col in columns_to_remove:
+                    if col in display_loyalty_df.columns:
+                        display_loyalty_df = display_loyalty_df.drop(col, axis=1)
+                
+                # Round numerical columns to whole numbers
+                numerical_columns = ['Avg_Draft_Round', 'Loyalty_Score', 'Avg_Draft_Position']
+                for col in numerical_columns:
+                    if col in display_loyalty_df.columns:
+                        display_loyalty_df[col] = display_loyalty_df[col].round(0).astype(int)
+                
                 # Style the loyalty table
                 def highlight_loyalty_score(val):
                     if pd.isna(val):
@@ -2468,9 +2483,9 @@ def main():
                     else:
                         return "background-color: rgba(138, 43, 226, 0.05);"
                 
-                styled_loyalty = loyalty_df.style.applymap(
+                styled_loyalty = display_loyalty_df.style.applymap(
                     highlight_loyalty_score, 
-                    subset=['Loyalty_Score']
+                    subset=['Loyalty_Score'] if 'Loyalty_Score' in display_loyalty_df.columns else []
                 )
                 
                 st.dataframe(
