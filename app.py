@@ -67,12 +67,14 @@ def load_data():
         drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
         categories_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=987718515"
         seasons_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=1895764019"
+        trades_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=58770562"
         
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
         drafts_df = pd.read_csv(drafts_url)
         categories_df = pd.read_csv(categories_url)
         seasons_df = pd.read_csv(seasons_url)
+        trades_df = pd.read_csv(trades_url)
         
         # --- HIER WIRD DIE SPALTE UMBENANNT ---
         if 'Year' in seasons_df.columns:
@@ -81,11 +83,11 @@ def load_data():
         # Optional: Clean up seasons_df columns
         seasons_df.columns = seasons_df.columns.str.strip()
         
-        return teams_df, matchups_df, drafts_df, categories_df, seasons_df
+        return teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df
     
     except Exception as e:
         st.error(f"Error loading data from Google Sheets: {e}")
-        return None, None, None, None, None
+        return None, None, None, None, None, None
         
 def create_team_mapping(teams_df):
     """Create mapping from TeamID to Manager Name by year"""
@@ -1062,6 +1064,8 @@ def main():
         st.session_state.analysis_type = "👨‍💼 Player Analysis"
     if st.sidebar.button("📊 Categories", use_container_width=True):
         st.session_state.analysis_type = "📊 Categories"
+    if st.sidebar.button("🤝 Trades", use_container_width=True):
+        st.session_state.analysis_type = "🤝 Trades"
         
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
@@ -2665,6 +2669,155 @@ def main():
 
         else:
             st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
+
+    elif st.session_state.analysis_type == "🤝 Trades":
+        st.title("🤝 Trade-Übersicht")
+        
+        # Laden der Trade-Daten
+        trades_df = pd.read_csv(trades_url)
+        
+        # Saison-Filter
+        seasons = sorted(trades_df['Saison'].unique(), reverse=True)
+        selected_season = st.selectbox("Saison auswählen:", ['Alle Saisons'] + list(seasons))
+        
+        # Daten filtern
+        if selected_season != 'Alle Saisons':
+            filtered_trades = trades_df[trades_df['Saison'] == selected_season]
+        else:
+            filtered_trades = trades_df
+        
+        # Grundlegende Statistiken
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            total_trades = len(filtered_trades['TradeID'].unique())
+            st.metric("Gesamte Trades", total_trades)
+        
+        with col2:
+            if not filtered_trades.empty:
+                trades_per_season = filtered_trades.groupby('Saison')['TradeID'].nunique().mean()
+                st.metric("Ø Trades pro Saison", f"{trades_per_season:.1f}")
+        
+        with col3:
+            if not filtered_trades.empty:
+                players_traded = len(filtered_trades['playerName'].unique())
+                st.metric("Verschiedene Spieler", players_traded)
+        
+        # Trade-Details Tabelle
+        st.subheader("📋 Trade-Details")
+        
+        if not filtered_trades.empty:
+            # Gruppierung nach TradeID für bessere Übersicht
+            trade_summary = []
             
+            for trade_id in filtered_trades['TradeID'].unique():
+                trade_data = filtered_trades[filtered_trades['TradeID'] == trade_id]
+                
+                # Teams und Spieler sammeln
+                teams = set()
+                players = []
+                saison = trade_data['Saison'].iloc[0]
+                
+                for _, row in trade_data.iterrows():
+                    teams.add(row['Team1'])
+                    teams.add(row['Team2'])
+                    players.append(row['playerName'])
+                
+                teams_list = list(teams)
+                
+                trade_summary.append({
+                    'Saison': saison,
+                    'Beteiligte Teams': f"{teams_list[0]} ↔ {teams_list[1]}" if len(teams_list) == 2 else ", ".join(teams_list),
+                    'Getauschte Spieler': ", ".join(players),
+                    'Anzahl Spieler': len(players),
+                    'TradeID': trade_id  # Versteckt für interne Verwendung
+                })
+            
+            # DataFrame für die Anzeige
+            summary_df = pd.DataFrame(trade_summary)
+            summary_df = summary_df.sort_values(['Saison', 'TradeID'], ascending=[False, False])
+            
+            # Interaktive Tabelle (ohne TradeID)
+            display_df = summary_df.drop('TradeID', axis=1)
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True
+            )
+            
+            # Zusätzliche Analysen
+            st.subheader("📊 Trade-Aktivität")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Trades pro Saison
+                trades_by_season = filtered_trades.groupby('Saison')['TradeID'].nunique().reset_index()
+                trades_by_season.columns = ['Saison', 'Anzahl Trades']
+                
+                st.write("**Trades pro Saison:**")
+                chart_data = trades_by_season.set_index('Saison')
+                st.bar_chart(chart_data)
+            
+            with col2:
+                # Aktivste Teams
+                team_activity = []
+                for _, row in filtered_trades.iterrows():
+                    team_activity.extend([row['Team1'], row['Team2']])
+                
+                team_counts = pd.Series(team_activity).value_counts().head(10)
+                
+                st.write("**Aktivste Teams (Top 10):**")
+                st.bar_chart(team_counts)
+            
+            # Detailansicht einzelner Trades
+            st.subheader("🔍 Trade-Details")
+            
+            # Trade-Optionen mit benutzerfreundlichen Namen
+            trade_options = ['Bitte wählen...']
+            trade_mapping = {}
+            
+            for _, row in summary_df.iterrows():
+                display_name = f"{row['Saison']} - {row['Beteiligte Teams']}"
+                trade_options.append(display_name)
+                trade_mapping[display_name] = row['TradeID']
+            
+            selected_trade_display = st.selectbox(
+                "Trade auswählen für Details:",
+                trade_options
+            )
+            
+            if selected_trade_display != 'Bitte wählen...':
+                selected_trade = trade_mapping[selected_trade_display]
+                trade_details = filtered_trades[filtered_trades['TradeID'] == selected_trade]
+                
+                st.write(f"**Saison:** {trade_details['Saison'].iloc[0]}")
+                st.write(f"**Beteiligte Teams:** {selected_trade_display.split(' - ')[1]}")
+                
+                # Spieler nach Teams gruppiert anzeigen
+                teams_in_trade = {}
+                for _, row in trade_details.iterrows():
+                    from_team = row['Team1']
+                    to_team = row['Team2']
+                    player = row['playerName']
+                    
+                    if from_team not in teams_in_trade:
+                        teams_in_trade[from_team] = {'gibt_ab': [], 'bekommt': []}
+                    if to_team not in teams_in_trade:
+                        teams_in_trade[to_team] = {'gibt_ab': [], 'bekommt': []}
+                    
+                    teams_in_trade[from_team]['gibt_ab'].append(player)
+                    teams_in_trade[to_team]['bekommt'].append(player)
+                
+                for team, actions in teams_in_trade.items():
+                    if actions['gibt_ab'] or actions['bekommt']:
+                        st.write(f"**{team}:**")
+                        if actions['gibt_ab']:
+                            st.write(f"  • Gibt ab: {', '.join(actions['gibt_ab'])}")
+                        if actions['bekommt']:
+                            st.write(f"  • Bekommt: {', '.join(actions['bekommt'])}")
+        
+        else:
+            st.info("Keine Trades für die ausgewählte Saison gefunden.")
+
 if __name__ == "__main__":
     main()
