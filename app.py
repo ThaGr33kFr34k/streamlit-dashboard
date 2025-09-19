@@ -2674,7 +2674,13 @@ def main():
         st.title("🤝 Trade-Übersicht")
         
         # Laden der Trade-Daten
-        trades_df = pd.read_csv(trades_url)
+        trades_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=58770562&single=true&output=csv"
+    
+        try:
+            trades_df = pd.read_csv(trades_url)
+        except Exception as e:
+            st.error(f"❌ Fehler beim Laden der Trade-Daten: {str(e)}")
+            st.stop()
         
         # Saison-Filter
         seasons = sorted(trades_df['Saison'].unique(), reverse=True)
