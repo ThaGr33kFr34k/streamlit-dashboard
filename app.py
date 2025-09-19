@@ -2203,7 +2203,12 @@ def main():
             
             # Calculate championship DNA
             champ_df, finals_df, contender_df = calculate_championship_dna(drafts_df, teams_df)
-            
+          
+            if champ_df is not None and 'Championship_Years' in champ_df.columns:
+                # Fix decimal years in Championship_Years column
+                champ_df['Championship_Years'] = champ_df['Championship_Years'].apply(
+                    lambda x: ', '.join([str(int(float(year))) for year in str(x).split(', ') if year.replace('.', '').replace('-', '').isdigit()])
+                )
             col1, col2 = st.columns(2)
             
             with col1:
@@ -2257,6 +2262,10 @@ def main():
             # Calculate legend analysis
             first_round_df, playoff_heroes_df = calculate_legend_analysis(drafts_df, teams_df, contender_df)
             
+            if first_round_df is not None and 'Years_as_Superstar' in first_round_df.columns:
+                first_round_df['Years_as_Superstar'] = first_round_df['Years_as_Superstar'].apply(
+                    lambda x: ', '.join([str(int(float(year))) for year in str(x).split(', ') if year.replace('.', '').replace('-', '').isdigit()]) if pd.notna(x) else x
+                )
             col1, col2 = st.columns(2)
             
             with col1:
@@ -2323,7 +2332,12 @@ def main():
             
             # Calculate loyalty
             loyalty_df = calculate_manager_player_loyalty(drafts_df, teams_df)
-            
+           
+            if loyalty_df is not None and 'Years' in loyalty_df.columns:
+                loyalty_df['Years'] = loyalty_df['Years'].apply(
+                    lambda x: ', '.join([str(int(float(year))) for year in str(x).split(', ') if year.replace('.', '').replace('-', '').isdigit()]) if pd.notna(x) else x
+                )
+                
             if loyalty_df is not None and len(loyalty_df) > 0:
                 # Top loyalty combinations
                 st.markdown("### 💕 Stärkste Manager-Spieler Bindungen")
