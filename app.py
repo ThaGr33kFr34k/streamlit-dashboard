@@ -2982,5 +2982,200 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
+    # Homepage Dashboard - fügen Sie das am ENDE Ihrer main() function ein, nach allen elif statements
+    else:  # Default homepage when no analysis_type is selected
+        # Liga Header mit Logo
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col2:
+            # Logo anzeigen (Google Drive direkte URL)
+            logo_url = "https://drive.google.com/uc?export=view&id=1uYESKqDX62PrZzZoJlmoMdt0mgobSWXu"
+            try:
+                st.image(logo_url, width=300)
+            except:
+                st.markdown("### 🏀 Fantasy Basketball Liga")
+        
+        st.markdown("""
+        <div style='text-align: center; margin-bottom: 2rem;'>
+            <h1>Welcome to the Fantasy Basketball Liga</h1>
+            <p style='font-size: 1.2rem; color: #888;'>Season 2025 • 11 Jahre Liga-Geschichte</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Top 3 Siegertreppchen vom aktuellen Jahr
+        st.markdown("### 🏆 Champions 2025")
+        
+        try:
+            # Ermittlung der Top 3 vom aktuellen Jahr (2025) aus seasons_df
+            latest_champions = seasons_df[seasons_df['Season'] == 2025].nlargest(3, 'Points')
+            
+            if len(latest_champions) >= 3:
+                # Siegertreppchen Layout
+                col1, col2, col3 = st.columns([1, 2, 1])
+                
+                # 2. Platz (links)
+                with col1:
+                    st.markdown(f"""
+                    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #C0C0C0, #A8A8A8); 
+                               border-radius: 15px; margin-top: 30px;'>
+                        <h3 style='margin: 0; color: #333;'>🥈</h3>
+                        <h4 style='margin: 5px 0; color: #333;'>{latest_champions.iloc[1]['Manager']}</h4>
+                        <p style='margin: 0; font-weight: bold; color: #555;'>{latest_champions.iloc[1]['Points']:.1f} Pts</p>
+                        <p style='margin: 0; font-size: 0.9rem; color: #666;'>2nd Place</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # 1. Platz (mitte, höher)
+                with col2:
+                    st.markdown(f"""
+                    <div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #FFD700, #FFA500); 
+                               border-radius: 15px; box-shadow: 0 4px 8px rgba(255,215,0,0.3);'>
+                        <h2 style='margin: 0; color: #333;'>👑</h2>
+                        <h3 style='margin: 10px 0; color: #333;'>{latest_champions.iloc[0]['Manager']}</h3>
+                        <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{latest_champions.iloc[0]['Points']:.1f} Pts</p>
+                        <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION 2025</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # 3. Platz (rechts)
+                with col3:
+                    st.markdown(f"""
+                    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #CD7F32, #8B4513); 
+                               border-radius: 15px; margin-top: 30px;'>
+                        <h3 style='margin: 0; color: #FFF;'>🥉</h3>
+                        <h4 style='margin: 5px 0; color: #FFF;'>{latest_champions.iloc[2]['Manager']}</h4>
+                        <p style='margin: 0; font-weight: bold; color: #FFF;'>{latest_champions.iloc[2]['Points']:.1f} Pts</p>
+                        <p style='margin: 0; font-size: 0.9rem; color: #DDD;'>3rd Place</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("Keine ausreichenden Daten für 2025 Top 3 verfügbar.")
+        except Exception as e:
+            st.info("Top 3 Daten werden geladen...")
+        
+        st.markdown("---")
+        
+        # Navigation Cards
+        st.markdown("### 📍 Navigation")
+        st.markdown("*Wähle einen Bereich für detaillierte Analysen:*")
+        
+        # Row 1: Team & Manager Analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("⛹🏽‍♂️ Team-View", use_container_width=True, key="nav_team"):
+                st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("🥊 Head-to-Head", use_container_width=True, key="nav_h2h"):
+                st.session_state.analysis_type = "🥊 Head-to-Head"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    ⚔️ Direkte Vergleiche zwischen Managern - Wer dominiert wen?
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Row 2: Championships & Performance  
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🏆 Playoff Performance", use_container_width=True, key="nav_playoffs"):
+                st.session_state.analysis_type = "🏆 Playoff Performance"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    🏆 Championship-Geschichte, Finals und Playoff-Erfolge
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("🏅 Medal Overview", use_container_width=True, key="nav_medals"):
+                st.session_state.analysis_type = "🏅 Medal Overview"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    🥇 Alle Titel und Auszeichnungen - Wer sammelt die meisten Medals?
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Row 3: Draft & Player Analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🎯 Drafts", use_container_width=True, key="nav_drafts"):
+                st.session_state.analysis_type = "🎯 Drafts"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    🎯 Draft-Strategien, Pick-Analysen und Erfolgsraten
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("👨‍💼 Player Analysis", use_container_width=True, key="nav_players"):
+                st.session_state.analysis_type = "👨‍💼 Player Analysis"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    👑 Championship-DNA, Legenden und Manager-Spieler Loyalität
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Row 4: Categories & Trades
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📊 Categories", use_container_width=True, key="nav_categories"):
+                st.session_state.analysis_type = "📊 Categories"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    📈 Kategorie-Performance - Stärken und Schwächen analysieren
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("🤝 Trades", use_container_width=True, key="nav_trades"):
+                st.session_state.analysis_type = "🤝 Trades"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                    🤝 Trade-Historie, aktivste Manager und Deal-Analysen
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # Liga-Info Footer
+        st.markdown("""
+        <div style='text-align: center; padding: 20px; color: #666;'>
+            <p>🏀 <strong>Fantasy Basketball Liga</strong> • Seit 2015 • 11 Saisons</p>
+            <p style='font-size: 0.9rem;'>Daten werden live aus Google Sheets geladen</p>
+        </div>
+        """, unsafe_allow_html=True)
+
 if __name__ == "__main__":
     main()
