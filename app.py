@@ -3079,7 +3079,7 @@ def main():
                 st.session_state.analysis_type = "🥊 Head-to-Head"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     ⚔️ Direkte Vergleiche zwischen Managern - Wer dominiert wen?
                 </p>
@@ -3094,7 +3094,7 @@ def main():
                 st.session_state.analysis_type = "🏆 Playoff Performance"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     🏆 Championship-Geschichte, Finals und Playoff-Erfolge
                 </p>
@@ -3106,7 +3106,7 @@ def main():
                 st.session_state.analysis_type = "🏅 Medal Overview"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     🥇 Alle Titel und Auszeichnungen - Wer sammelt die meisten Medals?
                 </p>
@@ -3121,7 +3121,7 @@ def main():
                 st.session_state.analysis_type = "🎯 Drafts"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     🎯 Draft-Strategien, Pick-Analysen und Erfolgsraten
                 </p>
@@ -3133,7 +3133,7 @@ def main():
                 st.session_state.analysis_type = "👨‍💼 Player Analysis"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     👑 Championship-DNA, Legenden und Manager-Spieler Loyalität
                 </p>
@@ -3148,7 +3148,7 @@ def main():
                 st.session_state.analysis_type = "📊 Categories"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     📈 Kategorie-Performance - Stärken und Schwächen analysieren
                 </p>
@@ -3160,7 +3160,7 @@ def main():
                 st.session_state.analysis_type = "🤝 Trades"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     🤝 Trade-Historie, aktivste Manager und Deal-Analysen
                 </p>
