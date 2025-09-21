@@ -3067,7 +3067,7 @@ def main():
                 st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #f0c7c7; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
                 </p>
