@@ -2997,13 +2997,13 @@ def main():
         
         st.markdown("""
         <div style='text-align: center; margin-bottom: 2rem;'>
-            <h1>Welcome to the Fantasy Basketball Liga</h1>
-            <p style='font-size: 1.2rem; color: #888;'>Season 2025 • 11 Jahre Liga-Geschichte</p>
+            <h1>Welcome to Domination Analytics</h1>
+            <p style='font-size: 1.2rem; color: #888;'>Seasons 2014-2025 • 11 Jahre Liga-Geschichte</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Top 3 Siegertreppchen vom aktuellen Jahr
-        st.markdown("### 🏆 Champions 2025")
+        st.markdown("### 🏆 Top 3 des letzten Jahres")
         
         try:
             # Ermittlung der Top 3 vom aktuellen Jahr (2025) aus seasons_df
@@ -3067,7 +3067,7 @@ def main():
                 st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
                 st.rerun()
             st.markdown("""
-            <div style='padding: 15px; background: #1E1E1E; border-radius: 10px; margin-top: -10px;'>
+            <div style='padding: 15px; background: #f0c7c7; border-radius: 10px; margin-top: -10px;'>
                 <p style='margin: 0; color: #888; font-size: 0.9rem;'>
                     📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
                 </p>
