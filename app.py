@@ -1929,7 +1929,7 @@ def main():
         
         if draft_analysis_df is not None and not draft_analysis_df.empty:
             # Tabs for different draft analyses
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Over/Under Performance", "📊 Draft vs Final Position", "🍀 Lottery Luck", "🎯 Manager Performance", "📈 Draft Value Analysis"])
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Over/Under Performance", "🍀 Lottery Luck", "🎯 Manager Performance", "📊 Draft vs Final Position", "📈 Draft Value Analysis"])
             
             with tab1:
                 st.subheader("Over/Under Performance")
@@ -1972,36 +1972,8 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
             
-            with tab2:
-                st.subheader("Draft Position vs Final Rank")
-                
-                # Scatter plot
-                fig = create_draft_scatter_plot(draft_analysis_df)
-                if fig:
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Correlation analysis
-                correlation, p_value = calculate_correlation(
-                    draft_analysis_df['Draft_Position'], 
-                    draft_analysis_df['Final_Rank']
-                )
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Correlation", f"{correlation:.3f}")
-                with col2:
-                    st.metric("P-Value", f"{p_value:.3f}")
-                with col3:
-                    significance = "Significant" if p_value < 0.05 else "Not Significant"
-                    st.metric("Statistical Significance", significance)
-                
-                st.markdown(f"""
-                **Interpretation:**
-                - Correlation of {correlation:.3f} indicates {"a strong" if abs(correlation) > 0.7 else "a moderate" if abs(correlation) > 0.3 else "a weak"} relationship
-                - {"Draft position is a good predictor of final rank" if abs(correlation) > 0.5 else "Draft position has limited predictive power"}
-                """)
             
-            with tab3:
+            with tab2:
                 st.subheader("Lottery Luck")
                 st.markdown("*Welcher Manager hatte in wie viel Prozent seiner Saisons einen Top 3 Pick?*")
                 
@@ -2091,7 +2063,7 @@ def main():
                 fig_lottery.add_hline(y=33.3, line_dash="dash", line_color="gray", annotation_text="Erwartungswert (33.3%)")
                 st.plotly_chart(fig_lottery, use_container_width=True)
             
-            with tab4:
+            with tab3:
                 st.subheader("Manager Draft Performance")
                 
                 # Cumulative over/under analysis
@@ -2155,7 +2127,36 @@ def main():
                     fig.update_layout(height=400)
                     st.plotly_chart(fig, use_container_width=True)
             
-            with tab5:
+            with tab4:
+                st.subheader("Draft Position vs Final Rank")
+                
+                # Scatter plot
+                fig = create_draft_scatter_plot(draft_analysis_df)
+                if fig:
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # Correlation analysis
+                correlation, p_value = calculate_correlation(
+                    draft_analysis_df['Draft_Position'], 
+                    draft_analysis_df['Final_Rank']
+                )
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Correlation", f"{correlation:.3f}")
+                with col2:
+                    st.metric("P-Value", f"{p_value:.3f}")
+                with col3:
+                    significance = "Significant" if p_value < 0.05 else "Not Significant"
+                    st.metric("Statistical Significance", significance)
+                
+                st.markdown(f"""
+                **Interpretation:**
+                - Correlation of {correlation:.3f} indicates {"a strong" if abs(correlation) > 0.7 else "a moderate" if abs(correlation) > 0.3 else "a weak"} relationship
+                - {"Draft position is a good predictor of final rank" if abs(correlation) > 0.5 else "Draft position has limited predictive power"}
+                """)
+                
+                with tab5:
                 st.subheader("Draft Value Analysis")
                 
                 # Calculate draft value
