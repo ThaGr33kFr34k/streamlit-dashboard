@@ -3157,8 +3157,7 @@ def main():
         # Liga-Info Footer
         st.markdown("""
         <div style='text-align: center; padding: 20px; color: #666;'>
-            <p>🏀 <strong>Fantasy Basketball Liga</strong> • Seit 2015 • 11 Saisons</p>
-            <p style='font-size: 0.9rem;'>Daten werden live aus Google Sheets geladen</p>
+            <p>🏀 <strong>Domination League</strong> • Seit 2014 • 11 Saisons</p>
         </div>
         """, unsafe_allow_html=True)
 
