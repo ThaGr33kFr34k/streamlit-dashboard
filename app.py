@@ -1076,7 +1076,7 @@ def main():
         st.session_state.analysis_type = "🥊 Head-to-Head"
     if st.sidebar.button("🏆 Playoff Performance", use_container_width=True):
         st.session_state.analysis_type = "🏆 Playoff Performance"
-    if st.sidebar.button("🏅 Medal Overview", use_container_width=True):
+    if st.sidebar.button("🏅 Ewige Tabellen", use_container_width=True):
         st.session_state.analysis_type = "🏅 Medal Overview"
     if st.sidebar.button("🎯 Drafts", use_container_width=True):
         st.session_state.analysis_type = "🎯 Drafts"
@@ -1762,7 +1762,6 @@ def main():
                 st.error("seasons_df ist nicht verfügbar. Bitte stellen Sie sicher, dass die Daten geladen wurden.")
         
     elif st.session_state.analysis_type == "🏅 Medal Overview":
-        st.header("Medal Overview")
     
         # Create tabs
         tab1, tab2 = st.tabs(["🏆 Medal Table", "📊 Ewige Tabelle"])
