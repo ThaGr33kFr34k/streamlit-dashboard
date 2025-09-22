@@ -3154,12 +3154,6 @@ def main():
         
         st.markdown("---")
         
-        # Liga-Info Footer
-        st.markdown("""
-        <div style='text-align: center; padding: 20px; color: #666;'>
-            <p>🏀 <strong>Domination League</strong> • Seit 2014 • 11 Saisons</p>
-        </div>
-        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
