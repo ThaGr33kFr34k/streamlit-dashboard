@@ -75,8 +75,6 @@ def load_data():
         categories_df = pd.read_csv(categories_url)
         seasons_df = pd.read_csv(seasons_url)
         trades_df = pd.read_csv(trades_url)
-
-        if len(seasons_df) > 0
     
         # --- HIER WIRD DIE SPALTE UMBENANNT ---
         if 'Year' in seasons_df.columns:
