@@ -1090,10 +1090,9 @@ def main():
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
         # Erstelle die zwei Tabs für Team-View
-        tab1, tab2 = st.tabs(["👥 Dashboard", "📜 Historic Drafts"])
+        tab1, tab2 = st.tabs(["👥 Saisonhistorie", "📜 Historic Drafts"])
 
         with tab1:
-            st.header("Team-View - Manager Dashboard")
 
             # Überprüfe, ob die Daten geladen wurden
             if seasons_df is not None and not seasons_df.empty:
