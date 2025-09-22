@@ -3026,7 +3026,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
                 </p>
             </div>
@@ -3038,7 +3038,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     ⚔️ Direkte Vergleiche zwischen Managern - Wer dominiert wen?
                 </p>
             </div>
@@ -3053,7 +3053,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     🏆 Championship-Geschichte, Finals und Playoff-Erfolge
                 </p>
             </div>
@@ -3065,7 +3065,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     🥇 Alle Titel und Auszeichnungen - Wer sammelt die meisten Medals?
                 </p>
             </div>
@@ -3080,7 +3080,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     🎯 Draft-Strategien, Pick-Analysen und Erfolgsraten
                 </p>
             </div>
@@ -3092,7 +3092,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     👑 Championship-DNA, Legenden und Manager-Spieler Loyalität
                 </p>
             </div>
@@ -3107,7 +3107,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     📈 Kategorie-Performance - Stärken und Schwächen analysieren
                 </p>
             </div>
@@ -3119,7 +3119,7 @@ def main():
                 st.rerun()
             st.markdown("""
             <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #888; font-size: 0.9rem;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
                     🤝 Trade-Historie, aktivste Manager und Deal-Analysen
                 </p>
             </div>
