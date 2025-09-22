@@ -1016,11 +1016,12 @@ def main():
     # Klickbarer Header, der zur Homepage führt
     st.markdown(f"""
     <div style="text-align: center; margin-bottom: 20px;">
-        <a href="https://dominationleague.streamlit.app/" target="_self" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-            <img src="{LOGO_URL}" style="height: 80px; margin-right: 15px;">
-            <h1 class="main-header" style="color: #c44b1f; font-size: 2.5rem; margin: 0; display: inline-block;">Domination League Analytics</h1>
-            <img src="{LOGO_URL}" style="height: 80px; margin-left: 15px;">
-        </a>
+        <a href="https://dominationleague.streamlit.app/" target="_self" style="text-decoration: none; 
+                   display: flex; align-items: center; justify-content: center; 
+                   padding-top: 15px; padding-bottom: 15px; /* HIER NEUES PADDING */
+                   border-bottom: 2px solid #333; /* Optionale Trennlinie */
+                   ">
+            <img src="{LOGO_URL}" style="height: 80px; margin-right: 20px;"> <h1 class="main-header" style="color: #c44b1f; font-size: 2.5rem; margin: 0; display: inline-block; white-space: nowrap;">Domination League Analytics</h1> <img src="{LOGO_URL}" style="height: 80px; margin-left: 20px;"> </a>
     </div>
     """, unsafe_allow_html=True)
     
