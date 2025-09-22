@@ -3014,55 +3014,64 @@ def main():
         st.markdown("### 🏆 Champions 2025")
         
         try:
-            # Debug - zeige was wirklich in seasons_df steht
-            st.write("DEBUG - seasons_df info:")
-            st.write("Shape:", seasons_df.shape)
-            st.write("Columns:", list(seasons_df.columns))
-            st.write("Data types:", seasons_df.dtypes.to_dict())
+                # Ermittlung der Top 3 vom aktuellsten Jahr - sortiert nach Final Rank (1 = bester)
+            current_year_data = seasons_df[seasons_df['Saison'] == latest_year]
+            st.write(f"DEBUG - Anzahl Teams in {latest_year}: {len(current_year_data)}")  # Temporär
             
-            # Versuche verschiedene Jahr-Spalten
-            year_column = None
-            for col in ['Year', 'year', 'Saison', 'season', 'YEAR']:
-                if col in seasons_df.columns:
-                    year_column = col
-                    break
-            
-            if year_column:
-                st.write(f"DEBUG - Gefundene Jahr-Spalte: '{year_column}'")
-                st.write(f"DEBUG - Unique values in {year_column}:", sorted(seasons_df[year_column].unique()))
+            if len(current_year_data) > 0:
+                # Sortiere nach Final Rank (niedrigste Zahl = beste Platzierung)
+                latest_champions = current_year_data.nsmallest(3, 'Final Rank')
+                st.write("DEBUG - Top 3 Daten:", latest_champions[['First Name', 'Final Rank', 'Wins']].to_dict())  # Temporär
                 
-                # Suche nach 2025 oder dem höchsten verfügbaren Jahr
-                available_years = sorted(seasons_df[year_column].unique(), reverse=True)
-                target_year = 2025 if 2025 in available_years else available_years[0]
-                
-                st.write(f"DEBUG - Using year: {target_year}")
-                
-                # Filter für das Jahr
-                current_year_data = seasons_df[seasons_df[year_column] == target_year]
-                st.write(f"DEBUG - Filtered data shape: {current_year_data.shape}")
-                
-                if len(current_year_data) >= 3:
-                    st.write("DEBUG - Sample data:")
-                    st.write(current_year_data[['First Name', 'Final Rank', 'Wins']].head())
+                if len(latest_champions) >= 3:
+                    # Siegertreppchen Layout
+                    col1, col2, col3 = st.columns([1, 2, 1])
                     
-                    # Sortiere nach Final Rank
-                    latest_champions = current_year_data.nsmallest(3, 'Final Rank')
+                    # 2. Platz (links) - Final Rank 2
+                    with col1:
+                        second_place = latest_champions.iloc[1]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #C0C0C0, #A8A8A8); 
+                                   border-radius: 15px; margin-top: 30px;'>
+                            <h3 style='margin: 0; color: #333;'>🥈</h3>
+                            <h4 style='margin: 5px 0; color: #333;'>{second_place['First Name']}</h4>
+                            <p style='margin: 0; font-weight: bold; color: #555;'>{second_place['Wins']}-{second_place['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 0.9rem; color: #666;'>2nd Place</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
-                    # Zeige die Top 3 einfach als Text erstmal
-                    st.write("### Top 3:")
-                    for i, (_, row) in enumerate(latest_champions.iterrows()):
-                        place = ["🥇", "🥈", "🥉"][i]
-                        st.write(f"{place} {row['First Name']} - Rank: {row['Final Rank']} - Record: {row['Wins']}-{row['Losses']}")
+                    # 1. Platz (mitte, höher) - Final Rank 1
+                    with col2:
+                        champion = latest_champions.iloc[0]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #FFD700, #FFA500); 
+                                   border-radius: 15px; box-shadow: 0 4px 8px rgba(255,215,0,0.3);'>
+                            <h2 style='margin: 0; color: #333;'>👑</h2>
+                            <h3 style='margin: 10px 0; color: #333;'>{champion['First Name']}</h3>
+                            <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{champion['Wins']}-{champion['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION {latest_year}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # 3. Platz (rechts) - Final Rank 3
+                    with col3:
+                        third_place = latest_champions.iloc[2]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #CD7F32, #8B4513); 
+                                   border-radius: 15px; margin-top: 30px;'>
+                            <h3 style='margin: 0; color: #FFF;'>🥉</h3>
+                            <h4 style='margin: 5px 0; color: #FFF;'>{third_place['First Name']}</h4>
+                            <p style='margin: 0; font-weight: bold; color: #FFF;'>{third_place['Wins']}-{third_place['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 0.9rem; color: #DDD;'>3rd Place</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info(f"Nicht genug Teams für Top 3 in {latest_year} gefunden.")
             else:
-                st.write("DEBUG - Keine Jahr-Spalte gefunden!")
-                st.write("DEBUG - Erste 5 Zeilen:")
-                st.write(seasons_df.head())
+                st.info(f"Keine Daten für {latest_year} gefunden.")
                 
         except Exception as e:
-            st.write(f"DEBUG - Error details: {str(e)}")
-            st.write(f"DEBUG - Error type: {type(e)}")
-            import traceback
-            st.write(f"DEBUG - Traceback: {traceback.format_exc()}")
+            st.info(f"Top 3 Daten werden geladen... (Error: {str(e)})")
         
         st.markdown("---")
         
