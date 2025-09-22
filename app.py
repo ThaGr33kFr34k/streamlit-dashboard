@@ -8,6 +8,9 @@ import random
 import ast
 from collections import Counter
 
+# Das Liga-Logo
+LOGO_URL = "https://i.imgur.com/5QnNAaO.png"
+
 # Page configuration
 st.set_page_config(
     page_title="Fantasy Basketball Analytics",
@@ -2994,6 +2997,9 @@ def main():
     else:  # Default homepage when no analysis_type is selected
         # Liga Header mit Logo
         col1, col2, col3 = st.columns([1, 2, 1])
+
+        with col1:
+        st.image(LOGO_URL, use_column_width=True) # Logo in der linken Spalte
         
         with col2:
             st.markdown("""
@@ -3003,6 +3009,9 @@ def main():
                 <p style='color: #FFF;'>Nutze die Sidebar ⬅️ links oder die die Navigation Cards ⬇️ unten, um dich durch die verschiedenen Bereiche zu bewegen.</p>
             </div>
             """, unsafe_allow_html=True)
+
+        with col3:
+        st.image(LOGO_URL, use_column_width=True) # Logo in der rechten Spalte
         
         # Top 3 Siegertreppchen vom aktuellen Jahr
         st.markdown("### 🏆 Saison 2025")
