@@ -1053,6 +1053,12 @@ def main():
         st.error("Error processing matchup data.")
         return
     
+    # use_container_width=True ist perfekt, damit es die Breite der Sidebar ausfüllt
+    st.sidebar.image(LOGO_URL, use_container_width=True)
+    
+    # für einen unsichtbaren Abstand:
+    # st.sidebar.write("")
+    
     # Sidebar with button navigation
     st.sidebar.title("Navigation")
 
