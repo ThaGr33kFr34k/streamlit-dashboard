@@ -1499,7 +1499,6 @@ def main():
             # Calculate and display opponent analysis
             favorites, nightmares = calculate_all_h2h_stats(processed_df, selected_manager, min_games=5)
             
-            st.markdown(f"### Analyse für **{selected_manager}**")
             display_opponent_analysis(favorites, nightmares, selected_manager)
             
             # Show all H2H stats table
@@ -1527,7 +1526,6 @@ def main():
                 st.info("Keine Gegner mit mindestens 5 Spielen gefunden.")
         
         with tab2:
-            st.subheader("Direkter Manager Vergleich")
             
             col1, col2 = st.columns(2)
             with col1:
