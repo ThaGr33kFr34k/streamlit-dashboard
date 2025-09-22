@@ -1594,8 +1594,7 @@ def main():
                 st.dataframe(full_styled, use_container_width=True, hide_index=True)
         
         with tab2:
-            st.subheader("😱 Choke vs Clutch 💪 Analysis")
-            
+        
             # Check if seasons_df is available
             if 'seasons_df' in locals() or 'seasons_df' in globals():
                 # Get all manager names
