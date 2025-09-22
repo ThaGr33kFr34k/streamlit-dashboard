@@ -2997,7 +2997,7 @@ def main():
             """, unsafe_allow_html=True)
         
         # Top 3 Siegertreppchen vom aktuellen Jahr
-        st.markdown("### 🏆 Champions 2025")
+        st.markdown("### 🏆 Saison 2025")
         
         try:            
             # Versuche verschiedene Jahr-Spalten
