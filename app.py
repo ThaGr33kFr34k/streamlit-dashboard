@@ -3003,9 +3003,6 @@ def main():
     else:  # Default homepage when no analysis_type is selected
         # Liga Header mit Logo
         col1, col2, col3 = st.columns([1, 2, 1])
-
-        with col1:
-            st.image(LOGO_URL, use_container_width=True) # Logo in der linken Spalte
         
         with col2:
             st.markdown("""
@@ -3015,11 +3012,7 @@ def main():
                 <p style='color: #FFF;'>Nutze die Sidebar ⬅️ links oder die die Navigation Cards ⬇️ unten, um dich durch die verschiedenen Bereiche zu bewegen.</p>
             </div>
             """, unsafe_allow_html=True)
-
-        with col3:
-            st.image(LOGO_URL, use_container_width=True) # Logo in der rechten Spalte
-
-        
+       
         # Navigation Cards
         st.markdown("### 📍 Navigation")
         st.markdown("*Wähle einen Bereich für detaillierte Analysen:*")
