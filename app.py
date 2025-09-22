@@ -75,7 +75,14 @@ def load_data():
         categories_df = pd.read_csv(categories_url)
         seasons_df = pd.read_csv(seasons_url)
         trades_df = pd.read_csv(trades_url)
-        
+
+        # Debug - temporär einfügen nach load_data()
+        st.write("DEBUG - seasons_df columns:", seasons_df.columns.tolist())
+        st.write("DEBUG - seasons_df shape:", seasons_df.shape) 
+        st.write("DEBUG - Available seasons:", sorted(seasons_df['Season'].unique()) if 'Season' in seasons_df.columns else "No Season column")
+        if len(seasons_df) > 0:
+            st.write("DEBUG - First 3 rows:", seasons_df.head(3))
+    
         # --- HIER WIRD DIE SPALTE UMBENANNT ---
         if 'Year' in seasons_df.columns:
             seasons_df = seasons_df.rename(columns={'Year': 'Saison'})
