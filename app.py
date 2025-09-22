@@ -2989,76 +2989,111 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
-    # Homepage Dashboard
+        # Homepage Dashboard - fügen Sie das am ENDE Ihrer main() function ein, nach allen elif statements
     else:  # Default homepage when no analysis_type is selected
         # Liga Header mit Logo
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col2:
-            # Logo anzeigen (Google Drive direkte URL)
-            logo_url = "https://drive.google.com/uc?export=view&id=1uYESKqDX62PrZzZoJlmoMdt0mgobSWXu"
-            try:
-                st.image(logo_url, width=300)
-            except:
-                st.markdown("### 🏀 Fantasy Basketball Liga")
+            # Logo anzeigen - Alternative URLs probieren
+            logo_urls = [
+                "https://drive.google.com/uc?export=view&id=1uYESKqDX62PrZzZoJlmoMdt0mgobSWXu",
+                "https://lh3.googleusercontent.com/d/1uYESKqDX62PrZzZoJlmoMdt0mgobSWXu",
+                "https://drive.google.com/uc?id=1uYESKqDX62PrZzZoJlmoMdt0mgobSWXu&export=download"
+            ]
+            
+            logo_loaded = False
+            for logo_url in logo_urls:
+                try:
+                    st.image(logo_url, width=300)
+                    logo_loaded = True
+                    break
+                except:
+                    continue
+            
+            if not logo_loaded:
+                st.markdown("""
+                <div style='text-align: center; padding: 20px;'>
+                    <h1 style='color: #FF6B35; margin: 0;'>🏀</h1>
+                    <h2 style='margin: 10px 0;'>Fantasy Basketball Liga</h2>
+                </div>
+                """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style='text-align: center; margin-bottom: 2rem;'>
-            <h1>Welcome to Domination Analytics</h1>
-            <p style='font-size: 1.2rem; color: #888;'>Seasons 2014-2025 • 11 Jahre Liga-Geschichte</p>
+            <h1>Welcome to the Fantasy Basketball Liga</h1>
+            <p style='font-size: 1.2rem; color: #888;'>11 Jahre Liga-Geschichte</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Top 3 Siegertreppchen vom aktuellen Jahr
-        st.markdown("### 🏆 Top 3 des letzten Jahres")
+        st.markdown("### 🏆 Champions 2025")
         
         try:
-            # Ermittlung der Top 3 vom aktuellen Jahr (2025) aus seasons_df
-            latest_champions = seasons_df[seasons_df['Year'] == 2025].nlargest(3, 'Final Rank')
+            # Debug - zeige verfügbare Jahre
+            available_years = sorted(seasons_df['Year'].unique(), reverse=True)
+            latest_year = available_years[0] if available_years else 2025
             
-            if len(latest_champions) >= 3:
-                # Siegertreppchen Layout
-                col1, col2, col3 = st.columns([1, 2, 1])
+            st.write(f"DEBUG - Verfügbare Jahre: {available_years[:5]}...")  # Temporär
+            st.write(f"DEBUG - Verwende Jahr: {latest_year}")  # Temporär
+            
+            # Ermittlung der Top 3 vom aktuellsten Jahr - sortiert nach Final Rank (1 = bester)
+            current_year_data = seasons_df[seasons_df['Year'] == latest_year]
+            st.write(f"DEBUG - Anzahl Teams in {latest_year}: {len(current_year_data)}")  # Temporär
+            
+            if len(current_year_data) > 0:
+                # Sortiere nach Final Rank (niedrigste Zahl = beste Platzierung)
+                latest_champions = current_year_data.nsmallest(3, 'Final Rank')
+                st.write("DEBUG - Top 3 Daten:", latest_champions[['First Name', 'Final Rank', 'Wins']].to_dict())  # Temporär
                 
-                # 2. Platz (links)
-                with col1:
-                    st.markdown(f"""
-                    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #C0C0C0, #A8A8A8); 
-                               border-radius: 15px; margin-top: 30px;'>
-                        <h3 style='margin: 0; color: #333;'>🥈</h3>
-                        <h4 style='margin: 5px 0; color: #333;'>{latest_champions.iloc[1]['First Name']}</h4>
-                        <p style='margin: 0; font-weight: bold; color: #555;'>{latest_champions.iloc[1]['Final Rank']:.1f} Pts</p>
-                        <p style='margin: 0; font-size: 0.9rem; color: #666;'>2nd Place</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # 1. Platz (mitte, höher)
-                with col2:
-                    st.markdown(f"""
-                    <div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #FFD700, #FFA500); 
-                               border-radius: 15px; box-shadow: 0 4px 8px rgba(255,215,0,0.3);'>
-                        <h2 style='margin: 0; color: #333;'>👑</h2>
-                        <h3 style='margin: 10px 0; color: #333;'>{latest_champions.iloc[0]['First Name']}</h3>
-                        <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{latest_champions.iloc[0]['Final Rank']:.1f} Pts</p>
-                        <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION 2025</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # 3. Platz (rechts)
-                with col3:
-                    st.markdown(f"""
-                    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #CD7F32, #8B4513); 
-                               border-radius: 15px; margin-top: 30px;'>
-                        <h3 style='margin: 0; color: #FFF;'>🥉</h3>
-                        <h4 style='margin: 5px 0; color: #FFF;'>{latest_champions.iloc[2]['First Name']}</h4>
-                        <p style='margin: 0; font-weight: bold; color: #FFF;'>{latest_champions.iloc[2]['Final Rank']:.1f} Pts</p>
-                        <p style='margin: 0; font-size: 0.9rem; color: #DDD;'>3rd Place</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                if len(latest_champions) >= 3:
+                    # Siegertreppchen Layout
+                    col1, col2, col3 = st.columns([1, 2, 1])
+                    
+                    # 2. Platz (links) - Final Rank 2
+                    with col1:
+                        second_place = latest_champions.iloc[1]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #C0C0C0, #A8A8A8); 
+                                   border-radius: 15px; margin-top: 30px;'>
+                            <h3 style='margin: 0; color: #333;'>🥈</h3>
+                            <h4 style='margin: 5px 0; color: #333;'>{second_place['First Name']}</h4>
+                            <p style='margin: 0; font-weight: bold; color: #555;'>{second_place['Wins']}-{second_place['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 0.9rem; color: #666;'>2nd Place</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # 1. Platz (mitte, höher) - Final Rank 1
+                    with col2:
+                        champion = latest_champions.iloc[0]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #FFD700, #FFA500); 
+                                   border-radius: 15px; box-shadow: 0 4px 8px rgba(255,215,0,0.3);'>
+                            <h2 style='margin: 0; color: #333;'>👑</h2>
+                            <h3 style='margin: 10px 0; color: #333;'>{champion['First Name']}</h3>
+                            <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{champion['Wins']}-{champion['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION {latest_year}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # 3. Platz (rechts) - Final Rank 3
+                    with col3:
+                        third_place = latest_champions.iloc[2]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #CD7F32, #8B4513); 
+                                   border-radius: 15px; margin-top: 30px;'>
+                            <h3 style='margin: 0; color: #FFF;'>🥉</h3>
+                            <h4 style='margin: 5px 0; color: #FFF;'>{third_place['First Name']}</h4>
+                            <p style='margin: 0; font-weight: bold; color: #FFF;'>{third_place['Wins']}-{third_place['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 0.9rem; color: #DDD;'>3rd Place</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info(f"Nicht genug Teams für Top 3 in {latest_year} gefunden.")
             else:
-                st.info("Keine ausreichenden Daten für 2025 Top 3 verfügbar.")
+                st.info(f"Keine Daten für {latest_year} gefunden.")
         except Exception as e:
-            st.info("Top 3 Daten werden geladen...")
+            st.info(f"Top 3 Daten werden geladen... (Error: {str(e)})")
         
         st.markdown("---")
         
