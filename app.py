@@ -3063,12 +3063,6 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
 
-                
-                    # Zeige die Top 3 einfach als Text erstmal
-                    st.write("### Top 3:")
-                    for i, (_, row) in enumerate(latest_champions.iterrows()):
-                        place = ["🥇", "🥈", "🥉"][i]
-                        st.write(f"{place} {row['First Name']} - Rank: {row['Final Rank']} - Record: {row['Wins']}-{row['Losses']}")
             else:
                 st.write("DEBUG - Keine Jahr-Spalte gefunden!")
                 st.write("DEBUG - Erste 5 Zeilen:")
