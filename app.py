@@ -2989,7 +2989,7 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
-            # Homepage Dashboard - fügen Sie das am ENDE Ihrer main() function ein, nach allen elif statements
+            
     else:  # Default homepage when no analysis_type is selected
         # Liga Header mit Logo
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -3006,7 +3006,7 @@ def main():
         st.markdown("""
         <div style='text-align: center; margin-bottom: 2rem;'>
             <h1>Welcome to the Fantasy Basketball Liga</h1>
-            <p style='font-size: 1.2rem; color: #888;'>Season 2025 • 11 Jahre Liga-Geschichte</p>
+            <p style='font-size: 1.2rem; color: #888;'>11 Jahre Liga-Geschichte</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -3022,7 +3022,7 @@ def main():
             
             # Versuche verschiedene Jahr-Spalten
             year_column = None
-            for col in ['Year', 'year', 'Season', 'season', 'YEAR']:
+            for col in ['Year', 'year', 'Saison', 'season', 'YEAR']:
                 if col in seasons_df.columns:
                     year_column = col
                     break
