@@ -2990,9 +2990,9 @@ def main():
         with col2:
             st.markdown("""
             <div style='padding: 20px; background-color: #333; border-radius: 10px; margin-top: 20px;'>
-                <h3 style='color: #FF6B35;'>Willkommen zur Domination League!</h3>
-                <p style='color: #FFF;'>Hier findest du alle wichtigen Informationen, Statistiken und Updates zu unserer Liga.</p>
-                <p style='color: #FFF;'>Nutze die Navigation links, um dich durch die verschiedenen Bereiche zu bewegen.</p>
+                <h3 style='color: #FF6B35;'>Willkommen zu Domination League Analytics!</h3>
+                <p style='color: #FFF;'>Hier werden 11 Jahre Liga-Geschichte ausgewertet. Alle historischen Daten und interessante Statistiken zu unserer Liga an einem Ort.</p>
+                <p style='color: #FFF;'>Nutze die Sidebar ⬅️ links ⬅️ oder die die Navigation Cards ⬇️ unten ⬇️  , um dich durch die verschiedenen Bereiche zu bewegen.</p>
             </div>
             """, unsafe_allow_html=True)
         
