@@ -3012,7 +3012,8 @@ def main():
 
         with col3:
             st.image(LOGO_URL, use_container_width=True) # Logo in der rechten Spalte
-        
+
+        """
         # Top 3 Siegertreppchen vom aktuellen Jahr
         st.markdown("### 🏆 Saison 2025")
         
@@ -3092,6 +3093,8 @@ def main():
             st.write(f"DEBUG - Traceback: {traceback.format_exc()}")
         
         st.markdown("---")
+        """
+
         
         # Navigation Cards
         st.markdown("### 📍 Navigation")
