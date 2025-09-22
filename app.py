@@ -1461,12 +1461,12 @@ def main():
                     
                             # Erste Saison (linke Spalte)
                             with col1:
-                                display_season_draft(manager_drafts, year1, year_col)
+                                process_draft_data(manager_drafts, year1, year_col)
                     
                             # Zweite Saison (rechte Spalte), falls vorhanden
                             with col2:
                                 if year2:
-                                    display_season_draft(manager_drafts, year2, year_col)
+                                    process_draft_data(manager_drafts, year2, year_col)
 
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
