@@ -1009,7 +1009,7 @@ def _display_season_draft(manager_drafts, year, year_col):
 # Main app
 def main():
     global draft_analysis_df
-    st.markdown('<h1 class="main-header">🏀 Fantasy Basketball Analytics</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🏀 Domination League Analytics</h1>', unsafe_allow_html=True)
     
     # Load data
     with st.spinner("Loading data..."):
@@ -2995,13 +2995,6 @@ def main():
                 <h2 style='margin: 10px 0; color: #FFF;'>Fantasy Basketball Liga</h2>
             </div>
             """, unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div style='text-align: center; margin-bottom: 2rem;'>
-            <h1>Welcome to the Fantasy Basketball Liga</h1>
-            <p style='font-size: 1.2rem; color: #888;'>11 Jahre Liga-Geschichte</p>
-        </div>
-        """, unsafe_allow_html=True)
         
         # Top 3 Siegertreppchen vom aktuellen Jahr
         st.markdown("### 🏆 Champions 2025")
