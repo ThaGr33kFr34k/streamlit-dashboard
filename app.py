@@ -2999,8 +2999,7 @@ def main():
         # Top 3 Siegertreppchen vom aktuellen Jahr
         st.markdown("### 🏆 Champions 2025")
         
-        try:
-            
+        try:            
             # Versuche verschiedene Jahr-Spalten
             year_column = None
             for col in ['Year', 'year', 'Saison', 'season', 'YEAR']:
@@ -3021,7 +3020,50 @@ def main():
                                        
                     # Sortiere nach Final Rank
                     latest_champions = current_year_data.nsmallest(3, 'Final Rank')
+
+                    # Siegertreppchen Layout
+                    col1, col2, col3 = st.columns([1, 2, 1])
                     
+                    # 2. Platz (links) - Final Rank 2
+                    with col1:
+                        second_place = latest_champions.iloc[1]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #C0C0C0, #A8A8A8); 
+                                   border-radius: 15px; margin-top: 30px;'>
+                            <h3 style='margin: 0; color: #333;'>🥈</h3>
+                            <h4 style='margin: 5px 0; color: #333;'>{second_place['First Name']}</h4>
+                            <p style='margin: 0; font-weight: bold; color: #555;'>{second_place['Wins']}-{second_place['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 0.9rem; color: #666;'>2nd Place</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # 1. Platz (mitte, höher) - Final Rank 1
+                    with col2:
+                        champion = latest_champions.iloc[0]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #FFD700, #FFA500); 
+                                   border-radius: 15px; box-shadow: 0 4px 8px rgba(255,215,0,0.3);'>
+                            <h2 style='margin: 0; color: #333;'>👑</h2>
+                            <h3 style='margin: 10px 0; color: #333;'>{champion['First Name']}</h3>
+                            <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{champion['Wins']}-{champion['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION {latest_year}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # 3. Platz (rechts) - Final Rank 3
+                    with col3:
+                        third_place = latest_champions.iloc[2]
+                        st.markdown(f"""
+                        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #CD7F32, #8B4513); 
+                                   border-radius: 15px; margin-top: 30px;'>
+                            <h3 style='margin: 0; color: #FFF;'>🥉</h3>
+                            <h4 style='margin: 5px 0; color: #FFF;'>{third_place['First Name']}</h4>
+                            <p style='margin: 0; font-weight: bold; color: #FFF;'>{third_place['Wins']}-{third_place['Losses']} Record</p>
+                            <p style='margin: 0; font-size: 0.9rem; color: #DDD;'>3rd Place</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                
                     # Zeige die Top 3 einfach als Text erstmal
                     st.write("### Top 3:")
                     for i, (_, row) in enumerate(latest_champions.iterrows()):
