@@ -1461,12 +1461,27 @@ def main():
                     
                             # Erste Saison (linke Spalte)
                             with col1:
-                                process_draft_data(manager_drafts, year1, year_col)
+                                if year1:
+                                    st.markdown(f"### {year1}")
+                                    # Filtere manager_drafts für das spezifische Jahr
+                                    season_data = manager_drafts[manager_drafts[year_col] == year1]
+                                    if not season_data.empty:
+                                        # Verwende die originale Funktion mit korrekten Parametern
+                                        process_draft_data(season_data, teams_df)
+                                    else:
+                                        st.info("Keine Draft-Daten für diese Saison")
                     
                             # Zweite Saison (rechte Spalte), falls vorhanden
                             with col2:
                                 if year2:
-                                    process_draft_data(manager_drafts, year2, year_col)
+                                    st.markdown(f"### {year2}")
+                                    # Filtere manager_drafts für das spezifische Jahr
+                                    season_data = manager_drafts[manager_drafts[year_col] == year2]
+                                    if not season_data.empty:
+                                        # Verwende die originale Funktion mit korrekten Parametern
+                                        process_draft_data(season_data, teams_df)
+                                    else:
+                                        st.info("Keine Draft-Daten für diese Saison")
 
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
