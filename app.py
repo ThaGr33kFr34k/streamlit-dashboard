@@ -2156,7 +2156,7 @@ def main():
                 - {"Draft position is a good predictor of final rank" if abs(correlation) > 0.5 else "Draft position has limited predictive power"}
                 """)
                 
-                with tab5:
+            with tab5:
                 st.subheader("Draft Value Analysis")
                 
                 # Calculate draft value
