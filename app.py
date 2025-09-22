@@ -1021,7 +1021,7 @@ def main():
                    padding-top: 15px; padding-bottom: 15px; /* HIER NEUES PADDING */
                    border-bottom: 2px solid #333; /* Optionale Trennlinie */
                    ">
-            <img src="{LOGO_URL}" style="height: 60px; margin-right: 20px;"> <h1 class="main-header" style="color: #c44b1f; font-size: 2.5rem; margin: 0; display: inline-block;">Domination League Analytics</h1> <img src="{LOGO_URL}" style="height: 60px; margin-left: 20px;"> </a>
+            <img src="{LOGO_URL}" style="height: 60px; margin-right: 20px;"> <h1 class="main-header" style="color: #c44b1f; font-size: 2.5rem; margin: 0; display: inline-block;">Fantasy Analytics</h1> <img src="{LOGO_URL}" style="height: 60px; margin-left: 20px;"> </a>
     </div>
     """, unsafe_allow_html=True)
     
