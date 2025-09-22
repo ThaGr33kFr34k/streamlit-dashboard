@@ -1403,7 +1403,6 @@ def main():
                 st.warning("Die Seasons-Daten konnten nicht geladen werden.")
 
         with tab2:
-            st.header("Historic Drafts - Manager Draft Historie")
 
             # Überprüfe, ob die Draft-Daten geladen wurden
             if drafts_df is not None and not drafts_df.empty:
@@ -1425,7 +1424,6 @@ def main():
                     )
 
                 if selected_manager:
-                    st.markdown(f"### Draft-Historie für **{selected_manager}**")
 
                     # 2. Filtere Draft-Daten für den ausgewählten Manager
                     manager_drafts = drafts_df[drafts_df['Manager'] == selected_manager].copy()
