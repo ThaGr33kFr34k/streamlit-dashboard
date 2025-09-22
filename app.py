@@ -3046,7 +3046,7 @@ def main():
                             <h2 style='margin: 0; color: #333;'>👑</h2>
                             <h3 style='margin: 10px 0; color: #333;'>{champion['First Name']}</h3>
                             <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{champion['Wins']}-{champion['Losses']} Record</p>
-                            <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION {latest_year}</p>
+                            <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION {target_year}</p>
                         </div>
                         """, unsafe_allow_html=True)
                     
