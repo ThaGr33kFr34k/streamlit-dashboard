@@ -2989,7 +2989,7 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
-    # Homepage Dashboard - fügen Sie das am ENDE Ihrer main() function ein, nach allen elif statements
+    # Homepage Dashboard
     else:  # Default homepage when no analysis_type is selected
         # Liga Header mit Logo
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -3014,7 +3014,7 @@ def main():
         
         try:
             # Ermittlung der Top 3 vom aktuellen Jahr (2025) aus seasons_df
-            latest_champions = seasons_df[seasons_df['Season'] == 2025].nlargest(3, 'Points')
+            latest_champions = seasons_df[seasons_df['Season'] == 2025].nlargest(3, 'Final Rank')
             
             if len(latest_champions) >= 3:
                 # Siegertreppchen Layout
@@ -3026,8 +3026,8 @@ def main():
                     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #C0C0C0, #A8A8A8); 
                                border-radius: 15px; margin-top: 30px;'>
                         <h3 style='margin: 0; color: #333;'>🥈</h3>
-                        <h4 style='margin: 5px 0; color: #333;'>{latest_champions.iloc[1]['Manager']}</h4>
-                        <p style='margin: 0; font-weight: bold; color: #555;'>{latest_champions.iloc[1]['Points']:.1f} Pts</p>
+                        <h4 style='margin: 5px 0; color: #333;'>{latest_champions.iloc[1]['First Name']}</h4>
+                        <p style='margin: 0; font-weight: bold; color: #555;'>{latest_champions.iloc[1]['Final Rank']:.1f} Pts</p>
                         <p style='margin: 0; font-size: 0.9rem; color: #666;'>2nd Place</p>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3038,8 +3038,8 @@ def main():
                     <div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #FFD700, #FFA500); 
                                border-radius: 15px; box-shadow: 0 4px 8px rgba(255,215,0,0.3);'>
                         <h2 style='margin: 0; color: #333;'>👑</h2>
-                        <h3 style='margin: 10px 0; color: #333;'>{latest_champions.iloc[0]['Manager']}</h3>
-                        <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{latest_champions.iloc[0]['Points']:.1f} Pts</p>
+                        <h3 style='margin: 10px 0; color: #333;'>{latest_champions.iloc[0]['First Name']}</h3>
+                        <p style='margin: 0; font-weight: bold; font-size: 1.2rem; color: #333;'>{latest_champions.iloc[0]['Final Rank']:.1f} Pts</p>
                         <p style='margin: 0; font-size: 1rem; color: #555;'>🏆 CHAMPION 2025</p>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3050,8 +3050,8 @@ def main():
                     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #CD7F32, #8B4513); 
                                border-radius: 15px; margin-top: 30px;'>
                         <h3 style='margin: 0; color: #FFF;'>🥉</h3>
-                        <h4 style='margin: 5px 0; color: #FFF;'>{latest_champions.iloc[2]['Manager']}</h4>
-                        <p style='margin: 0; font-weight: bold; color: #FFF;'>{latest_champions.iloc[2]['Points']:.1f} Pts</p>
+                        <h4 style='margin: 5px 0; color: #FFF;'>{latest_champions.iloc[2]['First Name']}</h4>
+                        <p style='margin: 0; font-weight: bold; color: #FFF;'>{latest_champions.iloc[2]['Final Rank']:.1f} Pts</p>
                         <p style='margin: 0; font-size: 0.9rem; color: #DDD;'>3rd Place</p>
                     </div>
                     """, unsafe_allow_html=True)
