@@ -2988,11 +2988,11 @@ def main():
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col2:
-            # Logo - Einfacher Fallback da Google Drive nicht funktioniert
             st.markdown("""
-            <div style='text-align: center; padding: 20px;'>
-                <h1 style='color: #FF6B35; font-size: 4rem; margin: 0;'>🏀</h1>
-                <h2 style='margin: 10px 0; color: #FFF;'>Fantasy Basketball Liga</h2>
+            <div style='padding: 20px; background-color: #333; border-radius: 10px; margin-top: 20px;'>
+                <h3 style='color: #FF6B35;'>Willkommen zur Domination League!</h3>
+                <p style='color: #FFF;'>Hier findest du alle wichtigen Informationen, Statistiken und Updates zu unserer Liga.</p>
+                <p style='color: #FFF;'>Nutze die Navigation links, um dich durch die verschiedenen Bereiche zu bewegen.</p>
             </div>
             """, unsafe_allow_html=True)
         
