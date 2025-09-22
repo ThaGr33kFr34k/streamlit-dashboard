@@ -1090,7 +1090,7 @@ def main():
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
         # Erstelle die zwei Tabs für Team-View
-        tab1, tab2 = st.tabs(["👥 Saisonhistorie", "📜 Historic Drafts"])
+        tab1, tab2 = st.tabs(["👥 Saisonhistorie", "📜 Drafthistorie"])
 
         with tab1:
 
