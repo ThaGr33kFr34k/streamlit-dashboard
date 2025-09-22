@@ -1764,13 +1764,13 @@ def main():
     elif st.session_state.analysis_type == "🏅 Medal Overview":
     
         # Create tabs
-        tab1, tab2 = st.tabs(["🏆 Medal Table", "📊 Ewige Tabelle"])
+        tab1, tab2 = st.tabs(["🏆 Medallienspiegel", "📊 Ewige Tabelle"])
         
         with tab1:
             medal_table = create_medal_table(teams_df)
             
             if medal_table is not None:
-                st.subheader("🏆 Medal Table")
+                st.subheader("🏆 Medallienspiegel")
                 
                 # Display medal table
                 medal_styled = medal_table.style.applymap(lambda x: "font-weight: bold;", subset=['Manager'])
