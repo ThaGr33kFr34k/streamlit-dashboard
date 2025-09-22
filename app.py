@@ -3023,23 +3023,16 @@ def main():
                     break
             
             if year_column:
-                st.write(f"DEBUG - Gefundene Jahr-Spalte: '{year_column}'")
-                st.write(f"DEBUG - Unique values in {year_column}:", sorted(seasons_df[year_column].unique()))
                 
                 # Suche nach 2025 oder dem höchsten verfügbaren Jahr
                 available_years = sorted(seasons_df[year_column].unique(), reverse=True)
                 target_year = 2025 if 2025 in available_years else available_years[0]
-                
-                st.write(f"DEBUG - Using year: {target_year}")
-                
+                         
                 # Filter für das Jahr
                 current_year_data = seasons_df[seasons_df[year_column] == target_year]
-                st.write(f"DEBUG - Filtered data shape: {current_year_data.shape}")
                 
                 if len(current_year_data) >= 3:
-                    st.write("DEBUG - Sample data:")
-                    st.write(current_year_data[['First Name', 'Final Rank', 'Wins']].head())
-                    
+                                       
                     # Sortiere nach Final Rank
                     latest_champions = current_year_data.nsmallest(3, 'Final Rank')
                     
