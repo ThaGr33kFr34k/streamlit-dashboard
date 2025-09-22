@@ -1111,7 +1111,6 @@ def main():
                 )
 
                 if selected_manager:
-                    st.markdown(f"### Dashboard für **{selected_manager}**")
 
                     # 2. Filtere Daten für den ausgewählten Manager
                     manager_data = seasons_df[seasons_df['First Name'] == selected_manager].copy()
