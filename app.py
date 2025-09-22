@@ -1014,7 +1014,7 @@ def main():
     st.markdown(f"""
     <div style="text-align: center;">
         <a href="https://dominationleague.streamlit.app/" target="_self" style="text-decoration: none;">
-            <h1 class="main-header" style="color: #FF6B35; font-size: 3rem; margin: 0; display: inline-block;">🏀 Domination League Analytics 📊</h1>
+            <h1 class="main-header" style="color: #FF6B35; font-size: 2.5rem; margin: 0; display: inline-block;">🏀 Domination League Analytics 📊</h1>
         </a>
     </div>
     """, unsafe_allow_html=True)
