@@ -3014,7 +3014,7 @@ def main():
         
         try:
             # Ermittlung der Top 3 vom aktuellen Jahr (2025) aus seasons_df
-            latest_champions = seasons_df[seasons_df['Season'] == 2025].nlargest(3, 'Final Rank')
+            latest_champions = seasons_df[seasons_df['Year'] == 2025].nlargest(3, 'Final Rank')
             
             if len(latest_champions) >= 3:
                 # Siegertreppchen Layout
