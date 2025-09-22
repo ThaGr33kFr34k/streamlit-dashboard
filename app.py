@@ -1403,25 +1403,17 @@ def main():
                 st.warning("Die Seasons-Daten konnten nicht geladen werden.")
 
         with tab2:
+            st.header("Historic Drafts - Manager Draft Historie")
+
             # Überprüfe, ob die Draft-Daten geladen wurden
             if drafts_df is not None and not drafts_df.empty:
-                # FIX: Konvertiere Jahr-Spalte zu int um Dezimalstellen zu entfernen
-                drafts_df_fixed = drafts_df.copy()
-                year_col = None
-                for col in ['Year', 'Season', 'Jahr', 'Saison']:
-                    if col in drafts_df_fixed.columns:
-                        year_col = col
-                        # Konvertiere zu int um 2025.0 -> 2025 zu machen
-                        try:
-                            drafts_df_fixed[col] = drafts_df_fixed[col].fillna(0).astype(int)
-                        except:
-                            pass  # Falls Konvertierung fehlschlägt, Original beibehalten
-                        break
-                
+
                 # 1. Manager-Dropdown erstellen (identisch zum ersten Tab)
                 st.subheader("Manager auswählen")
+
                 # Erstelle Liste aller einzigartigen Manager-Namen aus drafts_df
-                manager_names = sorted(drafts_df_fixed['Manager'].dropna().unique()) if 'Manager' in drafts_df_fixed.columns else []
+                manager_names = sorted(drafts_df['Manager'].dropna().unique()) if 'Manager' in drafts_df.columns else []
+
                 if not manager_names:
                     st.error("Keine Manager in den Draft-Daten gefunden. Überprüfen Sie die 'Manager' Spalte in drafts_df.")
                 else:
@@ -1431,20 +1423,31 @@ def main():
                         options=manager_names,
                         key="historic_drafts_manager_select"
                     )
+
                 if selected_manager:
+                    st.markdown(f"### Draft-Historie für **{selected_manager}**")
+
                     # 2. Filtere Draft-Daten für den ausgewählten Manager
-                    manager_drafts = drafts_df_fixed[drafts_df_fixed['Manager'] == selected_manager].copy()
+                    manager_drafts = drafts_df[drafts_df['Manager'] == selected_manager].copy()
+
                     if not manager_drafts.empty:
                         # 3. Sortiere nach Jahr absteigend (neueste zuerst)
+                        year_col = None
+                        for col in ['Year', 'Season', 'Jahr', 'Saison']:
+                            if col in manager_drafts.columns:
+                                year_col = col
+                                break
+
                         if year_col:
                             manager_drafts = manager_drafts.sort_values(year_col, ascending=False)
                             years = sorted(manager_drafts[year_col].unique(), reverse=True)
                         else:
                             st.warning("Keine Jahr-Spalte gefunden in den Draft-Daten")
                             years = ['Alle Jahre']
-                        
+
                         # 4. Erstelle Draft-Übersicht für jede Saison
                         st.subheader("🎯 Draft-Übersicht nach Saisons")
+
                         # Organisiere Jahre für 2-spaltiges Layout
                         years_pairs = []
                         for i in range(0, len(years), 2):
@@ -1452,7 +1455,7 @@ def main():
                                 years_pairs.append((years[i], years[i + 1]))
                             else:
                                 years_pairs.append((years[i], None))
-                        
+
                         for year_pair in years_pairs:
                             year1, year2 = year_pair
                     
@@ -1461,27 +1464,12 @@ def main():
                     
                             # Erste Saison (linke Spalte)
                             with col1:
-                                if year1:
-                                    st.markdown(f"### {year1}")
-                                    # Filtere manager_drafts für das spezifische Jahr
-                                    season_data = manager_drafts[manager_drafts[year_col] == year1]
-                                    if not season_data.empty:
-                                        # Verwende die originale Funktion mit korrekten Parametern
-                                        process_draft_data(season_data, teams_df)
-                                    else:
-                                        st.info("Keine Draft-Daten für diese Saison")
+                                _display_season_draft(manager_drafts, year1, year_col)
                     
                             # Zweite Saison (rechte Spalte), falls vorhanden
                             with col2:
                                 if year2:
-                                    st.markdown(f"### {year2}")
-                                    # Filtere manager_drafts für das spezifische Jahr
-                                    season_data = manager_drafts[manager_drafts[year_col] == year2]
-                                    if not season_data.empty:
-                                        # Verwende die originale Funktion mit korrekten Parametern
-                                        process_draft_data(season_data, teams_df)
-                                    else:
-                                        st.info("Keine Draft-Daten für diese Saison")
+                                    _display_season_draft(manager_drafts, year2, year_col)
 
                     else:
                         st.warning(f"Keine Draft-Daten für Manager '{selected_manager}' gefunden.")
@@ -1827,9 +1815,7 @@ def main():
                     barmode='stack',
                     height=500
                 )
-
-            st.plotly_chart(fig, use_container_width=True)
-
+                
         
         with tab2:
             st.subheader("📊 Ewige Tabelle")
