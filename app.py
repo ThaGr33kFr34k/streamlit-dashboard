@@ -1009,7 +1009,15 @@ def _display_season_draft(manager_drafts, year, year_col):
 # Main app
 def main():
     global draft_analysis_df
-    st.markdown('<h1 class="main-header">🏀 Domination League Analytics</h1>', unsafe_allow_html=True)
+   
+    # Klickbarer Header, der zur Homepage führt
+    st.markdown(f"""
+    <div style="text-align: center;">
+        <a href="https://dominationleague.streamlit.app/" target="_self" style="text-decoration: none;">
+            <h1 class="main-header" style="color: #FF6B35; font-size: 4rem; margin: 0; display: inline-block;">🏀 Domination League Analytics 📊</h1>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Load data
     with st.spinner("Loading data..."):
