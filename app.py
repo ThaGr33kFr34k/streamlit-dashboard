@@ -1912,7 +1912,7 @@ def main():
             Notiz: 2 Ties ergeben 1 Win (Default Berechnung von ESPN)
             """)
 
-                # Create eternal table from seasons_df
+        # Create eternal table from seasons_df
                 if 'seasons_df' in locals() or 'seasons_df' in globals():
                     # Now we know the correct column names: Year, Wins, Losses, Ties, First Name
                     if all(col in seasons_df.columns for col in ['First Name', 'Wins', 'Losses', 'Ties', 'Saison']):
