@@ -2768,18 +2768,18 @@ def main():
 
                 # --- Dynamische Tabelle für alle Manager mit Rankings ---
                 st.subheader("Vollständige Tabelle aller Manager")
-                
+                 
                 # Dropdown-Menü für Kategorie-Auswahl
                 selected_category = st.selectbox(
-                    "Wählen Sie eine Kategorie:",
-                    options=stats_to_plot,
-                    key="tab1_selectbox"
+                    "Wählen Sie eine Kategorie:",
+                    options=stats_to_plot,
+                    key="tab1_selectbox"
                 )
-                
+                 
                 # === WICHTIG: Erstelle sorted_stats Dictionary für alle Kategorien ===
                 sorted_stats = {}
                 for stat in stats_to_plot:
-                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
+                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
                     ascending_sort = True if stat == 'Turnovers' else False
                     
                     # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
