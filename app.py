@@ -2880,7 +2880,7 @@ def main():
             st.warning("Die Daten für 'Categories' konnten nicht geladen werden.")
 
     elif st.session_state.analysis_type == "🤝 Trades":
-        st.title("🤝 Trade-Übersicht")
+        st.header("Trade-Übersicht")
         
         # Laden der Trade-Daten
         trades_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUsvt5i3VEhZkg_bC_fGzJSg_xjkEsQVvkZ9D7uyY-d9-ExS5pTZUYpR9qCkIin1ZboCh4o6QcCBe3/pub?gid=58770562&single=true&output=csv"
