@@ -2768,7 +2768,7 @@ def main():
 
                 # --- Dynamische Tabelle für alle Manager mit Rankings ---
                 st.subheader("Vollständige Tabelle aller Manager")
-                 
+                
                 # Dropdown-Menü für Kategorie-Auswahl
                 selected_category = st.selectbox(
                     "Wählen Sie eine Kategorie:",
