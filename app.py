@@ -1903,6 +1903,7 @@ def main():
                     height=500
                 )
                 
+                st.plotly_chart(fig, use_container_width=True)
         
         with tab2:
             st.subheader("📊 Ewige Tabelle")
