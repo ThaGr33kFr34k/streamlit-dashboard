@@ -2853,11 +2853,11 @@ def main():
                 # Zeige die Tabelle mit den neuen Werten und dem kombinierten HTML-Styling
                 st.write(styled_df.to_html(escape=False), unsafe_allow_html=True)
                     
-                    # Debug-Info
-                    with st.expander("🐛 Debug Info"):
-                        st.write("Stats to plot:", stats_to_plot)
-                        st.write("Sorted stats keys:", list(sorted_stats.keys()) if 'sorted_stats' in locals() else "Not found")
-                        st.write("Ranking dicts keys:", list(ranking_dicts.keys()) if 'ranking_dicts' in locals() else "Not found")
+                # Debug-Info
+                with st.expander("🐛 Debug Info"):
+                    st.write("Stats to plot:", stats_to_plot)
+                    st.write("Sorted stats keys:", list(sorted_stats.keys()) if 'sorted_stats' in locals() else "Not found")
+                    st.write("Ranking dicts keys:", list(ranking_dicts.keys()) if 'ranking_dicts' in locals() else "Not found")
                 
                 # Erweiterte Legende für kombinierte Ansicht
                 with st.expander("🎨 Farblegende & Format-Info", expanded=False):
