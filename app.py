@@ -2766,28 +2766,161 @@ def main():
                     
                     st.plotly_chart(fig, use_container_width=True)
 
-                # --- Dynamische Tabelle für alle Manager ---
+                # --- Dynamische Tabelle für alle Manager mit Rankings ---
                 st.subheader("Vollständige Tabelle aller Manager")
                 
-                # Dropdown-Menü, um die Kategorie auszuwählen
+                # Dropdown-Menü für Kategorie-Auswahl
                 selected_category = st.selectbox(
                     "Wählen Sie eine Kategorie:",
                     options=stats_to_plot,
                     key="tab1_selectbox"
                 )
-            
-                # Sortiere die vollständige Tabelle basierend auf der ausgewählten Kategorie
+                
+                # Sortiere basierend auf ausgewählter Kategorie
                 ascending_sort = True if selected_category == 'Turnovers' else False
                 filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
                 
-                # Erstelle eine Kopie für die Anzeige mit formatierten Prozentwerten
+                # Erstelle Display-Tabelle
                 display_table = filtered_table.copy()
-                for stat in percentage_stats:
-                    if stat in display_table.columns:
-                        display_table[stat] = (display_table[stat] * 100).round(1).astype(str) + '%'
-
-                # Zeige die gefilterte Tabelle an
-                st.dataframe(display_table, use_container_width=True)
+                
+                # === Kombinierte Farbcodierung + Wert (Platz: X) ===
+                # Formatiere Werte mit Rankings
+                for stat in stats_to_plot:
+                    if stat in sorted_stats and stat in display_table.columns:
+                        ranking_dict = {manager: rank for rank, manager in enumerate(sorted_stats[stat], 1)}
+                        
+                        if stat in percentage_stats:
+                            display_table[stat] = display_table.apply(
+                                lambda row: f"{(row[stat] * 100):.1f}% <small>(Platz: {ranking_dict.get(row.name, '?')})</small>", 
+                                axis=1
+                            )
+                        else:
+                            display_table[stat] = display_table.apply(
+                                lambda row: f"{row[stat]:.1f} <small>(Platz: {ranking_dict.get(row.name, '?')})</small>", 
+                                axis=1
+                            )
+                
+                # Dark-Mode und Mobile optimierte Styling-Funktion
+                def style_rankings(df):
+                    def get_rank_styling(val, stat):
+                        if stat not in sorted_stats or pd.isna(val):
+                            return ''
+                        
+                        # Extrahiere Manager-Namen aus dem Index basierend auf dem Wert
+                        try:
+                            # Finde den Manager basierend auf der Position im DataFrame
+                            row_idx = df[df[stat] == val].index
+                            if len(row_idx) == 0:
+                                return ''
+                            manager_name = row_idx[0]
+                        except:
+                            return ''
+                        
+                        ranking_dict = {manager: rank for rank, manager in enumerate(sorted_stats[stat], 1)}
+                        rank = ranking_dict.get(manager_name, None)
+                        total_managers = len(sorted_stats[stat])
+                        
+                        if rank is None:
+                            return ''
+                        
+                        # Optimierte Farben für Dark Mode und Mobile
+                        if rank <= total_managers * 0.2:  # Top 20%
+                            return '''
+                                background: linear-gradient(135deg, rgba(46,125,50,0.25) 0%, rgba(46,125,50,0.15) 100%);
+                                color: #4caf50;
+                                font-weight: 600;
+                                border: 1px solid rgba(76,175,80,0.3);
+                                border-radius: 4px;
+                                padding: 2px 4px;
+                            '''
+                        elif rank >= total_managers * 0.8:  # Bottom 20%
+                            return '''
+                                background: linear-gradient(135deg, rgba(198,40,40,0.25) 0%, rgba(198,40,40,0.15) 100%);
+                                color: #f44336;
+                                font-weight: 600;
+                                border: 1px solid rgba(244,67,54,0.3);
+                                border-radius: 4px;
+                                padding: 2px 4px;
+                            '''
+                        elif rank <= total_managers * 0.5:  # Top 21-50%
+                            return '''
+                                background: linear-gradient(135deg, rgba(104,159,56,0.2) 0%, rgba(104,159,56,0.1) 100%);
+                                color: #8bc34a;
+                                font-weight: 500;
+                                border: 1px solid rgba(139,195,74,0.2);
+                                border-radius: 4px;
+                                padding: 2px 4px;
+                            '''
+                        else:  # Rang 51-80%
+                            return '''
+                                background: linear-gradient(135deg, rgba(255,152,0,0.2) 0%, rgba(255,152,0,0.1) 100%);
+                                color: #ff9800;
+                                font-weight: 400;
+                                border: 1px solid rgba(255,152,0,0.2);
+                                border-radius: 4px;
+                                padding: 2px 4px;
+                            '''
+                    
+                    # Wende Styling auf alle relevanten Spalten an
+                    styled_df = df.style
+                    for stat in stats_to_plot:
+                        if stat in df.columns:
+                            styled_df = styled_df.applymap(
+                                lambda val, col=stat: get_rank_styling(val, col),
+                                subset=[stat]
+                            )
+                    
+                    return styled_df
+                
+                # Zeige die gestylte Tabelle an
+                styled_table = style_rankings(display_table)
+                st.dataframe(styled_table, use_container_width=True)
+                
+                # Erweiterte Legende für kombinierte Ansicht
+                with st.expander("🎨 Farblegende & Format-Info", expanded=False):
+                    st.markdown("""
+                    **Format**: `Wert (Platz: X)` - z.B. `14500 (Platz: 3)`
+                    
+                    **Farbkodierung**:
+                    - 🟢 **Dunkelgrün**: Top 20% (Beste Performer)
+                    - 🌱 **Hellgrün**: Top 21-50% (Überdurchschnittlich)  
+                    - 🟡 **Orange**: Rang 51-80% (Unterdurchschnittlich)
+                    - 🔴 **Rot**: Bottom 20% (Verbesserungsbedarf)
+                    
+                    *Die Farben sind für Dark Mode und Mobile optimiert!*
+                    """)
+                
+                # === Zusätzliche Ranking-Übersicht ===
+                if st.toggle("📊 Detaillierte Ranking-Übersicht anzeigen", key="show_detailed_rankings"):
+                    st.markdown("### 🏆 Ranking-Übersicht")
+                    
+                    # Zwei Spalten für bessere Übersicht
+                    col1, col2 = st.columns(2)
+                    
+                    # Zeige Top 5 und Bottom 5 für ausgewählte Kategorie
+                    if selected_category in sorted_stats:
+                        rankings = sorted_stats[selected_category]
+                        
+                        with col1:
+                            st.markdown(f"#### 🥇 Top 5 - {selected_category}")
+                            for i, manager in enumerate(rankings[:5], 1):
+                                value = career_averages.loc[manager, selected_category]
+                                if selected_category in percentage_stats:
+                                    st.write(f"**{i}.** {manager}: {value*100:.1f}%")
+                                else:
+                                    st.write(f"**{i}.** {manager}: {value:.1f}")
+                        
+                        with col2:
+                            st.markdown(f"#### 📉 Bottom 5 - {selected_category}")
+                            for i, manager in enumerate(rankings[-5:], len(rankings)-4):
+                                value = career_averages.loc[manager, selected_category]
+                                if selected_category in percentage_stats:
+                                    st.write(f"**{i}.** {manager}: {value*100:.1f}%")
+                                else:
+                                    st.write(f"**{i}.** {manager}: {value:.1f}")
+                
+                # === Performance-Tipp ===
+                st.info("💡 **Tipp**: Die farbcodierte Ansicht gibt dir einen schnellen Überblick über die Performance-Verteilung aller Manager!")
 
             with tab2:
                 st.subheader("All-Time Stat Leaders")
