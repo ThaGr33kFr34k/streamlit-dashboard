@@ -2771,7 +2771,7 @@ def main():
                 
                 # Dropdown-Menü für Kategorie-Auswahl
                 selected_category = st.selectbox(
-                    "Wählen Sie eine Kategorie:",
+                    "Wählen Sie eine Kategorie:",
                     options=stats_to_plot,
                     key="tab1_selectbox"
                 )
