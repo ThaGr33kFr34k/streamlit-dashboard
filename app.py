@@ -2768,89 +2768,88 @@ def main():
 
                 # --- Dynamische Tabelle für alle Manager mit Rankings ---
                 st.subheader("Vollständige Tabelle aller Manager")
-                 
+                
                 # Dropdown-Menü für Kategorie-Auswahl
                 selected_category = st.selectbox(
-                    "Wählen Sie eine Kategorie:",
-                    options=stats_to_plot,
-                    key="tab1_selectbox"
+                    "Wählen Sie eine Kategorie:",
+                    options=stats_to_plot,
+                    key="tab1_selectbox"
                 )
-                 
+                
                 # === WICHTIG: Erstelle sorted_stats Dictionary für alle Kategorien ===
                 sorted_stats = {}
                 for stat in stats_to_plot:
-                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
-                    ascending_sort = True if stat == 'Turnovers' else False
-                    
-                    # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
-                    if stat == 'Turnovers':
-                        qualified_managers = years_played[years_played >= 5].index
-                        filtered_stats = career_averages.loc[qualified_managers]
-                        sorted_managers = filtered_stats.sort_values(by=stat, ascending=ascending_sort).index.tolist()
-                    else:
-                        sorted_managers = career_averages.sort_values(by=stat, ascending=ascending_sort).index.tolist()
-                    
-                    sorted_stats[stat] = sorted_managers
-                 
+                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
+                    ascending_sort = True if stat == 'Turnovers' else False
+                    
+                    # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
+                    if stat == 'Turnovers':
+                        qualified_managers = years_played[years_played >= 5].index
+                        filtered_stats = career_averages.loc[qualified_managers]
+                        sorted_managers = filtered_stats.sort_values(by=stat, ascending=ascending_sort).index.tolist()
+                    else:
+                        sorted_managers = career_averages.sort_values(by=stat, ascending=ascending_sort).index.tolist()
+                    
+                    sorted_stats[stat] = sorted_managers
+                
                 # Sortiere Tabelle basierend auf ausgewählter Kategorie
                 ascending_sort = True if selected_category == 'Turnovers' else False
                 filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
-                 
+                
                 # Erstelle Display-Tabelle
                 display_table = filtered_table.copy()
-                 
+                
                 # Formatiere die Werte (ohne die Rankings)
                 for stat in stats_to_plot:
-                    if stat in display_table.columns:
-                        if stat in percentage_stats:
-                            display_table[stat] = (display_table[stat] * 100).map('{:.1f}%'.format)
-                        else:
-                            display_table[stat] = display_table[stat].map('{:.0f}'.format)
-                 
+                    if stat in display_table.columns:
+                        if stat in percentage_stats:
+                            display_table[stat] = (display_table[stat] * 100).map('{:.1f}%'.format)
+                        else:
+                            display_table[stat] = display_table[stat].map('{:.0f}'.format)
+                
                 # === Farbcodierung nur der Klammer und des Inhalts ===
                 # Erstelle Ranking-Dictionaries für alle Stats
                 ranking_dicts = {stat: {manager: rank for rank, manager in enumerate(sorted_managers, 1)}
-                                for stat, sorted_managers in sorted_stats.items()}
-                 
+                                 for stat, sorted_managers in sorted_stats.items()}
+                
                 # Definiere die Funktion für das Zell-Styling
                 def style_rankings_with_html(df, ranking_dicts):
-                    html_df = pd.DataFrame('', index=df.index, columns=df.columns)
-                    for col_name in df.columns:
-                        if col_name in ranking_dicts:
-                            total_managers = len(ranking_dicts[col_name])
-                            for row_idx in range(len(df)):
-                                manager_name = df.index[row_idx]
-                                rank = ranking_dicts[col_name].get(manager_name, None)
-                                 
-                                value = df.loc[manager_name, col_name]
-                                 
-                                rank_html = f"(Platz: {rank})" if rank is not None else "(Platz: ?)"
-                                style_str = ''
-                                 
-                                if rank is not None:
-                                    if rank <= total_managers * 0.2:
-                                        style_str = 'color: #4caf50; font-weight: 600;'
-                                    elif rank >= total_managers * 0.8:
-                                        style_str = 'color: #f44336; font-weight: 600;'
-                                    elif rank <= total_managers * 0.5:
-                                        style_str = 'color: #8bc34a; font-weight: 500;'
-                                    else:
-                                        style_str = 'color: #ff9800; font-weight: 400;'
-                                 
-                                html_df.loc[manager_name, col_name] = f'{value} <span style="{style_str}">{rank_html}</span>'
-                        else:
-                            html_df[col_name] = df[col_name].astype(str)
-                 
-                    return html_df
-                 
+                    html_df = pd.DataFrame('', index=df.index, columns=df.columns)
+                    for col_name in df.columns:
+                        if col_name in ranking_dicts:
+                            total_managers = len(ranking_dicts[col_name])
+                            for row_idx in range(len(df)):
+                                manager_name = df.index[row_idx]
+                                rank = ranking_dicts[col_name].get(manager_name, None)
+                                
+                                value = df.loc[manager_name, col_name]
+                                
+                                rank_html = f"(Platz: {rank})" if rank is not None else "(Platz: ?)"
+                                style_str = ''
+                                
+                                if rank is not None:
+                                    if rank <= total_managers * 0.2:
+                                        style_str = 'color: #4caf50; font-weight: 600;'
+                                    elif rank >= total_managers * 0.8:
+                                        style_str = 'color: #f44336; font-weight: 600;'
+                                    elif rank <= total_managers * 0.5:
+                                        style_str = 'color: #8bc34a; font-weight: 500;'
+                                    else:
+                                        style_str = 'color: #ff9800; font-weight: 400;'
+                                
+                                html_df.loc[manager_name, col_name] = f'{value} <span style="{style_str}">{rank_html}</span>'
+                        else:
+                            html_df[col_name] = df[col_name].astype(str)
+                
+                    return html_df
+                
                 # Zeige die gestylte Tabelle an
                 st.write("---")
                 st.markdown("Hinweis: Die Spaltenwerte sind nun **anklickbar**, um die Tabelle zu sortieren.")
-                 
+                
                 # Erstelle die Tabelle mit den formatierten Werten
-                # Wichtig: DataFrame muss vor der Darstellung neu erstellt werden, um das Styling anwenden zu können
                 styled_df = style_rankings_with_html(display_table, ranking_dicts)
-                 
+                
                 # Zeige die Tabelle mit den neuen Werten und dem kombinierten HTML-Styling
                 st.write(styled_df.to_html(escape=False), unsafe_allow_html=True)
                     
