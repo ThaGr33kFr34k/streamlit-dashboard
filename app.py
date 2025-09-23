@@ -2784,97 +2784,73 @@ def main():
                 display_table = filtered_table.copy()
                 
                 # === Kombinierte Farbcodierung + Wert (Platz: X) ===
+                # Erstelle Ranking-Dictionaries für alle Stats
+                ranking_dicts = {}
+                for stat in stats_to_plot:
+                    if stat in sorted_stats:
+                        ranking_dicts[stat] = {manager: rank for rank, manager in enumerate(sorted_stats[stat], 1)}
+                
                 # Formatiere Werte mit Rankings
                 for stat in stats_to_plot:
-                    if stat in sorted_stats and stat in display_table.columns:
-                        ranking_dict = {manager: rank for rank, manager in enumerate(sorted_stats[stat], 1)}
+                    if stat in ranking_dicts and stat in display_table.columns:
+                        ranking_dict = ranking_dicts[stat]
                         
                         if stat in percentage_stats:
-                            display_table[stat] = display_table.apply(
-                                lambda row: f"{(row[stat] * 100):.1f}% <small>(Platz: {ranking_dict.get(row.name, '?')})</small>", 
-                                axis=1
+                            display_table[stat] = display_table.index.map(
+                                lambda manager: f"{(display_table.loc[manager, stat] * 100):.1f}% <small>(Platz: {ranking_dict.get(manager, '?')})</small>"
                             )
                         else:
-                            display_table[stat] = display_table.apply(
-                                lambda row: f"{row[stat]:.1f} <small>(Platz: {ranking_dict.get(row.name, '?')})</small>", 
-                                axis=1
+                            display_table[stat] = display_table.index.map(
+                                lambda manager: f"{display_table.loc[manager, stat]:.1f} <small>(Platz: {ranking_dict.get(manager, '?')})</small>"
                             )
                 
                 # Dark-Mode und Mobile optimierte Styling-Funktion
                 def style_rankings(df):
-                    def get_rank_styling(val, stat):
-                        if stat not in sorted_stats or pd.isna(val):
+                    def get_rank_styling(val, row_idx, col_name):
+                        if col_name not in ranking_dicts:
                             return ''
                         
-                        # Extrahiere Manager-Namen aus dem Index basierend auf dem Wert
-                        try:
-                            # Finde den Manager basierend auf der Position im DataFrame
-                            row_idx = df[df[stat] == val].index
-                            if len(row_idx) == 0:
-                                return ''
-                            manager_name = row_idx[0]
-                        except:
-                            return ''
-                        
-                        ranking_dict = {manager: rank for rank, manager in enumerate(sorted_stats[stat], 1)}
+                        # Hole den Manager-Namen direkt vom Index
+                        manager_name = df.index[row_idx]
+                        ranking_dict = ranking_dicts[col_name]
                         rank = ranking_dict.get(manager_name, None)
-                        total_managers = len(sorted_stats[stat])
+                        total_managers = len(ranking_dict)
                         
                         if rank is None:
                             return ''
                         
                         # Optimierte Farben für Dark Mode und Mobile
                         if rank <= total_managers * 0.2:  # Top 20%
-                            return '''
-                                background: linear-gradient(135deg, rgba(46,125,50,0.25) 0%, rgba(46,125,50,0.15) 100%);
-                                color: #4caf50;
-                                font-weight: 600;
-                                border: 1px solid rgba(76,175,80,0.3);
-                                border-radius: 4px;
-                                padding: 2px 4px;
-                            '''
+                            return 'background: linear-gradient(135deg, rgba(46,125,50,0.25) 0%, rgba(46,125,50,0.15) 100%); color: #4caf50; font-weight: 600; border: 1px solid rgba(76,175,80,0.3); border-radius: 4px; padding: 2px 4px;'
                         elif rank >= total_managers * 0.8:  # Bottom 20%
-                            return '''
-                                background: linear-gradient(135deg, rgba(198,40,40,0.25) 0%, rgba(198,40,40,0.15) 100%);
-                                color: #f44336;
-                                font-weight: 600;
-                                border: 1px solid rgba(244,67,54,0.3);
-                                border-radius: 4px;
-                                padding: 2px 4px;
-                            '''
+                            return 'background: linear-gradient(135deg, rgba(198,40,40,0.25) 0%, rgba(198,40,40,0.15) 100%); color: #f44336; font-weight: 600; border: 1px solid rgba(244,67,54,0.3); border-radius: 4px; padding: 2px 4px;'
                         elif rank <= total_managers * 0.5:  # Top 21-50%
-                            return '''
-                                background: linear-gradient(135deg, rgba(104,159,56,0.2) 0%, rgba(104,159,56,0.1) 100%);
-                                color: #8bc34a;
-                                font-weight: 500;
-                                border: 1px solid rgba(139,195,74,0.2);
-                                border-radius: 4px;
-                                padding: 2px 4px;
-                            '''
+                            return 'background: linear-gradient(135deg, rgba(104,159,56,0.2) 0%, rgba(104,159,56,0.1) 100%); color: #8bc34a; font-weight: 500; border: 1px solid rgba(139,195,74,0.2); border-radius: 4px; padding: 2px 4px;'
                         else:  # Rang 51-80%
-                            return '''
-                                background: linear-gradient(135deg, rgba(255,152,0,0.2) 0%, rgba(255,152,0,0.1) 100%);
-                                color: #ff9800;
-                                font-weight: 400;
-                                border: 1px solid rgba(255,152,0,0.2);
-                                border-radius: 4px;
-                                padding: 2px 4px;
-                            '''
+                            return 'background: linear-gradient(135deg, rgba(255,152,0,0.2) 0%, rgba(255,152,0,0.1) 100%); color: #ff9800; font-weight: 400; border: 1px solid rgba(255,152,0,0.2); border-radius: 4px; padding: 2px 4px;'
                     
-                    # Wende Styling auf alle relevanten Spalten an
-                    styled_df = df.style
+                    # Erstelle das Styling
+                    styles_df = pd.DataFrame('', index=df.index, columns=df.columns)
+                    
                     for stat in stats_to_plot:
-                        if stat in df.columns:
-                            styled_df = styled_df.applymap(
-                                lambda val, col=stat: get_rank_styling(val, col),
-                                subset=[stat]
-                            )
+                        if stat in df.columns and stat in ranking_dicts:
+                            for row_idx in range(len(df)):
+                                styles_df.iloc[row_idx, df.columns.get_loc(stat)] = get_rank_styling(
+                                    df.iloc[row_idx, df.columns.get_loc(stat)], 
+                                    row_idx, 
+                                    stat
+                                )
                     
-                    return styled_df
+                    return df.style.apply(lambda _: styles_df, axis=None)
                 
                 # Zeige die gestylte Tabelle an
-                styled_table = style_rankings(display_table)
-                st.dataframe(styled_table, use_container_width=True)
+                try:
+                    styled_table = style_rankings(display_table)
+                    st.dataframe(styled_table, use_container_width=True)
+                except Exception as e:
+                    # Fallback: Zeige ungestyle Tabelle
+                    st.dataframe(display_table, use_container_width=True)
+                    st.warning(f"Styling konnte nicht angewendet werden: {e}")
                 
                 # Erweiterte Legende für kombinierte Ansicht
                 with st.expander("🎨 Farblegende & Format-Info", expanded=False):
@@ -2904,24 +2880,27 @@ def main():
                         with col1:
                             st.markdown(f"#### 🥇 Top 5 - {selected_category}")
                             for i, manager in enumerate(rankings[:5], 1):
-                                value = career_averages.loc[manager, selected_category]
-                                if selected_category in percentage_stats:
-                                    st.write(f"**{i}.** {manager}: {value*100:.1f}%")
-                                else:
-                                    st.write(f"**{i}.** {manager}: {value:.1f}")
+                                # Prüfe ob Manager im DataFrame existiert
+                                if manager in career_averages.index:
+                                    value = career_averages.loc[manager, selected_category]
+                                    if selected_category in percentage_stats:
+                                        st.write(f"**{i}.** {manager}: {value*100:.1f}%")
+                                    else:
+                                        st.write(f"**{i}.** {manager}: {value:.1f}")
                         
                         with col2:
                             st.markdown(f"#### 📉 Bottom 5 - {selected_category}")
                             for i, manager in enumerate(rankings[-5:], len(rankings)-4):
-                                value = career_averages.loc[manager, selected_category]
-                                if selected_category in percentage_stats:
-                                    st.write(f"**{i}.** {manager}: {value*100:.1f}%")
-                                else:
-                                    st.write(f"**{i}.** {manager}: {value:.1f}")
+                                # Prüfe ob Manager im DataFrame existiert
+                                if manager in career_averages.index:
+                                    value = career_averages.loc[manager, selected_category]
+                                    if selected_category in percentage_stats:
+                                        st.write(f"**{i}.** {manager}: {value*100:.1f}%")
+                                    else:
+                                        st.write(f"**{i}.** {manager}: {value:.1f}")
                 
                 # === Performance-Tipp ===
                 st.info("💡 **Tipp**: Die farbcodierte Ansicht gibt dir einen schnellen Überblick über die Performance-Verteilung aller Manager!")
-
             with tab2:
                 st.subheader("All-Time Stat Leaders")
                 st.markdown("Alle Statistiken seit Anbeginn der Domination League zu einer Summe addiert. Manager, die schon länger dabei sind haben logischerweise einen Vorteil in der Auswertung, da sie mehr Jahre hatten, um Stats zu sammeln.  Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
