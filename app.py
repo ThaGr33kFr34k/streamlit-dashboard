@@ -1821,16 +1821,6 @@ def main():
                     else:
                         st.info("Keine Clutch-Performer gefunden! 😅")
                 
-                # Optional: Responsive Layout für sehr kleine Bildschirme
-                if st.checkbox("📱 Mobile Ansicht", help="Tabellen untereinander anzeigen für bessere Lesbarkeit"):
-                    st.markdown("---")
-                    st.markdown("### 📊 Kombinierte Übersicht")
-                    
-                    if choke_stats and clutch_stats:
-                        # Kombinierte Tabelle für Mobile
-                        combined_df = pd.DataFrame()
-                        # Hier würdest du die Daten kombinieren...
-                        st.info("💡 **Tipp**: Nutze die horizontale Scrollfunktion oder drehe dein Gerät für die beste Ansicht!")
                 
                 # Explanation
                 st.markdown("---")
