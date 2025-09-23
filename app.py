@@ -1656,84 +1656,181 @@ def main():
                     clutch_df = pd.DataFrame(clutch_stats)
                     clutch_df = clutch_df.sort_values('Total Sum', ascending=False)  # Highest positive first
                 
-                # Display tables side by side
-                col1, col2 = st.columns(2)
+                # Verbesserte Darstellung für Dark Mode und Mobile
+                col1, col2 = st.columns([1, 1])
                 
                 with col1:
                     st.markdown("### 😱 Choking Index")
-                    st.markdown("*Managers who underperform in playoffs*")
+                    st.markdown("*Manager die in Playoffs underperformen*")
                     
                     if choke_stats:
-                        # Style the choke table with red colors
+                        # Verbesserte Styling-Funktion für Choke-Tabelle
                         def style_choke_table(df):
-                            def highlight_chokes(val):
+                            def apply_choke_styling(val):
                                 if isinstance(val, (int, float)):
-                                    if val < -6:  # Very negative = very bad choking
-                                        return 'background-color: #ffebee; color: #c62828; font-weight: bold'
+                                    if val < -6:  # Sehr negativ = sehr schlechtes Choking
+                                        return 'background: linear-gradient(90deg, rgba(244,67,54,0.3) 0%, rgba(244,67,54,0.1) 100%); color: #f44336; font-weight: 600; border-left: 3px solid #f44336;'
                                     elif val < -3:
-                                        return 'background-color: #ffcdd2; color: #d32f2f'
+                                        return 'background: linear-gradient(90deg, rgba(255,152,0,0.25) 0%, rgba(255,152,0,0.1) 100%); color: #ff9800; font-weight: 500; border-left: 2px solid #ff9800;'
                                     elif val < 0:
-                                        return 'background-color: #ffecb3; color: #ef6c00'
+                                        return 'background: linear-gradient(90deg, rgba(255,193,7,0.2) 0%, rgba(255,193,7,0.05) 100%); color: #ffc107; border-left: 1px solid #ffc107;'
                                 return ''
                             
-                            styled = df.style.applymap(highlight_chokes, subset=['Choking Index', 'Total Sum'])
-                            styled = styled.applymap(lambda x: 'background-color: #ffebee' if x > df['Chokes'].mean() else '', subset=['Chokes'])
+                            # Styling für die Hauptwerte
+                            styled = df.style.applymap(apply_choke_styling, subset=['Choking Index', 'Total Sum'])
+                            
+                            # Hervorhebung für überdurchschnittliche Chokes
+                            def highlight_high_chokes(val):
+                                if isinstance(val, (int, float)) and val > df['Chokes'].mean():
+                                    return 'background-color: rgba(244,67,54,0.15); border-radius: 4px;'
+                                return ''
+                            
+                            styled = styled.applymap(highlight_high_chokes, subset=['Chokes'])
                             return styled
                         
+                        # Anwenden des Stylings
                         choke_styled = style_choke_table(choke_df)
+                        
                         st.dataframe(
                             choke_styled,
                             column_config={
-                                "Manager": "Manager",
-                                "Total Sum": st.column_config.NumberColumn("😱 Index", help="Summe aller Chokes (negativer = schlechter)", format="%.0f"),
-                                "Chokes": st.column_config.NumberColumn("🔴 Choke", help="Anzahl der Underperformances"),
-                                "Clutches": st.column_config.NumberColumn("🟢 Clutch", help="Anzahl der Overperformances"),
-                                "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
-                                "Choking Index": st.column_config.NumberColumn("Durchschnitt", help="Durchschnittliche Underperformance (negativer = schlechter)", format="%.2f")
+                                "Manager": st.column_config.TextColumn("👨‍💼 Manager", width="medium"),
+                                "Total Sum": st.column_config.NumberColumn(
+                                    "😱 Index", 
+                                    help="Summe aller Chokes (negativer = schlechter)", 
+                                    format="%.0f",
+                                    width="small"
+                                ),
+                                "Chokes": st.column_config.NumberColumn(
+                                    "🔴", 
+                                    help="Anzahl der Underperformances",
+                                    width="small"
+                                ),
+                                "Clutches": st.column_config.NumberColumn(
+                                    "🟢", 
+                                    help="Anzahl der Overperformances",
+                                    width="small"
+                                ),
+                                "Neutral": st.column_config.NumberColumn(
+                                    "⚪", 
+                                    help="Performances wie erwartet",
+                                    width="small"
+                                ),
+                                "Choking Index": st.column_config.NumberColumn(
+                                    "Ø", 
+                                    help="Durchschnittliche Underperformance (negativer = schlechter)", 
+                                    format="%.2f",
+                                    width="small"
+                                )
                             },
                             hide_index=True,
-                            use_container_width=True
+                            use_container_width=True,
+                            height=400
                         )
+                        
+                        # Zusätzliche Info-Box für Mobile
+                        with st.expander("📊 Legende Choking Index", expanded=False):
+                            st.markdown("""
+                            - **🔴**: Anzahl Underperformances (Chokes)
+                            - **🟢**: Anzahl Overperformances (Clutches) 
+                            - **⚪**: Neutrale Performances
+                            - **😱 Index**: Gesamtsumme (negativer = schlechter)
+                            - **Ø**: Durchschnitt pro Playoff
+                            """)
                     else:
-                        st.success("No chokers found! 🎉")
+                        st.success("Keine Choker gefunden! 🎉")
                 
                 with col2:
                     st.markdown("### 🔥 Clutch-O-Meter")
-                    st.markdown("*Managers who rise to the occasion*")
+                    st.markdown("*Manager die in wichtigen Momenten glänzen*")
                     
                     if clutch_stats:
-                        # Style the clutch table with green colors
+                        # Verbesserte Styling-Funktion für Clutch-Tabelle
                         def style_clutch_table(df):
-                            def highlight_clutches(val):
+                            def apply_clutch_styling(val):
                                 if isinstance(val, (int, float)):
-                                    if val > 6:  # Very positive = very good clutching
-                                        return 'background-color: #e8f5e8; color: #2e7d32; font-weight: bold'
+                                    if val > 6:  # Sehr positiv = sehr gutes Clutching
+                                        return 'background: linear-gradient(90deg, rgba(76,175,80,0.3) 0%, rgba(76,175,80,0.1) 100%); color: #4caf50; font-weight: 600; border-left: 3px solid #4caf50;'
                                     elif val > 3:
-                                        return 'background-color: #c8e6c9; color: #388e3c'
+                                        return 'background: linear-gradient(90deg, rgba(139,195,74,0.25) 0%, rgba(139,195,74,0.1) 100%); color: #8bc34a; font-weight: 500; border-left: 2px solid #8bc34a;'
                                     elif val > 0:
-                                        return 'background-color: #dcedc8; color: #689f38'
+                                        return 'background: linear-gradient(90deg, rgba(205,220,57,0.2) 0%, rgba(205,220,57,0.05) 100%); color: #cddc39; border-left: 1px solid #cddc39;'
                                 return ''
                             
-                            styled = df.style.applymap(highlight_clutches, subset=['Clutch-O-Meter', 'Total Sum'])
-                            styled = styled.applymap(lambda x: 'background-color: #e8f5e8' if x > df['Clutches'].mean() else '', subset=['Clutches'])
+                            # Styling für die Hauptwerte
+                            styled = df.style.applymap(apply_clutch_styling, subset=['Clutch-O-Meter', 'Total Sum'])
+                            
+                            # Hervorhebung für überdurchschnittliche Clutches
+                            def highlight_high_clutches(val):
+                                if isinstance(val, (int, float)) and val > df['Clutches'].mean():
+                                    return 'background-color: rgba(76,175,80,0.15); border-radius: 4px;'
+                                return ''
+                            
+                            styled = styled.applymap(highlight_high_clutches, subset=['Clutches'])
                             return styled
                         
+                        # Anwenden des Stylings
                         clutch_styled = style_clutch_table(clutch_df)
+                        
                         st.dataframe(
                             clutch_styled,
                             column_config={
-                                "Manager": "Manager",
-                                "Total Sum": st.column_config.NumberColumn("💪 Clutch-O-Meter", help="Summe aller Clutches (höher = besser)", format="%.0f"),
-                                "Clutches": st.column_config.NumberColumn("🟢 Clutch", help="Anzahl der Overperformances"), 
-                                "Chokes": st.column_config.NumberColumn("🔴 Choke", help="Anzahl der Underperformances"),
-                                "Neutral": st.column_config.NumberColumn("⚪ Neutral", help="Performances wie erwartet"),
-                                "Clutch-O-Meter": st.column_config.NumberColumn("Durchschnitt", help="Durchschnittliche Overperformance (höher = besser)", format="%.2f")
+                                "Manager": st.column_config.TextColumn("👨‍💼 Manager", width="medium"),
+                                "Total Sum": st.column_config.NumberColumn(
+                                    "💪 Meter", 
+                                    help="Summe aller Clutches (höher = besser)", 
+                                    format="%.0f",
+                                    width="small"
+                                ),
+                                "Clutches": st.column_config.NumberColumn(
+                                    "🟢", 
+                                    help="Anzahl der Overperformances",
+                                    width="small"
+                                ), 
+                                "Chokes": st.column_config.NumberColumn(
+                                    "🔴", 
+                                    help="Anzahl der Underperformances",
+                                    width="small"
+                                ),
+                                "Neutral": st.column_config.NumberColumn(
+                                    "⚪", 
+                                    help="Performances wie erwartet",
+                                    width="small"
+                                ),
+                                "Clutch-O-Meter": st.column_config.NumberColumn(
+                                    "Ø", 
+                                    help="Durchschnittliche Overperformance (höher = besser)", 
+                                    format="%.2f",
+                                    width="small"
+                                )
                             },
                             hide_index=True,
-                            use_container_width=True
+                            use_container_width=True,
+                            height=400
                         )
+                        
+                        # Zusätzliche Info-Box für Mobile
+                        with st.expander("📊 Legende Clutch-O-Meter", expanded=False):
+                            st.markdown("""
+                            - **🟢**: Anzahl Overperformances (Clutches)
+                            - **🔴**: Anzahl Underperformances (Chokes)
+                            - **⚪**: Neutrale Performances  
+                            - **💪 Meter**: Gesamtsumme (höher = besser)
+                            - **Ø**: Durchschnitt pro Playoff
+                            """)
                     else:
-                        st.info("No clutch performers found! 😅")
+                        st.info("Keine Clutch-Performer gefunden! 😅")
+                
+                # Optional: Responsive Layout für sehr kleine Bildschirme
+                if st.checkbox("📱 Mobile Ansicht", help="Tabellen untereinander anzeigen für bessere Lesbarkeit"):
+                    st.markdown("---")
+                    st.markdown("### 📊 Kombinierte Übersicht")
+                    
+                    if choke_stats and clutch_stats:
+                        # Kombinierte Tabelle für Mobile
+                        combined_df = pd.DataFrame()
+                        # Hier würdest du die Daten kombinieren...
+                        st.info("💡 **Tipp**: Nutze die horizontale Scrollfunktion oder drehe dein Gerät für die beste Ansicht!")
                 
                 # Explanation
                 st.markdown("---")
