@@ -2779,7 +2779,7 @@ def main():
                 # === WICHTIG: Erstelle sorted_stats Dictionary für alle Kategorien ===
                 sorted_stats = {}
                 for stat in stats_to_plot:
-                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
+                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
                     ascending_sort = True if stat == 'Turnovers' else False
                     
                     # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
