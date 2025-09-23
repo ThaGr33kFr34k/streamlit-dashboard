@@ -2775,7 +2775,7 @@ def main():
                     options=stats_to_plot,
                     key="tab1_selectbox"
                 )
-                 
+                
                 # === WICHTIG: Erstelle sorted_stats Dictionary für alle Kategorien ===
                 sorted_stats = {}
                 for stat in stats_to_plot:
