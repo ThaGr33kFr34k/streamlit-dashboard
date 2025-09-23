@@ -2776,7 +2776,23 @@ def main():
                     key="tab1_selectbox"
                 )
                 
-                # Sortiere basierend auf ausgewählter Kategorie
+                # === WICHTIG: Erstelle sorted_stats Dictionary für alle Kategorien ===
+                sorted_stats = {}
+                for stat in stats_to_plot:
+                    # Turnovers wird aufsteigend sortiert, alle anderen absteigend
+                    ascending_sort = True if stat == 'Turnovers' else False
+                    
+                    # Spezielle Behandlung für Turnovers: Minimum 5 Saisons
+                    if stat == 'Turnovers':
+                        qualified_managers = years_played[years_played >= 5].index
+                        filtered_stats = career_averages.loc[qualified_managers]
+                        sorted_managers = filtered_stats.sort_values(by=stat, ascending=ascending_sort).index.tolist()
+                    else:
+                        sorted_managers = career_averages.sort_values(by=stat, ascending=ascending_sort).index.tolist()
+                    
+                    sorted_stats[stat] = sorted_managers
+                
+                # Sortiere Tabelle basierend auf ausgewählter Kategorie
                 ascending_sort = True if selected_category == 'Turnovers' else False
                 filtered_table = career_averages.sort_values(by=selected_category, ascending=ascending_sort)
                 
@@ -2795,18 +2811,19 @@ def main():
                     if stat in ranking_dicts and stat in display_table.columns:
                         ranking_dict = ranking_dicts[stat]
                         
-                        if stat in percentage_stats:
-                            display_table[stat] = display_table.index.map(
-                                lambda manager: f"{(display_table.loc[manager, stat] * 100):.1f}% <small>(Platz: {ranking_dict.get(manager, '?')})</small>"
-                            )
-                        else:
-                            display_table[stat] = display_table.index.map(
-                                lambda manager: f"{display_table.loc[manager, stat]:.1f} <small>(Platz: {ranking_dict.get(manager, '?')})</small>"
-                            )
+                        # Erstelle eine Mapping-Funktion für jeden Stat
+                        def create_formatter(stat_name, ranking_dict):
+                            if stat_name in percentage_stats:
+                                return lambda manager: f"{(career_averages.loc[manager, stat_name] * 100):.1f}% <small>(Platz: {ranking_dict.get(manager, '?')})</small>"
+                            else:
+                                return lambda manager: f"{career_averages.loc[manager, stat_name]:.0f} <small>(Platz: {ranking_dict.get(manager, '?')})</small>"
+                        
+                        formatter = create_formatter(stat, ranking_dict)
+                        display_table[stat] = display_table.index.map(formatter)
                 
                 # Dark-Mode und Mobile optimierte Styling-Funktion
                 def style_rankings(df):
-                    def get_rank_styling(val, row_idx, col_name):
+                    def get_rank_styling(row_idx, col_name):
                         if col_name not in ranking_dicts:
                             return ''
                         
@@ -2814,10 +2831,11 @@ def main():
                         manager_name = df.index[row_idx]
                         ranking_dict = ranking_dicts[col_name]
                         rank = ranking_dict.get(manager_name, None)
-                        total_managers = len(ranking_dict)
                         
                         if rank is None:
                             return ''
+                            
+                        total_managers = len(ranking_dict)
                         
                         # Optimierte Farben für Dark Mode und Mobile
                         if rank <= total_managers * 0.2:  # Top 20%
@@ -2829,17 +2847,14 @@ def main():
                         else:  # Rang 51-80%
                             return 'background: linear-gradient(135deg, rgba(255,152,0,0.2) 0%, rgba(255,152,0,0.1) 100%); color: #ff9800; font-weight: 400; border: 1px solid rgba(255,152,0,0.2); border-radius: 4px; padding: 2px 4px;'
                     
-                    # Erstelle das Styling
+                    # Erstelle das Styling DataFrame
                     styles_df = pd.DataFrame('', index=df.index, columns=df.columns)
                     
-                    for stat in stats_to_plot:
-                        if stat in df.columns and stat in ranking_dicts:
+                    for col_name in stats_to_plot:
+                        if col_name in df.columns and col_name in ranking_dicts:
+                            col_idx = df.columns.get_loc(col_name)
                             for row_idx in range(len(df)):
-                                styles_df.iloc[row_idx, df.columns.get_loc(stat)] = get_rank_styling(
-                                    df.iloc[row_idx, df.columns.get_loc(stat)], 
-                                    row_idx, 
-                                    stat
-                                )
+                                styles_df.iloc[row_idx, col_idx] = get_rank_styling(row_idx, col_name)
                     
                     return df.style.apply(lambda _: styles_df, axis=None)
                 
@@ -2850,7 +2865,13 @@ def main():
                 except Exception as e:
                     # Fallback: Zeige ungestyle Tabelle
                     st.dataframe(display_table, use_container_width=True)
-                    st.warning(f"Styling konnte nicht angewendet werden: {e}")
+                    st.error(f"Styling-Fehler: {e}")
+                    
+                    # Debug-Info
+                    with st.expander("🐛 Debug Info"):
+                        st.write("Stats to plot:", stats_to_plot)
+                        st.write("Sorted stats keys:", list(sorted_stats.keys()) if 'sorted_stats' in locals() else "Not found")
+                        st.write("Ranking dicts keys:", list(ranking_dicts.keys()) if 'ranking_dicts' in locals() else "Not found")
                 
                 # Erweiterte Legende für kombinierte Ansicht
                 with st.expander("🎨 Farblegende & Format-Info", expanded=False):
@@ -2886,7 +2907,7 @@ def main():
                                     if selected_category in percentage_stats:
                                         st.write(f"**{i}.** {manager}: {value*100:.1f}%")
                                     else:
-                                        st.write(f"**{i}.** {manager}: {value:.1f}")
+                                        st.write(f"**{i}.** {manager}: {value:.0f}")
                         
                         with col2:
                             st.markdown(f"#### 📉 Bottom 5 - {selected_category}")
@@ -2897,10 +2918,11 @@ def main():
                                     if selected_category in percentage_stats:
                                         st.write(f"**{i}.** {manager}: {value*100:.1f}%")
                                     else:
-                                        st.write(f"**{i}.** {manager}: {value:.1f}")
+                                        st.write(f"**{i}.** {manager}: {value:.0f}")
                 
                 # === Performance-Tipp ===
                 st.info("💡 **Tipp**: Die farbcodierte Ansicht gibt dir einen schnellen Überblick über die Performance-Verteilung aller Manager!")
+
             with tab2:
                 st.subheader("All-Time Stat Leaders")
                 st.markdown("Alle Statistiken seit Anbeginn der Domination League zu einer Summe addiert. Manager, die schon länger dabei sind haben logischerweise einen Vorteil in der Auswertung, da sie mehr Jahre hatten, um Stats zu sammeln.  Notiz: Die Statistiken für Saison 2014 sind nicht enthalten.")
