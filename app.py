@@ -20,8 +20,6 @@ st.set_page_config(
 )
 
 # --- JavaScript für das automatische Einklappen der Sidebar auf Mobilgeräten ---
-# Dieses Skript wird bei jedem Klick in der Sidebar ausgeführt.
-# Wenn die Bildschirmbreite unter 768px liegt, wird der "Schließen"-Button geklickt.
 st.markdown(
     """
     <script>
@@ -31,9 +29,9 @@ st.markdown(
             sidebar.addEventListener('click', function(event) {
                 // Prüft, ob es sich um ein mobiles Gerät handelt (übliche Breakpoint-Größe)
                 if (window.innerWidth <= 768) {
-                    // Findet den "Schließen"-Button der Sidebar und klickt ihn
-                    // Streamlit's aria-label für den Schließen-Button ist "Schließen"
-                    const closeButton = document.querySelector('button[aria-label="Schließen"]');
+                    // Sucht nach dem Schließen-Button in beiden möglichen Sprachen (Deutsch und Englisch)
+                    const closeButton = document.querySelector('button[aria-label="Schließen"]') || 
+                                          document.querySelector('button[aria-label="Close sidebar"]');
                     if (closeButton) {
                         closeButton.click();
                     }
