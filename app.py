@@ -96,6 +96,8 @@ def load_data():
         categories_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=987718515"
         seasons_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=1895764019"
         trades_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=58770562"
+        ranks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?output=csv"
+
         
         teams_df = pd.read_csv(teams_url)
         matchups_df = pd.read_csv(matchups_url)
@@ -103,6 +105,7 @@ def load_data():
         categories_df = pd.read_csv(categories_url)
         seasons_df = pd.read_csv(seasons_url)
         trades_df = pd.read_csv(trades_url)
+        ranks_df = pd.read_csv(ranks_url)
     
         # --- HIER WIRD DIE SPALTE UMBENANNT ---
         if 'Year' in seasons_df.columns:
@@ -1033,6 +1036,202 @@ def _display_season_draft(manager_drafts, year, year_col):
                 hide_index=True,  # Versteckt Index
                 height=min(400, len(df_display) * 35 + 50)  # Dynamische Höhe
             )
+
+def calculate_draft_values(draft_data, fantasy_ranks):
+    """
+    Berechnet Draft Value für jeden Pick
+    Value = Draft Position - End Rank
+    Negativ = Steal, Positiv = Bust
+    """
+    # Merge Draft Data mit Fantasy Rankings
+    merged_data = draft_data.merge(
+        fantasy_ranks, 
+        left_on=['Player', 'Season'],  # Anpassen je nach Spaltenname
+        right_on=['NAME', 'Season'],   # Anpassen je nach Spaltenname
+        how='left'
+    )
+    
+    # Draft Value berechnen
+    merged_data['Draft_Value'] = merged_data['Draft_Position'] - merged_data['Fantasy_Rank']
+    
+    # Kategorisierung
+    merged_data['Pick_Type'] = merged_data['Draft_Value'].apply(
+        lambda x: 'Steal' if x < -10 else ('Bust' if x > 20 else 'Average')
+    )
+    
+    return merged_data
+
+# === EXPECTED RANK SYSTEM ===
+def get_expected_rank_by_round(round_num, total_teams=12):
+    """
+    Definiert erwartete Fantasy-Ranks basierend auf Draft-Runde
+    """
+    expected_ranks = {
+        1: (1, 12),     # Runde 1: Erwartung Top 12
+        2: (13, 24),    # Runde 2: Erwartung Top 24
+        3: (25, 36),    # Runde 3: Erwartung Top 36
+        4: (37, 48),    # Runde 4: Erwartung Top 48
+        5: (49, 60),    # Runde 5: Erwartung Top 60
+        6: (61, 100),   # Runde 6+: Alles ab Top 100 ist Bonus
+    }
+    
+    if round_num <= 5:
+        return expected_ranks[round_num]
+    else:
+        return expected_ranks[6]
+
+def calculate_consistency_score(draft_data_with_values):
+    """
+    Berechnet Draft Consistency Score pro Manager
+    """
+    consistency_scores = []
+    
+    for manager in draft_data_with_values['Manager'].unique():
+        manager_picks = draft_data_with_values[draft_data_with_values['Manager'] == manager]
+        
+        total_score = 0
+        total_picks = 0
+        
+        for _, pick in manager_picks.iterrows():
+            if pd.notna(pick['Fantasy_Rank']):
+                expected_min, expected_max = get_expected_rank_by_round(pick['Round'])
+                actual_rank = pick['Fantasy_Rank']
+                
+                # Scoring-System
+                if actual_rank <= expected_min:  # Übertroffen
+                    score = 2
+                elif actual_rank <= expected_max:  # Erfüllt
+                    score = 1
+                else:  # Enttäuscht
+                    score = -1 if pick['Round'] <= 3 else 0  # Frühe Runden werden härter bestraft
+                
+                total_score += score
+                total_picks += 1
+        
+        if total_picks > 0:
+            consistency_score = (total_score / total_picks) * 100
+            consistency_scores.append({
+                'Manager': manager,
+                'Consistency_Score': consistency_score,
+                'Total_Picks': total_picks,
+                'Good_Picks': len(manager_picks[manager_picks['Draft_Value'] < -5]),
+                'Bad_Picks': len(manager_picks[manager_picks['Draft_Value'] > 20])
+            })
+    
+    return pd.DataFrame(consistency_scores)
+
+# === HALL OF FAME & SHAME FUNKTIONEN ===
+def get_hall_of_fame_shame(draft_data_with_values, n_top=10):
+    """
+    Erstellt Hall of Fame (beste Steals) und Hall of Shame (größte Busts)
+    """
+    # Hall of Fame - Beste Steals (negativste Values)
+    hall_of_fame = draft_data_with_values.nsmallest(n_top, 'Draft_Value')[
+        ['Manager', 'Player', 'Season', 'Draft_Position', 'Fantasy_Rank', 'Draft_Value', 'Round']
+    ].copy()
+    hall_of_fame['Category'] = 'Hall of Fame'
+    
+    # Hall of Shame - Größte Busts (positivste Values)
+    hall_of_shame = draft_data_with_values.nlargest(n_top, 'Draft_Value')[
+        ['Manager', 'Player', 'Season', 'Draft_Position', 'Fantasy_Rank', 'Draft_Value', 'Round']
+    ].copy()
+    hall_of_shame['Category'] = 'Hall of Shame'
+    
+    return hall_of_fame, hall_of_shame
+
+# === VISUALISIERUNGEN ===
+def create_draft_value_scatter(draft_data_with_values):
+    """
+    Erstellt Scatter Plot: Draft Position vs Fantasy Rank
+    """
+    fig = px.scatter(
+        draft_data_with_values.dropna(),
+        x='Draft_Position',
+        y='Fantasy_Rank',
+        color='Pick_Type',
+        hover_data=['Manager', 'Player', 'Season', 'Draft_Value'],
+        title="🎯 Draft Position vs Fantasy End Rank",
+        color_discrete_map={
+            'Steal': '#4CAF50',
+            'Average': '#FFC107',
+            'Bust': '#F44336'
+        }
+    )
+    
+    # Perfekte Draft Line (Draft Position = Fantasy Rank)
+    max_pos = max(draft_data_with_values['Draft_Position'].max(), 
+                  draft_data_with_values['Fantasy_Rank'].max())
+    fig.add_trace(
+        go.Scatter(
+            x=[1, max_pos],
+            y=[1, max_pos],
+            mode='lines',
+            name='Perfect Draft Line',
+            line=dict(dash='dash', color='white', width=2),
+            hoverinfo='skip'
+        )
+    )
+    
+    fig.update_layout(
+        template='plotly_dark',
+        xaxis_title='Draft Position',
+        yaxis_title='Fantasy End Rank',
+        legend_title='Pick Quality'
+    )
+    
+    return fig
+
+def create_consistency_radar(consistency_df):
+    """
+    Erstellt Radar Chart für Draft Consistency
+    """
+    top_managers = consistency_df.nlargest(8, 'Consistency_Score')
+    
+    fig = go.Figure()
+    
+    for _, manager in top_managers.iterrows():
+        fig.add_trace(go.Scatterpolar(
+            r=[manager['Consistency_Score'], manager['Good_Picks']*10, 
+               100-manager['Bad_Picks']*5, manager['Total_Picks']],
+            theta=['Consistency Score', 'Good Picks (x10)', 'Avoid Busts', 'Experience'],
+            fill='toself',
+            name=manager['Manager']
+        ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]
+            )
+        ),
+        title="🎯 Draft Consistency Radar",
+        template='plotly_dark'
+    )
+    
+    return fig
+
+def create_manager_draft_heatmap(draft_data_with_values):
+    """
+    Erstellt Heatmap: Manager vs Round Performance
+    """
+    # Durchschnittlichen Draft Value pro Manager und Runde
+    heatmap_data = draft_data_with_values.groupby(['Manager', 'Round'])['Draft_Value'].mean().unstack(fill_value=0)
+    
+    fig = px.imshow(
+        heatmap_data,
+        title="🔥 Manager Draft Performance by Round",
+        color_continuous_scale='RdYlGn_r',  # Rot = schlecht, Grün = gut
+        aspect='auto'
+    )
+    
+    fig.update_layout(
+        template='plotly_dark',
+        xaxis_title='Draft Round',
+        yaxis_title='Manager'
+    )
+    
+    return fig
                     
 # Main app
 def main():
@@ -1111,6 +1310,8 @@ def main():
         st.session_state.analysis_type = "📊 Categories"
     if st.sidebar.button("🤝 Trades", use_container_width=True):
         st.session_state.analysis_type = "🤝 Trades"
+    if st.sidebar.button("🤝 Fantasy Rankings", use_container_width=True):
+        st.session_state.analysis_type = "🤝 Fantasy Rankings"
         
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
@@ -3236,6 +3437,314 @@ def main():
         
         st.markdown("---")
         
+    elif st.session_state.analysis_type == "🏈 Draft Analysis":
+        st.title("🏈 Draft Analysis Dashboard")
+        st.markdown("---")
+        
+        # Daten laden
+        fantasy_ranks = load_draft_data()
+        if fantasy_ranks is None:
+            st.error("Daten konnten nicht geladen werden!")
+            st.stop()
+        
+        # Debug: Fantasy Rankings anzeigen
+        with st.expander("🔍 Fantasy Rankings Data Preview", expanded=False):
+            st.dataframe(fantasy_ranks.head(10))
+            st.write(f"Shape: {fantasy_ranks.shape}")
+            st.write(f"Columns: {list(fantasy_ranks.columns)}")
+        
+        # Prüfe ob draft_data existiert (sollte in deinem Code verfügbar sein)
+        try:
+            # Verwende deinen bestehenden draft DataFrame
+            if 'draft_data' in locals() or 'draft_data' in globals():
+                draft_data = draft_data  # Dein existierender DataFrame
+            else:
+                st.error("❌ Draft-Daten nicht gefunden! Bitte stelle sicher, dass 'draft_data' geladen ist.")
+                st.info("💡 Der DataFrame sollte Spalten haben: Manager, Player, Draft_Position, Round, Season")
+                st.stop()
+                
+            # Debug: Draft Data anzeigen  
+            with st.expander("🔍 Draft Data Preview", expanded=False):
+                st.dataframe(draft_data.head(10))
+                st.write(f"Shape: {draft_data.shape}")
+                st.write(f"Columns: {list(draft_data.columns)}")
+                
+        except Exception as e:
+            st.error(f"Fehler beim Laden der Draft-Daten: {e}")
+            st.stop()
+        
+        # Daten verarbeiten
+        try:
+            draft_data_with_values = calculate_draft_values(draft_data, fantasy_ranks)
+            consistency_df = calculate_consistency_score(draft_data_with_values)
+            hall_of_fame, hall_of_shame = get_hall_of_fame_shame(draft_data_with_values)
+            
+        except Exception as e:
+            st.error(f"Fehler bei der Datenverarbeitung: {e}")
+            st.info("Überprüfe die Spaltenamen und Datenformate")
+            st.stop()
+        
+        # Tabs für verschiedene Analysen
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "🏆 Hall of Fame/Shame", 
+            "🎯 Draft Consistency", 
+            "📊 Value Analysis",
+            "🔥 Manager Heatmaps",
+            "🔍 Data Explorer"
+        ])
+        
+        # Tab 1: Hall of Fame & Shame
+        with tab1:
+            st.subheader("🏆 Hall of Fame & Hall of Shame")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("### 🌟 Hall of Fame - Beste Steals")
+                st.markdown("*Die besten Draft-Picks aller Zeiten (negativ = gut)*")
+                
+                if not hall_of_fame.empty:
+                    # Style für Hall of Fame
+                    def style_hall_of_fame(df):
+                        def color_values(val):
+                            if isinstance(val, (int, float)):
+                                if val < -20:  # Sehr guter Steal
+                                    return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
+                                elif val < -10:
+                                    return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
+                            return ''
+                        
+                        return df.style.applymap(color_values, subset=['Draft_Value'])
+                    
+                    styled_hof = style_hall_of_fame(hall_of_fame)
+                    st.dataframe(
+                        styled_hof,
+                        column_config={
+                            "Manager": "👨‍💼 Manager",
+                            "Player": "🏈 Player", 
+                            "Season": "📅 Season",
+                            "Draft_Position": st.column_config.NumberColumn("📍 Pick", format="%d"),
+                            "Fantasy_Rank": st.column_config.NumberColumn("🏆 End Rank", format="%d"),
+                            "Draft_Value": st.column_config.NumberColumn("💎 Value", format="%+d", help="Negativ = Steal"),
+                            "Round": st.column_config.NumberColumn("🔄 Round", format="%d")
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                else:
+                    st.info("Keine Hall of Fame Daten verfügbar")
+                
+            with col2:
+                st.markdown("### 💩 Hall of Shame - Größte Busts")
+                st.markdown("*Die schlechtesten Draft-Picks aller Zeiten (positiv = schlecht)*")
+                
+                if not hall_of_shame.empty:
+                    # Style für Hall of Shame  
+                    def style_hall_of_shame(df):
+                        def color_values(val):
+                            if isinstance(val, (int, float)):
+                                if val > 50:  # Sehr schlechter Bust
+                                    return 'background-color: rgba(244,67,54,0.3); color: #f44336; font-weight: bold;'
+                                elif val > 20:
+                                    return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
+                            return ''
+                        
+                        return df.style.applymap(color_values, subset=['Draft_Value'])
+                    
+                    styled_hos = style_hall_of_shame(hall_of_shame)
+                    st.dataframe(
+                        styled_hos,
+                        column_config={
+                            "Manager": "👨‍💼 Manager",
+                            "Player": "🏈 Player",
+                            "Season": "📅 Season", 
+                            "Draft_Position": st.column_config.NumberColumn("📍 Pick", format="%d"),
+                            "Fantasy_Rank": st.column_config.NumberColumn("📉 End Rank", format="%d"),
+                            "Draft_Value": st.column_config.NumberColumn("💀 Value", format="%+d", help="Positiv = Bust"),
+                            "Round": st.column_config.NumberColumn("🔄 Round", format="%d")
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                else:
+                    st.info("Keine Hall of Shame Daten verfügbar")
+        
+        # Tab 2: Draft Consistency
+        with tab2:
+            st.subheader("🎯 Draft Consistency Score")
+            st.markdown("*Wer drafted über die Jahre am verlässlichsten?*")
+            
+            if not consistency_df.empty:
+                # Sortiere nach Consistency Score
+                consistency_df_sorted = consistency_df.sort_values('Consistency_Score', ascending=False)
+                
+                # Top Manager Metrics
+                col1, col2, col3 = st.columns(3)
+                
+                if len(consistency_df_sorted) > 0:
+                    top_manager = consistency_df_sorted.iloc[0]
+                    with col1:
+                        st.metric(
+                            "🥇 Beste Consistency",
+                            f"{top_manager['Manager']}",
+                            f"{top_manager['Consistency_Score']:.1f} Score"
+                        )
+                    
+                    with col2:
+                        avg_score = consistency_df_sorted['Consistency_Score'].mean()
+                        st.metric(
+                            "📊 Liga Durchschnitt", 
+                            f"{avg_score:.1f}",
+                            "Consistency Score"
+                        )
+                    
+                    with col3:
+                        total_picks = consistency_df_sorted['Total_Picks'].sum()
+                        st.metric(
+                            "📈 Analysierte Picks",
+                            f"{total_picks:,}",
+                            "Gesamt"
+                        )
+                
+                # Consistency Tabelle
+                st.markdown("#### 📋 Manager Consistency Rankings")
+                
+                def style_consistency(df):
+                    def color_score(val):
+                        if isinstance(val, (int, float)):
+                            if val > 50:
+                                return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
+                            elif val > 0:
+                                return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
+                            elif val > -25:
+                                return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
+                            else:
+                                return 'background-color: rgba(244,67,54,0.2); color: #f44336;'
+                        return ''
+                    
+                    return df.style.applymap(color_score, subset=['Consistency_Score'])
+                
+                styled_consistency = style_consistency(consistency_df_sorted)
+                st.dataframe(
+                    styled_consistency,
+                    column_config={
+                        "Manager": "👨‍💼 Manager",
+                        "Consistency_Score": st.column_config.NumberColumn(
+                            "🎯 Score", 
+                            format="%.1f",
+                            help="Höher = besser. Basiert auf rundenbasierten Erwartungen"
+                        ),
+                        "Total_Picks": st.column_config.NumberColumn("📊 Total Picks", format="%d"),
+                        "Good_Picks": st.column_config.NumberColumn("🟢 Good Picks", format="%d"),
+                        "Bad_Picks": st.column_config.NumberColumn("🔴 Bad Picks", format="%d")
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
+                
+                # Radar Chart
+                if len(consistency_df_sorted) >= 3:
+                    st.markdown("#### 🕸️ Top Manager Consistency Radar")
+                    radar_fig = create_consistency_radar(consistency_df_sorted)
+                    st.plotly_chart(radar_fig, use_container_width=True)
+            
+            else:
+                st.info("Keine Consistency-Daten verfügbar")
+            
+            # Erklärung des Scoring-Systems
+            with st.expander("ℹ️ Wie funktioniert der Consistency Score?"):
+                st.markdown("""
+                **Scoring pro Pick:**
+                - **+2 Punkte**: Spieler übertrifft Erwartungen für seine Runde
+                - **+1 Punkt**: Spieler erfüllt Erwartungen  
+                - **-1 Punkt**: Spieler enttäuscht (frühe Runden werden härter bestraft)
+                - **0 Punkte**: Späte Runden-Picks die enttäuschen
+                
+                **Erwartungen pro Runde:**
+                - Runde 1: Top 12 Fantasy Rank
+                - Runde 2: Top 24 Fantasy Rank  
+                - Runde 3: Top 36 Fantasy Rank
+                - Runde 4: Top 48 Fantasy Rank
+                - Runde 5: Top 60 Fantasy Rank
+                - Runde 6+: Top 100 Fantasy Rank
+                """)
+        
+        # Tab 3: Value Analysis
+        with tab3:
+            st.subheader("📊 Draft Value Analysis")
+            st.markdown("*Draft Position vs Fantasy End Rank*")
+            
+            if not draft_data_with_values.empty:
+                # Scatter Plot
+                scatter_fig = create_draft_value_scatter(draft_data_with_values)
+                st.plotly_chart(scatter_fig, use_container_width=True)
+                
+                # Summary Statistics
+                col1, col2, col3, col4 = st.columns(4)
+                
+                steals = draft_data_with_values[draft_data_with_values['Draft_Value'] < -10]
+                busts = draft_data_with_values[draft_data_with_values['Draft_Value'] > 20]
+                avg_picks = draft_data_with_values[
+                    (draft_data_with_values['Draft_Value'] >= -10) & 
+                    (draft_data_with_values['Draft_Value'] <= 20)
+                ]
+                
+                with col1:
+                    st.metric("🌟 Steals", len(steals), f"{len(steals)/len(draft_data_with_values)*100:.1f}%")
+                
+                with col2:
+                    st.metric("💀 Busts", len(busts), f"{len(busts)/len(draft_data_with_values)*100:.1f}%") 
+                
+                with col3:
+                    st.metric("⚡ Average", len(avg_picks), f"{len(avg_picks)/len(draft_data_with_values)*100:.1f}%")
+                    
+                with col4:
+                    avg_value = draft_data_with_values['Draft_Value'].mean()
+                    st.metric("📊 Avg Value", f"{avg_value:.1f}", "Draft Value")
+            
+            else:
+                st.info("Keine Value Analysis Daten verfügbar")
+        
+        # Tab 4: Manager Heatmaps
+        with tab4:
+            st.subheader("🔥 Manager Performance Heatmaps")
+            st.markdown("*Performance pro Manager und Runde*")
+            
+            if not draft_data_with_values.empty:
+                heatmap_fig = create_manager_draft_heatmap(draft_data_with_values)
+                st.plotly_chart(heatmap_fig, use_container_width=True)
+            else:
+                st.info("Keine Heatmap-Daten verfügbar")
+        
+        # Tab 5: Data Explorer
+        with tab5:
+            st.subheader("🔍 Data Explorer")
+            st.markdown("*Rohdaten und Debugging*")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("##### 📊 Draft Data with Values")
+                if not draft_data_with_values.empty:
+                    st.dataframe(draft_data_with_values.head(20), use_container_width=True)
+                else:
+                    st.info("Keine Daten verfügbar")
+            
+            with col2:
+                st.markdown("##### 🏆 Fantasy Rankings")
+                if fantasy_ranks is not None and not fantasy_ranks.empty:
+                    st.dataframe(fantasy_ranks.head(20), use_container_width=True)
+                else:
+                    st.info("Keine Fantasy Rankings verfügbar")
+            
+            # Daten-Stats
+            if not draft_data_with_values.empty:
+                st.markdown("##### 📈 Dataset Statistics")
+                st.write(f"**Total Draft Picks analyzed:** {len(draft_data_with_values):,}")
+                st.write(f"**Unique Managers:** {draft_data_with_values['Manager'].nunique()}")
+                st.write(f"**Unique Players:** {draft_data_with_values['Player'].nunique()}")
+                st.write(f"**Seasons covered:** {draft_data_with_values['Season'].nunique()}")
+                st.write(f"**Draft Value Range:** {draft_data_with_values['Draft_Value'].min():.0f} to {draft_data_with_values['Draft_Value'].max():.0f}")
 
 if __name__ == "__main__":
     main()
