@@ -1280,8 +1280,8 @@ def main():
         st.error("Error processing matchup data.")
         return
     
-    # use_container_width=True ist perfekt, damit es die Breite der Sidebar ausfüllt
-    st.sidebar.image(LOGO_URL, use_container_width=True)
+    # use_container_width=True ist perfekt, damit es die Breite der  ausfüllt
+    st..image(LOGO_URL, use_container_width=True)
     
     # für einen unsichtbaren Abstand:
     # st.sidebar.write("")
@@ -1310,8 +1310,8 @@ def main():
         st.session_state.analysis_type = "📊 Categories"
     if st.sidebar.button("🤝 Trades", use_container_width=True):
         st.session_state.analysis_type = "🤝 Trades"
-    if st.sidebar.button("🤝 Fantasy Rankings", use_container_width=True):
-        st.session_state.analysis_type = "🤝 Fantasy Rankings"
+    if st.sidebar.button("Fantasy Rankings", use_container_width=True):
+        st.session_state.analysis_type = "Fantasy Rankings"
         
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
@@ -3437,7 +3437,7 @@ def main():
         
         st.markdown("---")
         
-    elif st.session_state.analysis_type == "🏈 Draft Analysis":
+    elif st.session_state.analysis_type == "Fantasy Rankings":
         st.title("🏈 Draft Analysis Dashboard")
         st.markdown("---")
         
