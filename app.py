@@ -3317,9 +3317,12 @@ def main():
         try:
             drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
             
-            # Alle verfügbaren Saisons aus Draft-Daten extrahieren
-            drafts_df = pd.read_csv(drafts_url)  # Deine drafts_url Variable
-            available_seasons = sorted(drafts_df['Season'].unique())
+            # Lade Draft-Daten
+            drafts_df = pd.read_csv(drafts_url)
+            
+            # Bereinige Saisons: Entferne NaN und konvertiere zu Integer
+            clean_seasons = drafts_df['Season'].dropna().astype(int).unique()
+            available_seasons = sorted(clean_seasons)
             
             st.info(f"🔍 Gefundene Saisons in Draft-Daten: {available_seasons}")
             
