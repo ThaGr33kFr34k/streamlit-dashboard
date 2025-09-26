@@ -3309,134 +3309,6 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
-            
-    else:  # Default homepage when no analysis_type is selected
-        # Liga Header mit Logo
-        col1, col2, col3 = st.columns([1, 2, 1])
-        
-        with col2:
-            st.markdown("""
-            <div style='padding: 20px; background-color: #333; border-radius: 10px; margin-top: 20px;'>
-                <h3 style='color: #FF6B35;'>Willkommen zu Domination League Analytics!</h3>
-                <p style='color: #FFF;'>Hier finden sich 11 Jahre Liga-Geschichte. Alle historischen Daten zu unserer Liga vereint an einem Ort. Korrekt ausgewertet und mit interessanten Statistiken angereichert.</p>
-                <p style='color: #FFF;'>Nutze die Sidebar ⬅️ links oder die die Navigation Cards ⬇️ unten, um dich durch die verschiedenen Bereiche zu bewegen.</p>
-            </div>
-            """, unsafe_allow_html=True)
-       
-        # Navigation Cards
-        st.markdown("### 📍 Navigation")
-        st.markdown("*Wähle einen Bereich für detaillierte Analysen:*")
-        
-        # Row 1: Team & Manager Analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("⛹🏽‍♂️ Team-View", use_container_width=True, key="nav_team"):
-                st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("🥊 Head-to-Head", use_container_width=True, key="nav_h2h"):
-                st.session_state.analysis_type = "🥊 Head-to-Head"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    ⚔️ Direkte Vergleiche zwischen Managern - Wer dominiert wen?
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Row 2: Championships & Performance  
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("🏆 Playoff Performance", use_container_width=True, key="nav_playoffs"):
-                st.session_state.analysis_type = "🏆 Playoff Performance"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🏆 Championship-Geschichte, Finals und Playoff-Erfolge
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("🏅 Medal Overview", use_container_width=True, key="nav_medals"):
-                st.session_state.analysis_type = "🏅 Medal Overview"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🥇 Alle Titel und Auszeichnungen - Wer sammelt die meisten Medals?
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Row 3: Draft & Player Analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("🎯 Drafts", use_container_width=True, key="nav_drafts"):
-                st.session_state.analysis_type = "🎯 Drafts"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🎯 Draft-Strategien, Pick-Analysen und Erfolgsraten
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("👨‍💼 Player Analysis", use_container_width=True, key="nav_players"):
-                st.session_state.analysis_type = "👨‍💼 Player Analysis"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    👑 Championship-DNA, Legenden und Manager-Spieler Loyalität
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Row 4: Categories & Trades
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("📊 Categories", use_container_width=True, key="nav_categories"):
-                st.session_state.analysis_type = "📊 Categories"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    📈 Kategorie-Performance - Stärken und Schwächen analysieren
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("🤝 Trades", use_container_width=True, key="nav_trades"):
-                st.session_state.analysis_type = "🤝 Trades"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🤝 Trade-Historie, aktivste Manager und Deal-Analysen
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
     elif st.session_state.analysis_type == "Fantasy Rankings":
         st.title("🏈 Draft Analysis Dashboard")
         st.markdown("---")
@@ -3830,6 +3702,132 @@ def main():
             
             else:
                 st.warning("Keine analysierbaren Daten verfügbar - überprüfe das Name-Matching")
-
+    else:  # Default homepage when no analysis_type is selected
+        # Liga Header mit Logo
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col2:
+            st.markdown("""
+            <div style='padding: 20px; background-color: #333; border-radius: 10px; margin-top: 20px;'>
+                <h3 style='color: #FF6B35;'>Willkommen zu Domination League Analytics!</h3>
+                <p style='color: #FFF;'>Hier finden sich 11 Jahre Liga-Geschichte. Alle historischen Daten zu unserer Liga vereint an einem Ort. Korrekt ausgewertet und mit interessanten Statistiken angereichert.</p>
+                <p style='color: #FFF;'>Nutze die Sidebar ⬅️ links oder die die Navigation Cards ⬇️ unten, um dich durch die verschiedenen Bereiche zu bewegen.</p>
+            </div>
+            """, unsafe_allow_html=True)
+       
+        # Navigation Cards
+        st.markdown("### 📍 Navigation")
+        st.markdown("*Wähle einen Bereich für detaillierte Analysen:*")
+        
+        # Row 1: Team & Manager Analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("⛹🏽‍♂️ Team-View", use_container_width=True, key="nav_team"):
+                st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("🥊 Head-to-Head", use_container_width=True, key="nav_h2h"):
+                st.session_state.analysis_type = "🥊 Head-to-Head"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    ⚔️ Direkte Vergleiche zwischen Managern - Wer dominiert wen?
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Row 2: Championships & Performance  
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🏆 Playoff Performance", use_container_width=True, key="nav_playoffs"):
+                st.session_state.analysis_type = "🏆 Playoff Performance"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    🏆 Championship-Geschichte, Finals und Playoff-Erfolge
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("🏅 Medal Overview", use_container_width=True, key="nav_medals"):
+                st.session_state.analysis_type = "🏅 Medal Overview"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    🥇 Alle Titel und Auszeichnungen - Wer sammelt die meisten Medals?
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Row 3: Draft & Player Analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("🎯 Drafts", use_container_width=True, key="nav_drafts"):
+                st.session_state.analysis_type = "🎯 Drafts"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    🎯 Draft-Strategien, Pick-Analysen und Erfolgsraten
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("👨‍💼 Player Analysis", use_container_width=True, key="nav_players"):
+                st.session_state.analysis_type = "👨‍💼 Player Analysis"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    👑 Championship-DNA, Legenden und Manager-Spieler Loyalität
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Row 4: Categories & Trades
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📊 Categories", use_container_width=True, key="nav_categories"):
+                st.session_state.analysis_type = "📊 Categories"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    📈 Kategorie-Performance - Stärken und Schwächen analysieren
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("🤝 Trades", use_container_width=True, key="nav_trades"):
+                st.session_state.analysis_type = "🤝 Trades"
+                st.rerun()
+            st.markdown("""
+            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
+                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
+                    🤝 Trade-Historie, aktivste Manager und Deal-Analysen
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
 if __name__ == "__main__":
     main()
