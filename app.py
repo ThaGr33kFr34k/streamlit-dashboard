@@ -1046,7 +1046,7 @@ def calculate_draft_values(draft_data, fantasy_ranks):
     # Merge Draft Data mit Fantasy Rankings
     merged_data = draft_data.merge(
         fantasy_ranks, 
-        left_on=['Player', 'Season'],  # Anpassen je nach Spaltenname
+        left_on=['PlayerName', 'Season'],  # Anpassen je nach Spaltenname
         right_on=['NAME', 'Season'],   # Anpassen je nach Spaltenname
         how='left'
     )
