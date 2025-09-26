@@ -1251,7 +1251,7 @@ def main():
     
     # Load data
     with st.spinner("Loading data..."):
-        teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df = load_data()
+        teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df, rankings_df = load_data()
     
     if teams_df is None or matchups_df is None:
         st.error("Please update the Google Sheets URLs in the code with your actual sheet URLs.")
