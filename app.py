@@ -96,8 +96,7 @@ def load_data():
         categories_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=987718515"
         seasons_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=1895764019"
         trades_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=58770562"
-        ranks_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=
-        https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?output=csv"
+        ranks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?output=csv"
 
         
         teams_df = pd.read_csv(teams_url)
@@ -1252,7 +1251,7 @@ def main():
     
     # Load data
     with st.spinner("Loading data..."):
-        teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df, rankings_df = load_data()
+        teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df, ranks_df = load_data()
     
     if teams_df is None or matchups_df is None:
         st.error("Please update the Google Sheets URLs in the code with your actual sheet URLs.")
