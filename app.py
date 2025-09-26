@@ -3315,6 +3315,8 @@ def main():
         
         # Daten laden
         try:
+            drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
+            
             # Alle verfügbaren Saisons aus Draft-Daten extrahieren
             drafts_df = pd.read_csv(drafts_url)  # Deine drafts_url Variable
             available_seasons = sorted(drafts_df['Season'].unique())
