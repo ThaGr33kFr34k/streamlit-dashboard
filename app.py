@@ -3309,8 +3309,7 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
-    elif st.session_state.analysis_type == "🏈 Draft Analysis":
-        st.title("🏈 Draft Analysis Dashboard")
+    elif st.session_state.analysis_type == "Fantasy Rankings":
         st.markdown("---")
         
         # Daten laden - HART KODIERTE URLS UND GIDS
