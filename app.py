@@ -114,7 +114,7 @@ def load_data():
         # Optional: Clean up seasons_df columns
         seasons_df.columns = seasons_df.columns.str.strip()
         
-        return teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df
+        return teams_df, matchups_df, drafts_df, categories_df, seasons_df, trades_df, ranks_df
     
     except Exception as e:
         st.error(f"Error loading data from Google Sheets: {e}")
@@ -3442,36 +3442,92 @@ def main():
         st.markdown("---")
         
         # Daten laden
-        fantasy_ranks = load_draft_data()
-        if fantasy_ranks is None:
-            st.error("Daten konnten nicht geladen werden!")
+        try:
+            # Alle verfügbaren Saisons aus Draft-Daten extrahieren
+            drafts_df = pd.read_csv(drafts_url)  # Deine drafts_url Variable
+            available_seasons = sorted(drafts_df['Season'].unique())
+            
+            st.info(f"🔍 Gefundene Saisons in Draft-Daten: {available_seasons}")
+            
+            # Fantasy Rankings für alle Saisons laden
+            all_ranks = []
+            loading_progress = st.progress(0)
+            loading_text = st.empty()
+            
+            for i, season in enumerate(available_seasons):
+                try:
+                    loading_text.text(f"Lade Fantasy Rankings für Saison {season}...")
+                    
+                    # URL für spezifische Saison (angenommen das Tab heißt z.B. "2023", "2022", etc.)
+                    season_url = f"https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?gid=0&single=true&output=csv&sheet={season}"
+                    
+                    season_ranks = pd.read_csv(season_url)
+                    season_ranks.columns = season_ranks.columns.str.strip()
+                    season_ranks = season_ranks.rename(columns={'#': 'Fantasy_Rank', 'NAME': 'Player_Name'})
+                    season_ranks['Season'] = season  # Saison hinzufügen
+                    
+                    all_ranks.append(season_ranks)
+                    st.success(f"✅ Saison {season}: {len(season_ranks)} Rankings geladen")
+                    
+                except Exception as e:
+                    st.warning(f"⚠️ Saison {season} konnte nicht geladen werden: {e}")
+                    
+                loading_progress.progress((i + 1) / len(available_seasons))
+            
+            loading_text.empty()
+            loading_progress.empty()
+            
+            if not all_ranks:
+                st.error("❌ Keine Fantasy Rankings konnten geladen werden!")
+                st.info("💡 Überprüfe die Sheet-Namen und URL-Format")
+                st.stop()
+            
+            # Alle Rankings kombinieren
+            ranks_df = pd.concat(all_ranks, ignore_index=True)
+            
+            # Draft-Daten vorbereiten
+            draft_data = drafts_df.copy()
+            draft_data = draft_data.rename(columns={
+                'PlayerName': 'Player',
+                'pickOrder': 'Draft_Position'
+            })
+            
+            st.success(f"✅ Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {len(all_ranks)} Saisons, {len(draft_data)} Draft Picks")
+            
+        except Exception as e:
+            st.error(f"❌ Fehler beim Laden der Daten: {e}")
+            
+            # Fallback: Manuelle Saison-Auswahl
+            st.markdown("### 🔧 Manuelle Saison-Konfiguration")
+            st.info("Falls die automatische Erkennung nicht funktioniert, gib die Saisons manuell ein:")
+            
+            manual_seasons = st.text_input(
+                "Verfügbare Saisons (komma-getrennt):",
+                placeholder="2015,2016,2017,2018,2019,2020,2021,2022,2023,2024"
+            )
+            
+            if manual_seasons and st.button("🔄 Mit manuellen Saisons neu laden"):
+                seasons_list = [s.strip() for s in manual_seasons.split(',')]
+                st.write(f"Versuche Saisons zu laden: {seasons_list}")
+                # Hier könnte der Code mit den manuellen Saisons wiederholt werden
+            
             st.stop()
         
-        # Debug: Fantasy Rankings anzeigen
-        with st.expander("🔍 Fantasy Rankings Data Preview", expanded=False):
-            st.dataframe(fantasy_ranks.head(10))
-            st.write(f"Shape: {fantasy_ranks.shape}")
-            st.write(f"Columns: {list(fantasy_ranks.columns)}")
-        
-        # Prüfe ob draft_data existiert (sollte in deinem Code verfügbar sein)
-        try:
-            # Verwende deinen bestehenden draft DataFrame
-            if 'draft_data' in locals() or 'draft_data' in globals():
-                draft_data = draft_data  # Dein existierender DataFrame
-            else:
-                st.error("❌ Draft-Daten nicht gefunden! Bitte stelle sicher, dass 'draft_data' geladen ist.")
-                st.info("💡 Der DataFrame sollte Spalten haben: Manager, Player, Draft_Position, Round, Season")
-                st.stop()
-                
-            # Debug: Draft Data anzeigen  
-            with st.expander("🔍 Draft Data Preview", expanded=False):
+        # Debug: Datenvorschau
+        with st.expander("🔍 Datenvorschau", expanded=False):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Fantasy Rankings (ranks_df):**")
+                st.dataframe(ranks_df.head(10))
+                st.write(f"Shape: {ranks_df.shape}")
+                st.write(f"Columns: {list(ranks_df.columns)}")
+            
+            with col2:
+                st.markdown("**Draft Data (drafts_df):**")
                 st.dataframe(draft_data.head(10))
                 st.write(f"Shape: {draft_data.shape}")
                 st.write(f"Columns: {list(draft_data.columns)}")
-                
-        except Exception as e:
-            st.error(f"Fehler beim Laden der Draft-Daten: {e}")
-            st.stop()
         
         # Daten verarbeiten
         try:
@@ -3731,11 +3787,33 @@ def main():
                     st.info("Keine Daten verfügbar")
             
             with col2:
-                st.markdown("##### 🏆 Fantasy Rankings")
-                if fantasy_ranks is not None and not fantasy_ranks.empty:
-                    st.dataframe(fantasy_ranks.head(20), use_container_width=True)
+                st.markdown("##### 🏆 Fantasy Rankings (ranks_df)")
+                if not ranks_df.empty:
+                    st.dataframe(ranks_df.head(20), use_container_width=True)
                 else:
                     st.info("Keine Fantasy Rankings verfügbar")
+            
+            # Matching-Analyse
+            st.markdown("##### 🔗 Name Matching Analysis")
+            if not merged_data.empty:
+                total_picks = len(merged_data)
+                matched_picks = len(merged_data.dropna(subset=['Fantasy_Rank']))
+                match_rate = (matched_picks / total_picks) * 100
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("📊 Total Picks", f"{total_picks:,}")
+                with col2:
+                    st.metric("✅ Matched Picks", f"{matched_picks:,}")  
+                with col3:
+                    st.metric("🎯 Match Rate", f"{match_rate:.1f}%")
+                
+                # Sample unmatched players
+                unmatched = merged_data[merged_data['Fantasy_Rank'].isna()]
+                if len(unmatched) > 0:
+                    st.markdown("##### ❌ Sample Unmatched Players")
+                    sample_unmatched = unmatched['Player'].value_counts().head(10)
+                    st.write(sample_unmatched)
             
             # Daten-Stats
             if not draft_data_with_values.empty:
@@ -3743,8 +3821,15 @@ def main():
                 st.write(f"**Total Draft Picks analyzed:** {len(draft_data_with_values):,}")
                 st.write(f"**Unique Managers:** {draft_data_with_values['Manager'].nunique()}")
                 st.write(f"**Unique Players:** {draft_data_with_values['Player'].nunique()}")
-                st.write(f"**Seasons covered:** {draft_data_with_values['Season'].nunique()}")
-                st.write(f"**Draft Value Range:** {draft_data_with_values['Draft_Value'].min():.0f} to {draft_data_with_values['Draft_Value'].max():.0f}")
+                st.write(f"**Seasons covered:** {draft_data_with_values['Season'].nunique() if 'Season' in draft_data_with_values.columns else 'N/A'}")
+                
+                if 'Draft_Value' in draft_data_with_values.columns:
+                    min_val = draft_data_with_values['Draft_Value'].min()
+                    max_val = draft_data_with_values['Draft_Value'].max()
+                    st.write(f"**Draft Value Range:** {min_val:.0f} to {max_val:.0f}")
+            
+            else:
+                st.warning("Keine analysierbaren Daten verfügbar - überprüfe das Name-Matching")
 
 if __name__ == "__main__":
     main()
