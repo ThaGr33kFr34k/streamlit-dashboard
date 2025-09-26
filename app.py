@@ -96,7 +96,8 @@ def load_data():
         categories_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=987718515"
         seasons_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=1895764019"
         trades_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=58770562"
-        ranks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?output=csv"
+        ranks_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=
+        https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?output=csv"
 
         
         teams_df = pd.read_csv(teams_url)
@@ -3310,11 +3311,12 @@ def main():
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
     elif st.session_state.analysis_type == "Fantasy Rankings":
-        st.title("🏈 Draft Analysis Dashboard")
+        
         st.markdown("---")
         
         # Daten laden
         try:
+            # ERSETZE DIESE URL MIT DEINER ECHTEN DRAFT-CSV URL
             drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
             
             # Lade Draft-Daten
@@ -3325,69 +3327,112 @@ def main():
             available_seasons = sorted(clean_seasons)
             
             st.info(f"🔍 Gefundene Saisons in Draft-Daten: {available_seasons}")
+            st.warning("⚠️ Google Sheets verwendet GIDs für Tabs - Sheet-Name allein funktioniert meist nicht!")
             
-            # Fantasy Rankings für alle Saisons laden
-            all_ranks = []
-            loading_progress = st.progress(0)
-            loading_text = st.empty()
+            # Fantasy Rankings für alle Saisons laden - MANUELLER GID MODUS
+            st.markdown("### 🔧 GID-basierte Konfiguration erforderlich")
+            st.info("Jeder Tab in Google Sheets hat eine eigene GID. Du musst diese manuell zuordnen.")
             
+            # Beispiel für GID-Mapping
+            with st.expander("💡 Wie finde ich die GIDs?", expanded=True):
+                st.markdown("""
+                **So findest du die GIDs deiner Tabs:**
+                
+                1. **Öffne dein Google Sheet** in einem Browser
+                2. **Klicke auf einen Tab** (z.B. "2023")
+                3. **Schau in die URL** - dort steht: `...#gid=123456789`
+                4. **Die Zahl nach `gid=`** ist deine GID für diesen Tab
+                
+                **Beispiel:**
+                - Tab "2023" → URL: `...#gid=0` → GID: `0`
+                - Tab "2022" → URL: `...#gid=1234567` → GID: `1234567`
+                - Tab "2021" → URL: `...#gid=7654321` → GID: `7654321`
+                """)
+            
+            # GID-Mapping Interface
+            st.markdown("#### 📋 GID-Mapping für deine Saisons")
+            
+            gid_mapping = {}
+            
+            # Erstelle Input-Felder für jede Saison
+            col1, col2 = st.columns(2)
             for i, season in enumerate(available_seasons):
-                try:
-                    loading_text.text(f"Lade Fantasy Rankings für Saison {season}...")
-                    
-                    # URL für spezifische Saison (angenommen das Tab heißt z.B. "2023", "2022", etc.)
-                    season_url = f"https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?gid=0&single=true&output=csv&sheet={season}"
-                    
-                    season_ranks = pd.read_csv(season_url)
-                    season_ranks.columns = season_ranks.columns.str.strip()
-                    season_ranks = season_ranks.rename(columns={'#': 'Fantasy_Rank', 'NAME': 'Player_Name'})
-                    season_ranks['Season'] = season  # Saison hinzufügen
-                    
-                    all_ranks.append(season_ranks)
-                    st.success(f"✅ Saison {season}: {len(season_ranks)} Rankings geladen")
-                    
-                except Exception as e:
-                    st.warning(f"⚠️ Saison {season} konnte nicht geladen werden: {e}")
-                    
-                loading_progress.progress((i + 1) / len(available_seasons))
+                if i % 2 == 0:
+                    with col1:
+                        gid = st.text_input(f"GID für Saison {season}:", key=f"gid_{season}", placeholder="z.B. 0, 1234567890")
+                else:
+                    with col2:
+                        gid = st.text_input(f"GID für Saison {season}:", key=f"gid_{season}", placeholder="z.B. 0, 1234567890")
+                
+                if gid.strip():
+                    gid_mapping[season] = gid.strip()
             
-            loading_text.empty()
-            loading_progress.empty()
-            
-            if not all_ranks:
-                st.error("❌ Keine Fantasy Rankings konnten geladen werden!")
-                st.info("💡 Überprüfe die Sheet-Namen und URL-Format")
+            # Lade Daten mit GIDs
+            if st.button("🚀 Daten mit GIDs laden") and gid_mapping:
+                all_ranks = []
+                loading_progress = st.progress(0)
+                loading_text = st.empty()
+                
+                success_count = 0
+                for i, season in enumerate(available_seasons):
+                    if season in gid_mapping:
+                        try:
+                            loading_text.text(f"Lade Fantasy Rankings für Saison {season} (GID: {gid_mapping[season]})...")
+                            
+                            # URL mit spezifischer GID
+                            season_url = f"https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?gid={gid_mapping[season]}&single=true&output=csv"
+                            
+                            season_ranks = pd.read_csv(season_url)
+                            season_ranks.columns = season_ranks.columns.str.strip()
+                            season_ranks = season_ranks.rename(columns={'#': 'Fantasy_Rank', 'NAME': 'Player_Name'})
+                            season_ranks['Season'] = int(season)
+                            
+                            all_ranks.append(season_ranks)
+                            st.success(f"✅ Saison {season} (GID: {gid_mapping[season]}): {len(season_ranks)} Rankings geladen")
+                            success_count += 1
+                            
+                        except Exception as e:
+                            st.error(f"❌ Saison {season} (GID: {gid_mapping[season]}) fehlgeschlagen: {e}")
+                            st.info(f"🔗 Versuchte URL: ...gid={gid_mapping[season]}...")
+                    else:
+                        st.warning(f"⚠️ Keine GID für Saison {season} angegeben")
+                    
+                    loading_progress.progress((i + 1) / len(available_seasons))
+                
+                loading_text.empty()
+                loading_progress.empty()
+                
+                if success_count == 0:
+                    st.error("❌ Keine Fantasy Rankings konnten geladen werden!")
+                    st.markdown("**Mögliche Probleme:**")
+                    st.markdown("- GIDs sind falsch")
+                    st.markdown("- Sheet ist nicht öffentlich")
+                    st.markdown("- Spalten haben andere Namen")
+                    st.stop()
+                
+                # Alle Rankings kombinieren
+                ranks_df = pd.concat(all_ranks, ignore_index=True)
+                
+                # Draft-Daten vorbereiten
+                draft_data = drafts_df.copy()
+                draft_data = draft_data.rename(columns={
+                    'PlayerName': 'Player',
+                    'pickOrder': 'Draft_Position'
+                })
+                draft_data = draft_data.dropna(subset=['Season'])
+                draft_data['Season'] = draft_data['Season'].astype(int)
+                
+                st.success(f"🎉 Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {success_count} Saisons, {len(draft_data)} Draft Picks")
+                
+            elif not gid_mapping:
+                st.info("👆 Bitte gib mindestens eine GID ein um fortzufahren")
+                st.stop()
+            else:
                 st.stop()
             
-            # Alle Rankings kombinieren
-            ranks_df = pd.concat(all_ranks, ignore_index=True)
-            
-            # Draft-Daten vorbereiten
-            draft_data = drafts_df.copy()
-            draft_data = draft_data.rename(columns={
-                'PlayerName': 'Player',
-                'pickOrder': 'Draft_Position'
-            })
-            
-            st.success(f"✅ Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {len(all_ranks)} Saisons, {len(draft_data)} Draft Picks")
-            
         except Exception as e:
-            st.error(f"❌ Fehler beim Laden der Daten: {e}")
-            
-            # Fallback: Manuelle Saison-Auswahl
-            st.markdown("### 🔧 Manuelle Saison-Konfiguration")
-            st.info("Falls die automatische Erkennung nicht funktioniert, gib die Saisons manuell ein:")
-            
-            manual_seasons = st.text_input(
-                "Verfügbare Saisons (komma-getrennt):",
-                placeholder="2015,2016,2017,2018,2019,2020,2021,2022,2023,2024"
-            )
-            
-            if manual_seasons and st.button("🔄 Mit manuellen Saisons neu laden"):
-                seasons_list = [s.strip() for s in manual_seasons.split(',')]
-                st.write(f"Versuche Saisons zu laden: {seasons_list}")
-                # Hier könnte der Code mit den manuellen Saisons wiederholt werden
-            
+            st.error(f"❌ Fehler beim Laden der Draft-Daten: {e}")
+            st.info("Überprüfe deine Draft-CSV URL")
             st.stop()
         
         # Debug: Datenvorschau
@@ -3707,132 +3752,6 @@ def main():
             
             else:
                 st.warning("Keine analysierbaren Daten verfügbar - überprüfe das Name-Matching")
-    else:  # Default homepage when no analysis_type is selected
-        # Liga Header mit Logo
-        col1, col2, col3 = st.columns([1, 2, 1])
-        
-        with col2:
-            st.markdown("""
-            <div style='padding: 20px; background-color: #333; border-radius: 10px; margin-top: 20px;'>
-                <h3 style='color: #FF6B35;'>Willkommen zu Domination League Analytics!</h3>
-                <p style='color: #FFF;'>Hier finden sich 11 Jahre Liga-Geschichte. Alle historischen Daten zu unserer Liga vereint an einem Ort. Korrekt ausgewertet und mit interessanten Statistiken angereichert.</p>
-                <p style='color: #FFF;'>Nutze die Sidebar ⬅️ links oder die die Navigation Cards ⬇️ unten, um dich durch die verschiedenen Bereiche zu bewegen.</p>
-            </div>
-            """, unsafe_allow_html=True)
-       
-        # Navigation Cards
-        st.markdown("### 📍 Navigation")
-        st.markdown("*Wähle einen Bereich für detaillierte Analysen:*")
-        
-        # Row 1: Team & Manager Analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("⛹🏽‍♂️ Team-View", use_container_width=True, key="nav_team"):
-                st.session_state.analysis_type = "⛹🏽‍♂️ Team-View"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    📊 Team Rankings, Saisonverläufe und Performance-Trends aller Manager
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("🥊 Head-to-Head", use_container_width=True, key="nav_h2h"):
-                st.session_state.analysis_type = "🥊 Head-to-Head"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    ⚔️ Direkte Vergleiche zwischen Managern - Wer dominiert wen?
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Row 2: Championships & Performance  
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("🏆 Playoff Performance", use_container_width=True, key="nav_playoffs"):
-                st.session_state.analysis_type = "🏆 Playoff Performance"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🏆 Championship-Geschichte, Finals und Playoff-Erfolge
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("🏅 Medal Overview", use_container_width=True, key="nav_medals"):
-                st.session_state.analysis_type = "🏅 Medal Overview"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🥇 Alle Titel und Auszeichnungen - Wer sammelt die meisten Medals?
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Row 3: Draft & Player Analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("🎯 Drafts", use_container_width=True, key="nav_drafts"):
-                st.session_state.analysis_type = "🎯 Drafts"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🎯 Draft-Strategien, Pick-Analysen und Erfolgsraten
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("👨‍💼 Player Analysis", use_container_width=True, key="nav_players"):
-                st.session_state.analysis_type = "👨‍💼 Player Analysis"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    👑 Championship-DNA, Legenden und Manager-Spieler Loyalität
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Row 4: Categories & Trades
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("📊 Categories", use_container_width=True, key="nav_categories"):
-                st.session_state.analysis_type = "📊 Categories"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    📈 Kategorie-Performance - Stärken und Schwächen analysieren
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            if st.button("🤝 Trades", use_container_width=True, key="nav_trades"):
-                st.session_state.analysis_type = "🤝 Trades"
-                st.rerun()
-            st.markdown("""
-            <div style='padding: 15px; background: #f2e38a; border-radius: 10px; margin-top: -10px;'>
-                <p style='margin: 0; color: #4f4d4d; font-size: 0.9rem;'>
-                    🤝 Trade-Historie, aktivste Manager und Deal-Analysen
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
         
 if __name__ == "__main__":
     main()
