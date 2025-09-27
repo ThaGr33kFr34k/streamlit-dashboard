@@ -1053,10 +1053,10 @@ def calculate_draft_values(draft_data, ranks_df):
     
     # Konvertiere Fantasy_Rank und Draft_Position zu numerischen Werten
     merged_data['Fantasy_Rank'] = pd.to_numeric(merged_data['Fantasy_Rank'], errors='coerce')
-    merged_data['Draft_Position'] = pd.to_numeric(merged_data['Draft_Position'], errors='coerce')
+    merged_data['Pick'] = pd.to_numeric(merged_data['Pick'], errors='coerce')
     
     # Draft Value berechnen (nur bei gültigen numerischen Werten)
-    merged_data['Draft_Value'] = merged_data['Draft_Position'] - merged_data['Fantasy_Rank']
+    merged_data['Pick'] = merged_data['Pick'] - merged_data['Fantasy_Rank']
     
     # Kategorisierung
     merged_data['Pick_Type'] = merged_data['Draft_Value'].apply(
