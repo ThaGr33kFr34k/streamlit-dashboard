@@ -1040,12 +1040,12 @@ def _display_season_draft(manager_drafts, year, year_col):
 def calculate_draft_values(draft_data, ranks_df):
     """
     Berechnet Draft Value für jeden Pick
-    Value = Draft Position - End Rank
+    Value =  Pick - Fantasy Rank
     Negativ = Steal, Positiv = Bust
     """
     # Merge Draft Data mit Fantasy Rankings
     merged_data = draft_data.merge(
-        ranks_df, 
+        draft_data, ranks_df, 
         left_on=['Player', 'Season'],  # Angepasst an neue Spaltennamen
         right_on=['Player_Name', 'Season'],   # Angepasst an neue Spaltennamen
         how='left'
