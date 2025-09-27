@@ -1046,14 +1046,14 @@ def calculate_draft_values(draft_data, ranks_df):
     # Merge Draft Data mit Fantasy Rankings
     merged_data = draft_data.merge(
         ranks_df, 
-        left_on=['Player', 'Season'],  # Angepasst an neue Spaltennamen
-        right_on=['Player_Name', 'Season'],   # Angepasst an neue Spaltennamen
+        left_on=['Player', 'Season'],  
+        right_on=['Player_Name', 'Season'],   
         how='left'
     )
 
-    # Konvertiere Fantasy_Rank und Draft_Position zu numerischen Werten
+    # Konvertiere Fantasy_Rank und Pick zu numerischen Werten
     merged_data['Fantasy_Rank'] = pd.to_numeric(merged_data['Fantasy_Rank'], errors='coerce')
-    merged_data['Draft_Position'] = pd.to_numeric(merged_data['Draft_Position'], errors='coerce')
+    merged_data['Pick'] = pd.to_numeric(merged_data['Pick'], errors='coerce')
     
     # Draft Value berechnen
     merged_data['Draft_Value'] = merged_data['Draft_Position'] - merged_data['Fantasy_Rank']
@@ -1133,13 +1133,13 @@ def get_hall_of_fame_shame(draft_data_with_values, n_top=10):
     """
     # Hall of Fame - Beste Steals (negativste Values)
     hall_of_fame = draft_data_with_values.nsmallest(n_top, 'Draft_Value')[
-        ['Manager', 'Player', 'Season', 'Draft_Position', 'Fantasy_Rank', 'Draft_Value', 'Round']
+        ['Manager', 'Player', 'Season', 'Pick', 'Fantasy_Rank', 'Draft_Value', 'Round']
     ].copy()
     hall_of_fame['Category'] = 'Hall of Fame'
     
     # Hall of Shame - Größte Busts (positivste Values)
     hall_of_shame = draft_data_with_values.nlargest(n_top, 'Draft_Value')[
-        ['Manager', 'Player', 'Season', 'Draft_Position', 'Fantasy_Rank', 'Draft_Value', 'Round']
+        ['Manager', 'Player', 'Season', 'Pick', 'Fantasy_Rank', 'Draft_Value', 'Round']
     ].copy()
     hall_of_shame['Category'] = 'Hall of Shame'
     
@@ -1152,7 +1152,7 @@ def create_draft_value_scatter(draft_data_with_values):
     """
     fig = px.scatter(
         draft_data_with_values.dropna(),
-        x='Draft_Position',
+        x='Pick',
         y='Fantasy_Rank',
         color='Pick_Type',
         hover_data=['Manager', 'Player', 'Season', 'Draft_Value'],
@@ -1165,7 +1165,7 @@ def create_draft_value_scatter(draft_data_with_values):
     )
     
     # Perfekte Draft Line (Draft Position = Fantasy Rank)
-    max_pos = max(draft_data_with_values['Draft_Position'].max(), 
+    max_pos = max(draft_data_with_values['Pick'].max(), 
                   draft_data_with_values['Fantasy_Rank'].max())
     fig.add_trace(
         go.Scatter(
@@ -1180,7 +1180,7 @@ def create_draft_value_scatter(draft_data_with_values):
     
     fig.update_layout(
         template='plotly_dark',
-        xaxis_title='Draft Position',
+        xaxis_title='Draft Pick',
         yaxis_title='Fantasy End Rank',
         legend_title='Pick Quality'
     )
@@ -3394,8 +3394,10 @@ def main():
             draft_data = drafts_df.copy()
             draft_data = draft_data.rename(columns={
                 'PlayerName': 'Player',
-                'pickOrder': 'Draft_Position'
             })
+            
+            # Entferne unnötige Spalten
+            draft_data = draft_data.drop(columns=['Draft_Position', 'Unnamed: 8'], errors='ignore')
             draft_data = draft_data.dropna(subset=['Season'])
             draft_data['Season'] = draft_data['Season'].astype(int)
             
