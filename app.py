@@ -1044,11 +1044,8 @@ def calculate_draft_values(draft_data, ranks_df):
     Negativ = Steal, Positiv = Bust
     """
     # Merge Draft Data mit Fantasy Rankings
-    merged_data = draft_data.merge(
-        draft_data, ranks_df, 
-        left_on=['Player', 'Season'],  # Angepasst an neue Spaltennamen
-        right_on=['Player_Name', 'Season'],   # Angepasst an neue Spaltennamen
-        how='left'
+    merged_data = calculate_draft_values(
+        draft_data, ranks_df
     )
     
     # Konvertiere Fantasy_Rank und Draft_Position zu numerischen Werten
