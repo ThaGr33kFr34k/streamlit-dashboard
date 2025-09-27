@@ -1044,9 +1044,7 @@ def calculate_draft_values(draft_data, ranks_df):
     Negativ = Steal, Positiv = Bust
     """
     # Merge Draft Data mit Fantasy Rankings
-    merged_data = calculate_draft_values(
-        draft_data, ranks_df
-    )
+    merged_data = calculate_draft_values(draft_data, ranks_df)
     
     # Konvertiere Fantasy_Rank und Draft_Position zu numerischen Werten
     merged_data['Fantasy_Rank'] = pd.to_numeric(merged_data['Fantasy_Rank'], errors='coerce')
@@ -3336,9 +3334,7 @@ def main():
             # Bereinige Saisons: Entferne NaN und konvertiere zu Integer
             clean_seasons = drafts_df['Season'].dropna().astype(int).unique()
             available_seasons = sorted(clean_seasons)
-            
-            st.info(f"🔍 Gefundene Saisons in Draft-Daten: {available_seasons}")
-            
+                        
             # Fantasy Rankings für alle Saisons laden
             all_ranks = []
             loading_progress = st.progress(0)
@@ -3425,15 +3421,52 @@ def main():
                 st.write(f"Shape: {draft_data.shape}")
                 st.write(f"Columns: {list(draft_data.columns)}")
         
-        # Daten verarbeiten
+        # Daten verarbeiten und Draft Values berechnen
         try:
-            draft_data_with_values = calculate_draft_values(draft_data, ranks_df)
+            st.info("🔄 Verknüpfe Draft-Daten mit Fantasy Rankings...")
+            
+            # Einmalig: calculate_draft_values aufrufen
+            merged_data = calculate_draft_values(draft_data, ranks_df)
+            
+            # Filtere nur Daten mit verfügbaren Fantasy Rankings
+            draft_data_with_values = merged_data.dropna(subset=['Fantasy_Rank']).copy()
+            
+            # Erfolgs-Metriken
+            total_picks = len(merged_data)
+            matched_picks = len(draft_data_with_values)
+            match_rate = (matched_picks / total_picks) * 100 if total_picks > 0 else 0
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("📊 Total Picks", f"{total_picks:,}")
+            with col2:
+                st.metric("✅ Matched Picks", f"{matched_picks:,}")
+            with col3:
+                st.metric("🎯 Match Rate", f"{match_rate:.1f}%")
+            
+            if matched_picks == 0:
+                st.warning("⚠️ Keine Übereinstimmungen gefunden!")
+                st.stop()
+            
+            # Berechne Analysen mit den bereits gefilterten Daten
             consistency_df = calculate_consistency_score(draft_data_with_values)
             hall_of_fame, hall_of_shame = get_hall_of_fame_shame(draft_data_with_values)
             
+            st.success(f"✅ Analyse abgeschlossen: {len(draft_data_with_values)} Picks analysiert")
+            
         except Exception as e:
-            st.error(f"Fehler bei der Datenverarbeitung: {e}")
-            st.info("Überprüfe die Spaltenamen und Datenformate")
+            st.error(f"❌ Fehler bei der Datenverarbeitung: {e}")
+            
+            # Debug Info
+            with st.expander("🐛 Debug Information"):
+                if 'draft_data' in locals():
+                    st.write("**Draft Data Columns:**", list(draft_data.columns))
+                    st.write("**Draft Data Shape:**", draft_data.shape)
+                
+                if 'ranks_df' in locals():
+                    st.write("**Ranks Data Columns:**", list(ranks_df.columns))
+                    st.write("**Ranks Data Shape:**", ranks_df.shape)
+            
             st.stop()
         
         # Tabs für verschiedene Analysen
