@@ -1050,6 +1050,10 @@ def calculate_draft_values(draft_data, ranks_df):
         right_on=['Player_Name', 'Season'],   # Angepasst an neue Spaltennamen
         how='left'
     )
+
+    # Konvertiere Fantasy_Rank und Draft_Position zu numerischen Werten
+    merged_data['Fantasy_Rank'] = pd.to_numeric(merged_data['Fantasy_Rank'], errors='coerce')
+    merged_data['Draft_Position'] = pd.to_numeric(merged_data['Draft_Position'], errors='coerce')
     
     # Draft Value berechnen
     merged_data['Draft_Value'] = merged_data['Draft_Position'] - merged_data['Fantasy_Rank']
