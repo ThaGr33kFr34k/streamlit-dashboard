@@ -1037,7 +1037,7 @@ def _display_season_draft(manager_drafts, year, year_col):
                 height=min(400, len(df_display) * 35 + 50)  # Dynamische Höhe
             )
 
-def calculate_draft_values(draft_data, fantasy_ranks):
+def calculate_draft_values(draft_data, ranks_df):
     """
     Berechnet Draft Value für jeden Pick
     Value = Draft Position - End Rank
@@ -1045,7 +1045,7 @@ def calculate_draft_values(draft_data, fantasy_ranks):
     """
     # Merge Draft Data mit Fantasy Rankings
     merged_data = draft_data.merge(
-        fantasy_ranks, 
+        ranks_df, 
         left_on=['Player', 'Season'],  # Angepasst an neue Spaltennamen
         right_on=['Player_Name', 'Season'],   # Angepasst an neue Spaltennamen
         how='left'
@@ -3430,7 +3430,7 @@ def main():
         
         # Daten verarbeiten
         try:
-            draft_data_with_values = calculate_draft_values(draft_data, fantasy_ranks)
+            draft_data_with_values = calculate_draft_values(draft_data, ranks_df)
             consistency_df = calculate_consistency_score(draft_data_with_values)
             hall_of_fame, hall_of_shame = get_hall_of_fame_shame(draft_data_with_values)
             
