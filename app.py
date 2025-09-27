@@ -3597,46 +3597,56 @@ def main():
                         )
                 
                 # Consistency Tabelle
-                st.markdown("#### 📋 Manager Consistency Rankings")
+                st.markdown("#### 📋 Manager Consistency Rankings (Min. 30 Picks)")
+            
+                # Filtere Manager mit mindestens 30 Picks
+                qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30]
                 
-                def style_consistency(df):
-                    def color_score(val):
-                        if isinstance(val, (int, float)):
-                            if val > 50:
-                                return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
-                            elif val > 0:
-                                return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
-                            elif val > -25:
-                                return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
-                            else:
-                                return 'background-color: rgba(244,67,54,0.2); color: #f44336;'
-                        return ''
+                if len(qualified_managers) == 0:
+                    st.warning("⚠️ Keine Manager mit mindestens 30 Picks gefunden!")
+                    st.info("Reduziere das Minimum oder warte auf mehr Daten")
+                else:
+                    def style_consistency(df):
+                        def color_score(val):
+                            if isinstance(val, (int, float)):
+                                if val > 50:
+                                    return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
+                                elif val > 0:
+                                    return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
+                                elif val > -25:
+                                    return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
+                                else:
+                                    return 'background-color: rgba(244,67,54,0.2); color: #f44336;'
+                            return ''
+                        
+                        return df.style.applymap(color_score, subset=['Consistency_Score'])
                     
-                    return df.style.applymap(color_score, subset=['Consistency_Score'])
+                    styled_consistency = style_consistency(qualified_managers)
+                    st.dataframe(
+                        styled_consistency,
+                        column_config={
+                            "Manager": "👨‍💼 Manager",
+                            "Consistency_Score": st.column_config.NumberColumn(
+                                "🎯 Score", 
+                                format="%.1f",
+                                help="Höher = besser. Basiert auf rundenbasierten Erwartungen"
+                            ),
+                            "Total_Picks": st.column_config.NumberColumn("📊 Total Picks", format="%d"),
+                            "Good_Picks": st.column_config.NumberColumn("🟢 Good Picks", format="%d"),
+                            "Bad_Picks": st.column_config.NumberColumn("🔴 Bad Picks", format="%d")
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                    
+                    st.info(f"📊 Qualifizierte Manager: {len(qualified_managers)} von {len(consistency_df_sorted)}")
                 
-                styled_consistency = style_consistency(consistency_df_sorted)
-                st.dataframe(
-                    styled_consistency,
-                    column_config={
-                        "Manager": "👨‍💼 Manager",
-                        "Consistency_Score": st.column_config.NumberColumn(
-                            "🎯 Score", 
-                            format="%.1f",
-                            help="Höher = besser. Basiert auf rundenbasierten Erwartungen"
-                        ),
-                        "Total_Picks": st.column_config.NumberColumn("📊 Total Picks", format="%d"),
-                        "Good_Picks": st.column_config.NumberColumn("🟢 Good Picks", format="%d"),
-                        "Bad_Picks": st.column_config.NumberColumn("🔴 Bad Picks", format="%d")
-                    },
-                    hide_index=True,
-                    use_container_width=True
-                )
-                
-                # Radar Chart
-                if len(consistency_df_sorted) >= 3:
-                    st.markdown("#### 🕸️ Top Manager Consistency Radar")
-                    radar_fig = create_consistency_radar(consistency_df_sorted)
+                # Radar Chart nur für qualifizierte Manager
+                if len(qualified_managers) >= 3:
+                    st.markdown("#### 🕸️ Top Manager Consistency Radar (Min. 30 Picks)")
+                    radar_fig = create_consistency_radar(qualified_managers)
                     st.plotly_chart(radar_fig, use_container_width=True)
+        
             
             else:
                 st.info("Keine Consistency-Daten verfügbar")
