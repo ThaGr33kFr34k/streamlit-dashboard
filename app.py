@@ -3498,9 +3498,9 @@ def main():
                     def style_hall_of_fame(df):
                         def color_values(val):
                             if isinstance(val, (int, float)):
-                                if val < -20:  # Sehr guter Steal
+                                if val > 50:  # Sehr guter Steal
                                     return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
-                                elif val < -10:
+                                elif val > 20:
                                     return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
                             return ''
                         
@@ -3511,7 +3511,7 @@ def main():
                         styled_hof,
                         column_config={
                             "Manager": "👨‍💼 Manager",
-                            "Player": "🏈 Player", 
+                            "Player": "🏀 Player", 
                             "Season": "📅 Season",
                             "Pick": st.column_config.NumberColumn("📍 Pick", format="%d"),
                             "Fantasy_Rank": st.column_config.NumberColumn("🏆 End Rank", format="%d"),
@@ -3533,9 +3533,9 @@ def main():
                     def style_hall_of_shame(df):
                         def color_values(val):
                             if isinstance(val, (int, float)):
-                                if val > 50:  # Sehr schlechter Bust
+                                if val < -20:  # Sehr schlechter Bust
                                     return 'background-color: rgba(244,67,54,0.3); color: #f44336; font-weight: bold;'
-                                elif val > 20:
+                                elif val < -10:
                                     return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
                             return ''
                         
@@ -3546,7 +3546,7 @@ def main():
                         styled_hos,
                         column_config={
                             "Manager": "👨‍💼 Manager",
-                            "Player": "🏈 Player",
+                            "Player": "🏀 Player",
                             "Season": "📅 Season", 
                             "Pick": st.column_config.NumberColumn("📍 Pick", format="%d"),
                             "Fantasy_Rank": st.column_config.NumberColumn("📉 End Rank", format="%d"),
