@@ -3481,7 +3481,7 @@ def main():
                             "Manager": "👨‍💼 Manager",
                             "Player": "🏈 Player", 
                             "Season": "📅 Season",
-                            "Draft_Position": st.column_config.NumberColumn("📍 Pick", format="%d"),
+                            "Pick": st.column_config.NumberColumn("📍 Pick", format="%d"),
                             "Fantasy_Rank": st.column_config.NumberColumn("🏆 End Rank", format="%d"),
                             "Draft_Value": st.column_config.NumberColumn("💎 Value", format="%+d", help="Negativ = Steal"),
                             "Round": st.column_config.NumberColumn("🔄 Round", format="%d")
@@ -3516,7 +3516,7 @@ def main():
                             "Manager": "👨‍💼 Manager",
                             "Player": "🏈 Player",
                             "Season": "📅 Season", 
-                            "Draft_Position": st.column_config.NumberColumn("📍 Pick", format="%d"),
+                            "Pick": st.column_config.NumberColumn("📍 Pick", format="%d"),
                             "Fantasy_Rank": st.column_config.NumberColumn("📉 End Rank", format="%d"),
                             "Draft_Value": st.column_config.NumberColumn("💀 Value", format="%+d", help="Positiv = Bust"),
                             "Round": st.column_config.NumberColumn("🔄 Round", format="%d")
