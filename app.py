@@ -3695,7 +3695,7 @@ def main():
             
             # Matching-Analyse
             st.markdown("##### 🔗 Name Matching Analysis")
-            if not merged_data.empty:
+            if 'merged_data' in locals() and not merged_data.empty:                
                 total_picks = len(merged_data)
                 matched_picks = len(merged_data.dropna(subset=['Fantasy_Rank']))
                 match_rate = (matched_picks / total_picks) * 100
