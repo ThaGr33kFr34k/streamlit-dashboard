@@ -1037,7 +1037,7 @@ def _display_season_draft(manager_drafts, year, year_col):
                 height=min(400, len(df_display) * 35 + 50)  # Dynamische Höhe
             )
 
-def calculate_draft_values(draft_data, ranks_df):
+def calculate_draft_values(draft_data, fantasy_ranks):
     """
     Berechnet Draft Value für jeden Pick
     Value = Draft Position - End Rank
@@ -1045,17 +1045,17 @@ def calculate_draft_values(draft_data, ranks_df):
     """
     # Merge Draft Data mit Fantasy Rankings
     merged_data = draft_data.merge(
-        ranks_df, 
-        left_on=['Player', 'Season'],  
-        right_on=['Player_Name', 'Season'],   
+        fantasy_ranks, 
+        left_on=['Player', 'Season'],  # Angepasst an neue Spaltennamen
+        right_on=['Player_Name', 'Season'],   # Angepasst an neue Spaltennamen
         how='left'
     )
-
-    # Konvertiere Fantasy_Rank und Pick zu numerischen Werten
-    merged_data['Fantasy_Rank'] = pd.to_numeric(merged_data['Fantasy_Rank'], errors='coerce')
-    merged_data['Pick'] = pd.to_numeric(merged_data['Pick'], errors='coerce')
     
-    # Draft Value berechnen
+    # Konvertiere Fantasy_Rank und Draft_Position zu numerischen Werten
+    merged_data['Fantasy_Rank'] = pd.to_numeric(merged_data['Fantasy_Rank'], errors='coerce')
+    merged_data['Draft_Position'] = pd.to_numeric(merged_data['Draft_Position'], errors='coerce')
+    
+    # Draft Value berechnen (nur bei gültigen numerischen Werten)
     merged_data['Draft_Value'] = merged_data['Draft_Position'] - merged_data['Fantasy_Rank']
     
     # Kategorisierung
@@ -1066,8 +1066,7 @@ def calculate_draft_values(draft_data, ranks_df):
     )
     
     return merged_data
-    
-# === EXPECTED RANK SYSTEM ===
+
 def get_expected_rank_by_round(round_num, total_teams=12):
     """
     Definiert erwartete Fantasy-Ranks basierend auf Draft-Runde
@@ -1126,7 +1125,6 @@ def calculate_consistency_score(draft_data_with_values):
     
     return pd.DataFrame(consistency_scores)
 
-# === HALL OF FAME & SHAME FUNKTIONEN ===
 def get_hall_of_fame_shame(draft_data_with_values, n_top=10):
     """
     Erstellt Hall of Fame (beste Steals) und Hall of Shame (größte Busts)
@@ -1145,18 +1143,17 @@ def get_hall_of_fame_shame(draft_data_with_values, n_top=10):
     
     return hall_of_fame, hall_of_shame
 
-# === VISUALISIERUNGEN ===
 def create_draft_value_scatter(draft_data_with_values):
     """
-    Erstellt Scatter Plot: Draft Position vs Fantasy Rank
+    Erstellt Scatter Plot: Pick vs Fantasy Rank
     """
     fig = px.scatter(
         draft_data_with_values.dropna(),
-        x='Pick',
+        x='Pick',  # Geändert von Draft_Position zu Pick
         y='Fantasy_Rank',
         color='Pick_Type',
         hover_data=['Manager', 'Player', 'Season', 'Draft_Value'],
-        title="🎯 Draft Position vs Fantasy End Rank",
+        title="🎯 Draft Pick vs Fantasy End Rank",
         color_discrete_map={
             'Steal': '#4CAF50',
             'Average': '#FFC107',
@@ -1164,7 +1161,7 @@ def create_draft_value_scatter(draft_data_with_values):
         }
     )
     
-    # Perfekte Draft Line (Draft Position = Fantasy Rank)
+    # Perfekte Draft Line (Pick = Fantasy Rank)
     max_pos = max(draft_data_with_values['Pick'].max(), 
                   draft_data_with_values['Fantasy_Rank'].max())
     fig.add_trace(
@@ -1180,7 +1177,7 @@ def create_draft_value_scatter(draft_data_with_values):
     
     fig.update_layout(
         template='plotly_dark',
-        xaxis_title='Draft Pick',
+        xaxis_title='Draft Pick',  # Geändert
         yaxis_title='Fantasy End Rank',
         legend_title='Pick Quality'
     )
@@ -3315,7 +3312,8 @@ def main():
         else:
             st.info("Keine Trades für die ausgewählte Saison gefunden.")
 
-    elif st.session_state.analysis_type == "Fantasy Rankings":
+    elif st.session_state.analysis_type == "🏈 Draft Analysis":
+        st.title("🏈 Draft Analysis Dashboard")
         st.markdown("---")
         
         # Daten laden - HART KODIERTE URLS UND GIDS
@@ -3393,9 +3391,9 @@ def main():
             # Draft-Daten vorbereiten
             draft_data = drafts_df.copy()
             draft_data = draft_data.rename(columns={
-                'PlayerName': 'Player',
+                'PlayerName': 'Player'  # Nur PlayerName umbenennen
+                # Pick bleibt Pick - wird NICHT zu Draft_Position umbenannt!
             })
-            
             # Entferne unnötige Spalten
             draft_data = draft_data.drop(columns=['Draft_Position', 'Unnamed: 8'], errors='ignore')
             draft_data = draft_data.dropna(subset=['Season'])
@@ -3433,7 +3431,7 @@ def main():
         
         # Daten verarbeiten
         try:
-            draft_data_with_values = calculate_draft_values(draft_data, ranks_df)
+            draft_data_with_values = calculate_draft_values(draft_data, fantasy_ranks)
             consistency_df = calculate_consistency_score(draft_data_with_values)
             hall_of_fame, hall_of_shame = get_hall_of_fame_shame(draft_data_with_values)
             
@@ -3697,7 +3695,7 @@ def main():
             
             # Matching-Analyse
             st.markdown("##### 🔗 Name Matching Analysis")
-            if 'merged_data' in locals() and not merged_data.empty:                
+            if 'merged_data' in locals() and not merged_data.empty:
                 total_picks = len(merged_data)
                 matched_picks = len(merged_data.dropna(subset=['Fantasy_Rank']))
                 match_rate = (matched_picks / total_picks) * 100
@@ -3716,9 +3714,11 @@ def main():
                     st.markdown("##### ❌ Sample Unmatched Players")
                     sample_unmatched = unmatched['Player'].value_counts().head(10)
                     st.write(sample_unmatched)
+            else:
+                st.info("Keine Matching-Daten verfügbar")
             
             # Daten-Stats
-            if not draft_data_with_values.empty:
+            if 'draft_data_with_values' in locals() and not draft_data_with_values.empty:
                 st.markdown("##### 📈 Dataset Statistics")
                 st.write(f"**Total Draft Picks analyzed:** {len(draft_data_with_values):,}")
                 st.write(f"**Unique Managers:** {draft_data_with_values['Manager'].nunique()}")
