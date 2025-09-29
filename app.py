@@ -3639,7 +3639,7 @@ def main():
                         # Sortiert nach Total Draft Value
                         df_value = qualified_managers.sort_values(
                             'Total_Draft_Value', 
-                            ascending=false
+                            ascending=true
                         )
                         
                         # Nur relevante Spalten für diese Tabelle
