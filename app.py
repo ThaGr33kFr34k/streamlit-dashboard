@@ -1191,7 +1191,7 @@ def create_consistency_radar(consistency_df):
         fig.add_trace(go.Scatterpolar(
             r=[manager['Draft_Consistency'], manager['Good_Picks']*10, 
                100-manager['Bad_Picks']*5, manager['Total_Picks']],
-            theta=['Draft Consistency %', 'Good Picks (x10)', 'Avoid Busts', 'Experience'],
+            theta=['Draft Consistency', 'Good Picks (x10)', 'Avoid Busts', 'Experience'],
             fill='toself',
             name=manager['Manager']
         ))
@@ -3561,7 +3561,7 @@ def main():
             
             if not consistency_df.empty:
                 # Sortiere nach Consistency Score
-                consistency_df_sorted = consistency_df.sort_values('Consistency_Score', ascending=False)
+                consistency_df_sorted = consistency_df.sort_values('Draft_Consistency', ascending=False) 
                 
                 # Top Manager Metrics
                 col1, col2, col3 = st.columns(3)
@@ -3572,15 +3572,15 @@ def main():
                         st.metric(
                             "🥇 Beste Consistency",
                             f"{top_manager['Manager']}",
-                            f"{top_manager['Consistency_Score']:.1f} Score"
+                            f"{top_manager['Draft_Consistency']:.1f} Score"
                         )
                     
                     with col2:
-                        avg_score = consistency_df_sorted['Consistency_Score'].mean()
+                        avg_score = consistency_df_sorted['Draft_Consistency'].mean()
                         st.metric(
                             "📊 Liga Durchschnitt", 
                             f"{avg_score:.1f}",
-                            "Consistency Score"
+                            "Draft_Consistency Score"
                         )
                     
                     with col3:
@@ -3616,7 +3616,7 @@ def main():
                             if not isinstance(val, (int, float)):
                                 return ''
                             
-                            if col_name == 'Consistency_Score':
+                            if col_name == 'Draft_Consistency':
                                 # Höher = konsistenter (grün)
                                 if val > 75:
                                     return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
@@ -3645,7 +3645,7 @@ def main():
                             return ''
                         
                         styled = df.style
-                        styled = styled.applymap(lambda x: color_consistency(x, 'Consistency_Score'), subset=['Consistency_Score'])
+                        styled = styled.applymap(lambda x: color_consistency(x, 'Draft_Consistency'), subset=['Draft_Consistency'])
                         styled = styled.applymap(lambda x: color_consistency(x, 'Draft_Quality'), subset=['Draft_Quality'])
                         return styled
                     
@@ -3654,7 +3654,7 @@ def main():
                         styled_consistency,
                         column_config={
                             "Manager": "👨‍💼 Manager",
-                            "Consistency_Score": st.column_config.NumberColumn(
+                            "Draft_Consistency": st.column_config.NumberColumn(
                                 "🎯 Consistency", 
                                 format="%.1f",
                                 help="Wie konsistent drafted wird (0-100). Höher = weniger Schwankung"
@@ -3683,7 +3683,7 @@ def main():
                     # Erklärung
                     with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
                         st.markdown("""
-                        **🎯 Consistency Score (0-100):**
+                        **🎯 Draft_Consistency (0-100):**
                         - Basiert auf der Standardabweichung der Draft Values
                         - **Höher = konsistenter** (weniger extreme Ausreißer)
                         - 100 = perfekt konsistent, alle Picks gleich gut/schlecht
