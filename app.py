@@ -3634,7 +3634,7 @@ def main():
         
                     # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
                     with table_col_right:
-                        st.markdown("##### 💎 Kumulierter Draft Value ")
+                        st.markdown("##### 💎 Kumulierter Draft Value")
                         
                         # Sortiert nach Total Draft Value
                         df_value = qualified_managers.sort_values(
