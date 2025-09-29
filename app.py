@@ -3609,7 +3609,7 @@ def main():
                     )
                     
                     if sort_by == "Draft Quality (beste Drafts)":
-                        qualified_managers = qualified_managers.sort_values('Draft_Quality', ascending=True)  # Negativ = besser
+                        qualified_managers = qualified_managers.sort_values('Consistency_Score', ascending=True)  # Negativ = besser
                     
                     def style_consistency(df):
                         def color_consistency(val, col_name):
