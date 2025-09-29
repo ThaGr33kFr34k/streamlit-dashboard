@@ -3310,13 +3310,16 @@ def main():
     elif st.session_state.analysis_type == "Fantasy Rankings":
         st.markdown("---")
         
-        # Daten laden - HART KODIERTE URLS UND GIDS
-        try:
+        @st.cache_data(ttl=3600)  # Cache für 1 Stunde (3600 Sekunden)
+        def load_all_draft_data():
+            """
+            Lädt alle Draft- und Rankings-Daten mit Caching
+            """
             # Draft-Daten laden
             drafts_url = "https://docs.google.com/spreadsheets/d/1xREpOPu-_5QTUzxX9I6mdqdO8xmI3Yz-uBjRBCRnyuQ/export?format=csv&gid=2084485780"
             drafts_df = pd.read_csv(drafts_url)
             
-            # GID-Mapping für Fantasy Rankings (hart kodiert)
+            # GID-Mapping für Fantasy Rankings
             gid_mapping = {
                 2015: "535243575",
                 2016: "539681520", 
@@ -3331,78 +3334,57 @@ def main():
                 2025: "773818060"
             }
             
-            # Bereinige Saisons: Entferne NaN und konvertiere zu Integer
+            # Bereinige Saisons
             clean_seasons = drafts_df['Season'].dropna().astype(int).unique()
             available_seasons = sorted(clean_seasons)
-                        
+            
             # Fantasy Rankings für alle Saisons laden
             all_ranks = []
-            loading_progress = st.progress(0)
-            loading_text = st.empty()
             
-            success_count = 0
-            for i, season in enumerate(available_seasons):
+            for season in available_seasons:
                 if season in gid_mapping:
                     try:
-                        loading_text.text(f"Lade Fantasy Rankings für Saison {season} (GID: {gid_mapping[season]})...")
-                        
-                        # URL mit spezifischer GID
                         season_url = f"https://docs.google.com/spreadsheets/d/e/2PACX-1vRlCbDaiCHyKlGXaYQiU2Wnojwr-CzUfvpUzW1TlI3GTsgqyj-3yOFi0A0Z2gEGSQ/pub?gid={gid_mapping[season]}&single=true&output=csv"
-                        
                         season_ranks = pd.read_csv(season_url)
                         season_ranks.columns = season_ranks.columns.str.strip()
                         season_ranks = season_ranks.rename(columns={'#': 'Fantasy_Rank', 'NAME': 'Player_Name'})
                         season_ranks['Season'] = int(season)
-                        
                         all_ranks.append(season_ranks)
-                        st.success(f"✅ Saison {season} (GID: {gid_mapping[season]}): {len(season_ranks)} Rankings geladen")
-                        success_count += 1
-                        
-                    except Exception as e:
-                        st.error(f"❌ Saison {season} (GID: {gid_mapping[season]}) fehlgeschlagen: {e}")
-                        st.info(f"🔗 Versuchte URL: ...gid={gid_mapping[season]}...")
-                else:
-                    st.warning(f"⚠️ Keine GID für Saison {season} verfügbar")
-                
-                loading_progress.progress((i + 1) / len(available_seasons))
+                    except:
+                        pass  # Silently skip failed seasons
             
-            loading_text.empty()
-            loading_progress.empty()
-            
-            if success_count == 0:
-                st.error("❌ Keine Fantasy Rankings konnten geladen werden!")
-                st.markdown("**Mögliche Probleme:**")
-                st.markdown("- GIDs sind falsch")
-                st.markdown("- Sheet ist nicht öffentlich")
-                st.markdown("- Spalten haben andere Namen")
-                st.stop()
-            
-            # Alle Rankings kombinieren
+            # Kombiniere alle Rankings
             ranks_df = pd.concat(all_ranks, ignore_index=True)
             
             # Draft-Daten vorbereiten
             draft_data = drafts_df.copy()
-            draft_data = draft_data.rename(columns={
-                'PlayerName': 'Player'  # Nur PlayerName umbenennen
-                # Pick bleibt Pick - wird NICHT zu Draft_Position umbenannt!
-            })
-            # Entferne unnötige Spalten
+            draft_data = draft_data.rename(columns={'PlayerName': 'Player'})
             draft_data = draft_data.drop(columns=['Draft_Position', 'Unnamed: 8'], errors='ignore')
             draft_data = draft_data.dropna(subset=['Season'])
             draft_data['Season'] = draft_data['Season'].astype(int)
             
-            st.success(f"🎉 Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {success_count} Saisons, {len(draft_data)} Draft Picks")
+            return draft_data, ranks_df, len(all_ranks)
+        
+        try:
+            # Lade Daten (wird gecacht)
+            with st.spinner("🔄 Lade Draft-Daten (wird gecacht für schnellere Wiederholung)..."):
+                draft_data, ranks_df, success_count = load_all_draft_data()
+            
+            st.success(f"✅ Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {success_count} Saisons, {len(draft_data)} Draft Picks")
+            
+            # Cache-Info für User
+            if st.checkbox("ℹ️ Cache-Info anzeigen", value=False):
+                st.info("📦 Daten sind für 1 Stunde gecacht. Bei Änderungen im Google Sheet verwende den Button unten zum manuellen Refresh.")
+                if st.button("🔄 Cache leeren & neu laden"):
+                    st.cache_data.clear()
+                    st.rerun()
             
         except Exception as e:
             st.error(f"❌ Fehler beim Laden der Daten: {e}")
             
             # Debug Info bei Fehlern
             with st.expander("🐛 Debug Information"):
-                st.write("**Drafts URL:**", drafts_url)
-                st.write("**GID Mapping:**", gid_mapping)
-                if 'drafts_df' in locals():
-                    st.write("**Draft Columns:**", list(drafts_df.columns))
-                    st.write("**Draft Shape:**", drafts_df.shape)
+                st.write("**Fehlerdetails:**", str(e))
             st.stop()
         
         # Debug: Datenvorschau
