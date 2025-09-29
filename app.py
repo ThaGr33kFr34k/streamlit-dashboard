@@ -1183,15 +1183,15 @@ def create_consistency_radar(consistency_df):
     """
     Erstellt Radar Chart für Draft Consistency
     """
-    top_managers = consistency_df.nlargest(8, 'Consistency_Score')
+    top_managers = consistency_df.nlargest(8, 'Draft_Consistency')
     
     fig = go.Figure()
     
     for _, manager in top_managers.iterrows():
         fig.add_trace(go.Scatterpolar(
-            r=[manager['Consistency_Score'], manager['Good_Picks']*10, 
+            r=[manager['Draft_Consistency'], manager['Good_Picks']*10, 
                100-manager['Bad_Picks']*5, manager['Total_Picks']],
-            theta=['Consistency Score', 'Good Picks (x10)', 'Avoid Busts', 'Experience'],
+            theta=['Draft Consistency %', 'Good Picks (x10)', 'Avoid Busts', 'Experience'],
             fill='toself',
             name=manager['Manager']
         ))
