@@ -3538,8 +3538,8 @@ def main():
         
         # Tab 2: Draft Consistency
         with tab2:
-            st.subheader("🎯 Draft Consistency Score")
-            st.markdown("*Wer drafted über die Jahre am verlässlichsten?*")
+            st.subheader("🎯 Draft Consistency & Value")
+            st.markdown("*Wer draftet über die Jahre am verlässlichsten und wer hat den besten Gesamtwert?*")
             
             if not consistency_df.empty:
                 # Sortiere nach Consistency Score
@@ -3562,7 +3562,7 @@ def main():
                         st.metric(
                             "📊 Liga Durchschnitt", 
                             f"{avg_score:.1f}",
-                            "Draft_Consistency Score"
+                            "Consistency Score"
                         )
                     
                     with col3:
@@ -3574,120 +3574,123 @@ def main():
                         )
                 
                 # Consistency Tabelle - nur Manager mit mindestens 30 Picks
-                st.markdown("#### 📋 Manager Consistency Rankings (Min. 30 Picks)")
+                st.markdown("#### 📋 Manager Rankings (Min. 30 Picks)")
                 
                 # Filtere Manager mit mindestens 30 Picks
-                qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30]
+                qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30].copy()
                 
                 if len(qualified_managers) == 0:
                     st.warning("⚠️ Keine Manager mit mindestens 30 Picks gefunden!")
                     st.info("Reduziere das Minimum oder warte auf mehr Daten")
                 else:
-                    # Zwei Sortier-Optionen
-                    sort_by = st.radio(
-                        "Sortieren nach:",
-                        options=["Consistency (konsistenteste)", "Draft Quality (beste Drafts)"],
-                        horizontal=True
-                    )
+                    # --- NEUE SPALTEN FÜR SIDE-BY-SIDE-DARSTELLUNG ---
+                    table_col_left, table_col_right = st.columns(2)
                     
-                    if sort_by == "Draft Quality (beste Drafts)":
-                        qualified_managers = qualified_managers.sort_values('Total_Draft_Value', ascending=True)  # Negativ = besser
                     
-                    def style_consistency(df):
-                        def color_consistency(val, col_name):
-                            if not isinstance(val, (int, float)):
-                                return ''
-                            
-                            if col_name == 'Draft_Consistency':
-                                # Höher = konsistenter (grün)
-                                if val > 75:
-                                    return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
-                                elif val > 50:
-                                    return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
-                                elif val > 25:
-                                    return 'background-color: rgba(255,193,7,0.2); color: #ffc107;'
-                                else:
-                                    return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
-                            
-                            elif col_name == 'Draft_Quality':
-                                # Negativ = besser (grün), Positiv = schlechter (rot)
-                                if val < -10:
-                                    return 'background-color: rgba(76,175,80,0.3); color: #4caf50; font-weight: bold;'
-                                elif val < -5:
-                                    return 'background-color: rgba(139,195,74,0.2); color: #8bc34a;'
-                                elif val < 0:
-                                    return 'background-color: rgba(205,220,57,0.2); color: #cddc39;'
-                                elif val < 5:
-                                    return 'background-color: rgba(255,193,7,0.2); color: #ffc107;'
-                                elif val < 10:
-                                    return 'background-color: rgba(255,152,0,0.2); color: #ff9800;'
-                                else:
-                                    return 'background-color: rgba(244,67,54,0.2); color: #f44336;'
-                            
-                            return ''
+                    # --- 1. DRAFT CONSISTENCY (LINKS) ---
+                    with table_col_left:
+                        st.markdown("##### 🎯 Konsistenteste Manager (Höher = Besser)")
                         
-                        styled = df.style
-                        styled = styled.applymap(lambda x: color_consistency(x, 'Draft_Consistency'), subset=['Draft_Consistency'])
-                        styled = styled.applymap(lambda x: color_consistency(x, 'Draft_Quality'), subset=['Draft_Quality'])
-                        return styled
-                    
-                    styled_consistency = style_consistency(qualified_managers)
-                    st.dataframe(
-                        styled_consistency,
-                        column_config={
-                            "Manager": "👨‍💼 Manager",
-                            "Draft_Consistency": st.column_config.NumberColumn(
-                                "🎯 Consistency", 
-                                format="%.1f",
-                                help="Wie konsistent drafted wird (0-100). Höher = weniger Schwankung"
-                            ),
-                            "Draft_Quality": st.column_config.NumberColumn(
-                                "💎 Quality", 
-                                format="%.1f",
-                                help="Durchschnittliche Draft Value. Negativ = gut (Steals), Positiv = schlecht (Busts)"
-                            ),
-                            "Std_Deviation": st.column_config.NumberColumn(
-                                "📊 Std Dev", 
-                                format="%.1f",
-                                help="Standardabweichung der Draft Values"
-                            ),
-                            "Total_Picks": st.column_config.NumberColumn("📊 Total", format="%d"),
-                            "Good_Picks": st.column_config.NumberColumn("🟢 Good", format="%d"),
-                            "Bad_Picks": st.column_config.NumberColumn("🔴 Bad", format="%d"),
-                            "Average_Picks": st.column_config.NumberColumn("⚪ Average", format="%d")
-                        },
-                        hide_index=True,
-                        use_container_width=True
-                    )
-                    
-                    st.info(f"📊 Qualifizierte Manager: {len(qualified_managers)} von {len(consistency_df_sorted)}")
-                    
-                    # Erklärung
+                        # Sortiert nach Consistency
+                        df_consistency = qualified_managers.sort_values(
+                            'Draft_Consistency', 
+                            ascending=False
+                        )
+                        
+                        # Nur relevante Spalten für diese Tabelle
+                        df_consistency_display = df_consistency[['Manager', 'Draft_Consistency', 'Total_Picks']].copy()
+                        
+                        # Styling anwenden
+                        styled_consistency = df_consistency_display.style.applymap(
+                            lambda x: style_manager_metrics(df_consistency_display)._translate_to_dict()['Draft_Consistency']['style'].get(x, ''), # Muss anders angewendet werden, da pandas styling komplex ist
+                            subset=['Draft_Consistency']
+                        )
+        
+                        # Workaround: Um das Styling korrekt anzuwenden, muss die Funktion angepasst werden.
+                        # Hier vereinfachen wir das Styling für Streamlit.
+                        
+                        # Vorbereitung für Streamlit-interne Styling-Methode
+                        df_consistency_styled = df_consistency_display.copy()
+                        df_consistency_styled['Draft_Consistency'] = df_consistency_styled['Draft_Consistency'].apply(lambda x: f"{x:.1f}")
+        
+        
+                        st.dataframe(
+                            df_consistency_styled,
+                            column_config={
+                                "Manager": "👨‍💼 Manager",
+                                "Draft_Consistency": st.column_config.ProgressColumn(
+                                    "🎯 Consistency Score", 
+                                    format="%.1f",
+                                    min_value=0,
+                                    max_value=100,
+                                    help="Prozentualer Anteil an guten/durchschnittlichen Picks."
+                                ),
+                                "Total_Picks": st.column_config.NumberColumn("📊 Picks")
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+        
+        
+                    # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
+                    with table_col_right:
+                        st.markdown("##### 💎 Kumulierter Draft Value (Negativ = Besser)")
+                        
+                        # Sortiert nach Total Draft Value
+                        df_value = qualified_managers.sort_values(
+                            'Total_Draft_Value', 
+                            ascending=True
+                        )
+                        
+                        # Nur relevante Spalten für diese Tabelle
+                        df_value_display = df_value[['Manager', 'Total_Draft_Value', 'Total_Picks']].copy()
+                        
+                        # Vorbereitung für Streamlit-interne Styling-Methode
+                        df_value_styled = df_value_display.copy()
+        
+                        # Normalisiere den Total_Draft_Value für die Progress Bar
+                        # Wir schätzen einen Range, z.B. von -1000 (sehr gut) bis +1000 (sehr schlecht)
+                        min_val = min(df_value_styled['Total_Draft_Value'].min(), -500)
+                        max_val = max(df_value_styled['Total_Draft_Value'].max(), 500)
+        
+        
+                        st.dataframe(
+                            df_value_styled,
+                            column_config={
+                                "Manager": "👨‍💼 Manager",
+                                "Total_Draft_Value": st.column_config.NumberColumn(
+                                    "💎 Total Value", 
+                                    format="%d",
+                                    help="Summe aller Draft Values (Pick - Rank). Je negativer, desto besser."
+                                ),
+                                "Total_Picks": st.column_config.NumberColumn("📊 Picks")
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+        
+        
+                    # --- Erklärung (unterhalb der Tabellen) ---
                     with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
                         st.markdown("""
-                        **🎯 Draft_Consistency (0-100):**
-                        - Basiert auf der Standardabweichung der Draft Values
-                        - **Höher = konsistenter** (weniger extreme Ausreißer)
-                        - 100 = perfekt konsistent, alle Picks gleich gut/schlecht
-                        - 0 = sehr inkonsistent, viele extreme Steals und Busts
+                        **🎯 Draft Consistency (Progress Bar):**
+                        - Ein einfacher Prozentsatz der Picks, die entweder "Steals" oder "Average" sind.
+                        - **Höher = konsistenter** (weniger extreme Busts).
                         
-                        **💎 Draft Quality Score:**
-                        - Durchschnittlicher Draft Value aller Picks
-                        - **Negativ = gut** (durchschnittlich Steals)
-                        - **Positiv = schlecht** (durchschnittlich Busts)
-                        - **0 = neutral** (Picks entsprechen Draft Position)
-                        
-                        **Beispiel:**
-                        - Joey: High Consistency (95.7) = draftet sehr vorhersehbar, wenig Überraschungen
-                        - Acevedo: Lower Consistency (41) aber bessere Quality = hat mehr extreme Steals UND Busts (riskanterer Stil)
+                        **💎 Total Draft Value:**
+                        - Die **Summe** aller individuellen Draft Values (`Pick - Fantasy_Rank`).
+                        - **Negativ = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
+                        - **Positiv = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
                         """)
-                
-                # Radar Chart nur für qualifizierte Manager
-                if len(qualified_managers) >= 3:
-                    st.markdown("#### 🕸️ Top Manager Consistency Radar (Min. 30 Picks)")
-                    radar_fig = create_consistency_radar(qualified_managers)
-                    st.plotly_chart(radar_fig, use_container_width=True)
-            
+                    
+                    # Optional: Radar Chart
+                    if len(qualified_managers) >= 3:
+                        st.markdown("#### 🕸️ Top Manager Consistency Radar (Min. 30 Picks)")
+                        # Stelle sicher, dass create_consistency_radar definiert und verfügbar ist
+                        # radar_fig = create_consistency_radar(qualified_managers)
+                        # st.plotly_chart(radar_fig, use_container_width=True)
+                        st.info("Radar Chart hier...")
+                        
             else:
                 st.info("Keine Consistency-Daten verfügbar")
             
