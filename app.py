@@ -1130,13 +1130,13 @@ def get_hall_of_fame_shame(draft_data_with_values, n_top=10):
     Erstellt Hall of Fame (beste Steals) und Hall of Shame (größte Busts)
     """
     # Hall of Fame - Beste Steals (negativste Values)
-    hall_of_fame = draft_data_with_values.nsmallest(n_top, 'Draft_Value')[
+    hall_of_fame = draft_data_with_values.nlargest(n_top, 'Draft_Value')[
         ['Manager', 'Player', 'Season', 'Pick', 'Fantasy_Rank', 'Draft_Value', 'Round']
     ].copy()
     hall_of_fame['Category'] = 'Hall of Fame'
     
     # Hall of Shame - Größte Busts (positivste Values)
-    hall_of_shame = draft_data_with_values.nlargest(n_top, 'Draft_Value')[
+    hall_of_shame = draft_data_with_values.nsmallest(n_top, 'Draft_Value')[
         ['Manager', 'Player', 'Season', 'Pick', 'Fantasy_Rank', 'Draft_Value', 'Round']
     ].copy()
     hall_of_shame['Category'] = 'Hall of Shame'
