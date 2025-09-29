@@ -1087,44 +1087,38 @@ def get_expected_rank_by_round(round_num, total_teams=12):
 
 def calculate_consistency_score(draft_data_with_values):
     """
-    Berechnet echte Draft Consistency pro Manager
-    Consistency = wie nah ist jemand am Durchschnitt (0 = perfekt consistent)
-    Kleinere Werte = konsistenter (weniger Schwankung)    
+    Berechnet Draft Consistency pro Manager
+    Consistency = (Good Picks + Average Picks) / Total Picks als %
+    Höher = besser (überwiegend gute/durchschnittliche Picks)
     """
     consistency_scores = []
     
     for manager in draft_data_with_values['Manager'].unique():
         manager_picks = draft_data_with_values[draft_data_with_values['Manager'] == manager]
         
-        # Berechne Draft Values (Pick - Fantasy_Rank)
-        draft_values = manager_picks['Draft_Value'].dropna()
+        total_picks = len(manager_picks)
+        good_picks = len(manager_picks[manager_picks['Draft_Value'] < -5])
+        bad_picks = len(manager_picks[manager_picks['Draft_Value'] > 20])
+        average_picks = total_picks - good_picks - bad_picks
         
-        if len(draft_values) > 0:
-            # Consistency Metriken
-            std_deviation = draft_values.std()  # Standardabweichung = Consistency Maß
-            mean_value = draft_values.mean()    # Durchschnittlicher Draft Value
-            median_value = draft_values.median()
-            
-            # Consistency Score: Je niedriger die Standardabweichung, desto konsistenter
-            # Invertiere für Anzeige: 100 - (std/max_std * 100)
-            max_std = 50  # Annahme: max Standardabweichung von 50
-            consistency_score = max(0, 100 - (std_deviation / max_std * 100))
-            
-            # Draft Quality Score (separater Wert!)
-            quality_score = mean_value  # Durchschnittlicher Draft Value (negativ = gut)
-            
-            consistency_scores.append({
-                'Manager': manager,
-                'Consistency_Score': consistency_score,  # Wie konsistent (0-100, höher = konsistenter)
-                'Draft_Quality': quality_score,          # Wie gut (negativ = besser)
-                'Std_Deviation': std_deviation,          # Rohe Standardabweichung
-                'Total_Picks': len(manager_picks),
-                'Good_Picks': len(manager_picks[manager_picks['Draft_Value'] < -5]),
-                'Bad_Picks': len(manager_picks[manager_picks['Draft_Value'] > 20]),
-                'Average_Picks': len(manager_picks[(manager_picks['Draft_Value'] >= -5) & (manager_picks['Draft_Value'] <= 20)])
-            })
+        # Simple Consistency Formula
+        consistency_percentage = ((good_picks + average_picks) / total_picks * 100) if total_picks > 0 else 0
+        
+        # Total Draft Value (Summe aller Values)
+        total_draft_value = manager_picks['Draft_Value'].sum()
+        
+        consistency_scores.append({
+            'Manager': manager,
+            'Draft_Consistency': consistency_percentage,  # % Good + Average Picks
+            'Total_Draft_Value': total_draft_value,       # Summe aller Draft Values
+            'Total_Picks': total_picks,
+            'Good_Picks': good_picks,
+            'Average_Picks': average_picks,
+            'Bad_Picks': bad_picks
+        })
     
     return pd.DataFrame(consistency_scores)
+
 
 def get_hall_of_fame_shame(draft_data_with_values, n_top=10):
     """
