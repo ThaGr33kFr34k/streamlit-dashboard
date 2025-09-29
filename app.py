@@ -3634,12 +3634,14 @@ def main():
         
                     # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
                     with table_col_right:
-                        st.markdown("##### 💎 Kumulierter Draft Value (Negativ = Besser)")
+                        # *** ÄNDERUNG 1: Titel geändert, um positive Werte als "besser" zu kennzeichnen ***
+                        st.markdown("##### 💎 Kumulierter Draft Value (Positiv = Besser)")
                         
                         # Sortiert nach Total Draft Value
+                        # *** ÄNDERUNG 2: Sortierung auf absteigend (ascending=False) geändert, damit positive/höhere Werte zuerst kommen ***
                         df_value = qualified_managers.sort_values(
                             'Total_Draft_Value', 
-                            ascending=True
+                            ascending=False
                         )
                         
                         # Nur relevante Spalten für diese Tabelle
@@ -3647,11 +3649,6 @@ def main():
                         
                         # Vorbereitung für Streamlit-interne Styling-Methode
                         df_value_styled = df_value_display.copy()
-        
-                        # Normalisiere den Total_Draft_Value für die Progress Bar
-                        # Wir schätzen einen Range, z.B. von -1000 (sehr gut) bis +1000 (sehr schlecht)
-                        min_val = min(df_value_styled['Total_Draft_Value'].min(), -500)
-                        max_val = max(df_value_styled['Total_Draft_Value'].max(), 500)
         
         
                         st.dataframe(
@@ -3661,7 +3658,8 @@ def main():
                                 "Total_Draft_Value": st.column_config.NumberColumn(
                                     "💎 Total Value", 
                                     format="%d",
-                                    help="Summe aller Draft Values (Pick - Rank). Je negativer, desto besser."
+                                    # *** ÄNDERUNG 3: Help-Text geändert ***
+                                    help="Summe aller Draft Values (Pick - Rank). Je positiver, desto besser."
                                 ),
                                 "Total_Picks": st.column_config.NumberColumn("📊 Picks")
                             },
