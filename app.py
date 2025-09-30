@@ -3411,7 +3411,6 @@ def main():
         
         # Tab 1: Hall of Fame & Shame
         with tab1:
-            st.subheader("🏆 Hall of Fame & Hall of Shame")
             
             col1, col2 = st.columns(2)
             
