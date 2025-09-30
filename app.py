@@ -3663,7 +3663,7 @@ def main():
         
             else:
             # Dies ist das "else" für if not consistency_df.empty:
-                st.info("Keine Consistency-Daten verfügbar. Überprüfen Sie, ob Manager mit genügend Picks vorhanden sind.")
+            st.info("Keine Consistency-Daten verfügbar. Überprüfen Sie, ob Manager mit genügend Picks vorhanden sind.")
             
         # Tab 3: Value Analysis
         with tab3:
