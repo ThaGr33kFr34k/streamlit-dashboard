@@ -3675,7 +3675,7 @@ def main():
                 """)
 
             else:
-            st.info("Keine Consistency-Daten verfügbar")
+                st.info("Keine Consistency-Daten verfügbar")
         
         # Tab 3: Value Analysis
         with tab3:
