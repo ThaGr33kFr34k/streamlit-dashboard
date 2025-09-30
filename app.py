@@ -3344,7 +3344,7 @@ def main():
             st.success(f"✅ Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {success_count} Saisons, {len(draft_data)} Draft Picks")
 
             
-# #            # Cache-Info für User
+         # Cache-Info für User
 # #            if st.checkbox("ℹ️ Cache-Info anzeigen", value=False):
 # #                st.info("📦 Daten sind für 1 Stunde gecacht. Bei Änderungen im Google Sheet verwende den Button unten zum manuellen Refresh.")
 # #                if st.button("🔄 Cache leeren & neu laden"):
@@ -3353,13 +3353,13 @@ def main():
             
 # #        except Exception as e:
 # #            st.error(f"❌ Fehler beim Laden der Daten: {e}")
-# #            # Debug Info bei Fehlern
+                # Debug Info bei Fehlern
 # #            with st.expander("🐛 Debug Information"):
 # #                st.write("**Fehlerdetails:**", str(e))
 # #            st.stop()
 
         
-# #        # Debug: Datenvorschau
+        # Debug: Datenvorschau
 # #        with st.expander("🔍 Datenvorschau", expanded=False):
 # #            col1, col2 = st.columns(2)
             
