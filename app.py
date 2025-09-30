@@ -3384,9 +3384,7 @@ def main():
             # Abhängigkeiten: calculate_consistency_score und get_hall_of_fame_shame müssen definiert sein
             consistency_df = calculate_consistency_score(draft_data_with_values)
             hall_of_fame, hall_of_shame = get_hall_of_fame_shame(draft_data_with_values)
-            
-            st.success(f"✅ Analyse abgeschlossen: {len(draft_data_with_values)} Picks analysiert")
-            
+                        
         except Exception as e:
             st.error(f"❌ Fehler bei der Datenverarbeitung: {e}")
             
