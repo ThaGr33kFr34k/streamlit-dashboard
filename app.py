@@ -3340,14 +3340,48 @@ def main():
             
             return draft_data, ranks_df, len(all_ranks)
         
+        try:
+            # Lade Daten (wird gecacht)
+            with st.spinner("🔄 Lade Draft-Daten (wird gecacht für schnellere Wiederholung)..."):
+                draft_data, ranks_df, success_count = load_all_draft_data()
+            
+            st.success(f"✅ Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {success_count} Saisons, {len(draft_data)} Draft Picks")
+            
+            # Cache-Info für User
+            if st.checkbox("ℹ️ Cache-Info anzeigen", value=False):
+                st.info("📦 Daten sind für 1 Stunde gecacht. Bei Änderungen im Google Sheet verwende den Button unten zum manuellen Refresh.")
+                if st.button("🔄 Cache leeren & neu laden"):
+                    st.cache_data.clear()
+                    st.rerun()
+            
+        except Exception as e:
+            st.error(f"❌ Fehler beim Laden der Daten: {e}")
             
             # Debug Info bei Fehlern
             with st.expander("🐛 Debug Information"):
                 st.write("**Fehlerdetails:**", str(e))
             st.stop()
         
+        # Debug: Datenvorschau
+        with st.expander("🔍 Datenvorschau", expanded=False):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Fantasy Rankings (ranks_df):**")
+                st.dataframe(ranks_df.head(10))
+                st.write(f"Shape: {ranks_df.shape}")
+                st.write(f"Columns: {list(ranks_df.columns)}")
+            
+            with col2:
+                st.markdown("**Draft Data (drafts_df):**")
+                st.dataframe(draft_data.head(10))
+                st.write(f"Shape: {draft_data.shape}")
+                st.write(f"Columns: {list(draft_data.columns)}")
+        
         # Daten verarbeiten und Draft Values berechnen
-        try:            
+        try:
+            st.info("🔄 Verknüpfe Draft-Daten mit Fantasy Rankings...")
+            
             # Abhängigkeit: calculate_draft_values muss definiert sein
             merged_data = calculate_draft_values(draft_data, ranks_df)
             
@@ -3403,6 +3437,7 @@ def main():
         
         # Tab 1: Hall of Fame & Shame
         with tab1:
+            st.subheader("🏆 Hall of Fame & Hall of Shame")
             
             col1, col2 = st.columns(2)
             
@@ -3489,8 +3524,36 @@ def main():
                 # Sortiere nach Consistency Score
                 consistency_df_sorted = consistency_df.sort_values('Draft_Consistency', ascending=False)
                 
+                # Top Manager Metrics
+                col1, col2, col3 = st.columns(3)
+                
+                if len(consistency_df_sorted) > 0:
+                    top_manager = consistency_df_sorted.iloc[0]
+                    with col1:
+                        st.metric(
+                            "🥇 Beste Consistency",
+                            f"{top_manager['Manager']}",
+                            f"{top_manager['Draft_Consistency']:.1f} Score"
+                        )
+                    
+                    with col2:
+                        avg_score = consistency_df_sorted['Draft_Consistency'].mean()
+                        st.metric(
+                            "📊 Liga Durchschnitt",
+                            f"{avg_score:.1f}",
+                            "Consistency Score"
+                        )
+                    
+                    with col3:
+                        total_picks = consistency_df_sorted['Total_Picks'].sum()
+                        st.metric(
+                            "📈 Analysierte Picks",
+                            f"{total_picks:,}",
+                            "Gesamt"
+                        )
                 
                 # Consistency Tabelle - nur Manager mit mindestens 30 Picks
+                st.markdown("#### 📋 Manager Rankings (Min. 30 Picks)")
                 
                 # Filtere Manager mit mindestens 30 Picks
                 qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30].copy()
