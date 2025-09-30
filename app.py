@@ -1280,7 +1280,7 @@ def main():
     if st.sidebar.button("🤝 Trades", use_container_width=True):
         st.session_state.analysis_type = "🤝 Trades"
     if st.sidebar.button("🏁 Fantasy Ranks", use_container_width=True):
-        st.session_state.analysis_type = "🏁 Fantasy Ranks"
+        st.session_state.analysis_type = "Fantasy Rankings"
         
     # Main content based on selection
     if st.session_state.analysis_type == "⛹🏽‍♂️ Team-View":
