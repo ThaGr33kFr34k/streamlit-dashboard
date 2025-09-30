@@ -3517,153 +3517,154 @@ def main():
         
         # Tab 2: Draft Consistency
         with tab2:
-            st.subheader("🎯 Draft Consistency + Value")
-            st.markdown("*Wer draftet über die Jahre am verlässlichsten und wer hat den besten Gesamtwert?*")
-            
-            if not consistency_df.empty:
-                # Sortiere nach Consistency Score
-                consistency_df_sorted = consistency_df.sort_values('Draft_Consistency', ascending=False)
-                
-                # Top Manager Metrics
-                col1, col2, col3 = st.columns(3)
-                
-                if len(consistency_df_sorted) > 0:
-                    top_manager = consistency_df_sorted.iloc[0]
-                    with col1:
-                        st.metric(
-                            "🥇 Beste Consistency",
-                            f"{top_manager['Manager']}",
-                            f"{top_manager['Draft_Consistency']:.1f} Score"
-                        )
-                    
-                    with col2:
-                        avg_score = consistency_df_sorted['Draft_Consistency'].mean()
-                        st.metric(
-                            "📊 Liga Durchschnitt",
-                            f"{avg_score:.1f}",
-                            "Consistency Score"
-                        )
-                    
-                    with col3:
-                        total_picks = consistency_df_sorted['Total_Picks'].sum()
-                        st.metric(
-                            "📈 Analysierte Picks",
-                            f"{total_picks:,}",
-                            "Gesamt"
-                        )
-                
-                # Consistency Tabelle - nur Manager mit mindestens 30 Picks
-                st.markdown("#### 📋 Manager Rankings (Min. 30 Picks)")
-                
-                # Filtere Manager mit mindestens 30 Picks
-                qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30].copy()
-                
-                if len(qualified_managers) == 0:
-                    st.warning("⚠️ Keine Manager mit mindestens 30 Picks gefunden!")
-                    st.info("Reduziere das Minimum oder warte auf mehr Daten")
-                else:
-                    # --- NEUE SPALTEN FÜR SIDE-BY-SIDE-DARSTELLUNG ---
-                    table_col_left, table_col_right = st.columns(2)
-                    
-                    
-                    # --- 1. DRAFT CONSISTENCY (LINKS) ---
-                    with table_col_left:
-                        st.markdown("##### 🎯 Konsistenteste Manager (Höher = Besser)")
-                        
-                        # Sortiert nach Consistency
-                        df_consistency = qualified_managers.sort_values(
-                            'Draft_Consistency',
-                            ascending=False
-                        )
-                        
-                        # Nur relevante Spalten für diese Tabelle
-                        df_consistency_display = df_consistency[['Manager', 'Draft_Consistency', 'Total_Picks']].copy()
-                        
-                        # Vorbereitung für Streamlit-interne Styling-Methode
-                        df_consistency_styled = df_consistency_display.copy()
-                        df_consistency_styled['Draft_Consistency'] = df_consistency_styled['Draft_Consistency'].apply(lambda x: f"{x:.1f}")
-            
-                        
-                        st.dataframe(
-                            df_consistency_styled,
-                            column_config={
-                                "Manager": "👨‍💼 Manager",
-                                "Draft_Consistency": st.column_config.ProgressColumn(
-                                    "🎯 Consistency Score",
-                                    format="%.1f",
-                                    min_value=0,
-                                    max_value=100,
-                                    help="Prozentualer Anteil an guten/durchschnittlichen Picks."
-                                ),
-                                "Total_Picks": st.column_config.NumberColumn("📊 Picks")
-                            },
-                            hide_index=True,
-                            use_container_width=True
-                        )
-            
-            
-                    # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
-                    with table_col_right:
-                        # FIX: SyntaxError behoben: Innere Anführungszeichen auf einfache Anführungszeichen geändert
-                        st.markdown("##### 💎 Kumulierter Draft Value ('Big Hits')")
-                        
-                        # Sortiert nach Total Draft Value (Positiv = Besser)
-                        df_value = qualified_managers.sort_values(
-                            'Total_Draft_Value',
-                            ascending=False
-                        )
-                        
-                        # Nur relevante Spalten für diese Tabelle
-                        df_value_display = df_value[['Manager', 'Total_Draft_Value', 'Total_Picks']].copy()
-                        
-                        # Funktion zum Hinzufügen des Emojis (Visualisierungshilfe)
-                        def add_value_icon(row):
-                            value = row['Total_Draft_Value']
-                            # Anpassung der Thresholds, um mit HoF/HoS konsistent zu sein, z.B. bei Total Value
-                            if value > 50: 
-                                return '🟢 ' # Positiv: Steals überwiegen stark
-                            elif value > -50:
-                                return '⚪ ' # Neutral: Im Durchschnitt gut/schlecht
-                            else:
-                                return '🔴 ' # Negativ: Busts überwiegen stark
-            
-                        # Neue Spalte mit dem Icon + Wert erstellen
-                        df_value_styled = df_value_display.copy()
-                        df_value_styled['Total_Value_Icon'] = df_value_styled.apply(add_value_icon, axis=1) + df_value_styled['Total_Draft_Value'].astype(int).astype(str)
-                        
-                        # Nur die neue Icon-Spalte anzeigen und die Original-Spalte ausblenden
-                        st.dataframe(
-                            df_value_styled,
-                            column_config={
-                                "Manager": "👨‍💼 Manager",
-                                "Total_Value_Icon": st.column_config.TextColumn(
-                                    "💎 Total Value",
-                                    help="Summe aller Draft Values. Grün = stark positiv, Rot = stark negativ."
-                                ),
-                                "Total_Draft_Value": None, # Originalspalte ausblenden
-                                "Total_Picks": st.column_config.NumberColumn("📊 Picks")
-                            },
-                            hide_index=True,
-                            use_container_width=True
-                        )
-            
-            
-            # --- Erklärung (unterhalb der Tabellen) ---
-            with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
-                st.markdown("""
-                **🎯 Draft Consistency (Progress Bar):**
-                - Ein einfacher Prozentsatz der Picks, die entweder "Steals" oder "Average" sind (d.h. die nicht als extreme Busts eingestuft wurden).
-                - **Höher = konsistenter** (weniger extreme Busts).
-                
-                **💎 Total Draft Value:**
-                - Die **Summe** aller individuellen Draft Values (`Fantasy_Rank - Pick` oder `Pick - Fantasy_Rank`, je nach Definition in der Funktion `calculate_draft_values`).
-                - **Positiv = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
-                - **Negativ = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
-                """)
-            # Hier endet der 'if not consistency_df.empty' Block, der das ganze Tab-Inhalt umschließt.
-            else: # Muss mit 'if not consistency_df.empty:' ausgerichtet sein.
-            # Dies ist das "else" für if not consistency_df.empty:
-            st.info("Keine Consistency-Daten verfügbar. Überprüfen Sie, ob Manager mit genügend Picks vorhanden sind.")
+            st.subheader("🎯 Draft Consistency & Value")
+            st.markdown("*Wer draftet über die Jahre am verlässlichsten und wer hat den besten Gesamtwert?*")
+            
+            if not consistency_df.empty:
+                # Sortiere nach Consistency Score
+                consistency_df_sorted = consistency_df.sort_values('Draft_Consistency', ascending=False)
+                
+                # Top Manager Metrics
+                col1, col2, col3 = st.columns(3)
+                
+                if len(consistency_df_sorted) > 0:
+                    top_manager = consistency_df_sorted.iloc[0]
+                    with col1:
+                        st.metric(
+                            "🥇 Beste Consistency",
+                            f"{top_manager['Manager']}",
+                            f"{top_manager['Draft_Consistency']:.1f} Score"
+                        )
+                    
+                    with col2:
+                        avg_score = consistency_df_sorted['Draft_Consistency'].mean()
+                        st.metric(
+                            "📊 Liga Durchschnitt",
+                            f"{avg_score:.1f}",
+                            "Consistency Score"
+                        )
+                    
+                    with col3:
+                        total_picks = consistency_df_sorted['Total_Picks'].sum()
+                        st.metric(
+                            "📈 Analysierte Picks",
+                            f"{total_picks:,}",
+                            "Gesamt"
+                        )
+                
+                # Consistency Tabelle - nur Manager mit mindestens 30 Picks
+                st.markdown("#### 📋 Manager Rankings (Min. 30 Picks)")
+                
+                # Filtere Manager mit mindestens 30 Picks
+                qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30].copy()
+                
+                if len(qualified_managers) == 0:
+                    st.warning("⚠️ Keine Manager mit mindestens 30 Picks gefunden!")
+                    st.info("Reduziere das Minimum oder warte auf mehr Daten")
+                else:
+                    # --- NEUE SPALTEN FÜR SIDE-BY-SIDE-DARSTELLUNG ---
+                    table_col_left, table_col_right = st.columns(2)
+                    
+                    
+                    # --- 1. DRAFT CONSISTENCY (LINKS) ---
+                    with table_col_left:
+                        st.markdown("##### 🎯 Konsistenteste Manager (Höher = Besser)")
+                        
+                        # Sortiert nach Consistency
+                        df_consistency = qualified_managers.sort_values(
+                            'Draft_Consistency',
+                            ascending=False
+                        )
+                        
+                        # Nur relevante Spalten für diese Tabelle
+                        df_consistency_display = df_consistency[['Manager', 'Draft_Consistency', 'Total_Picks']].copy()
+                        
+                        # Vorbereitung für Streamlit-interne Styling-Methode
+                        df_consistency_styled = df_consistency_display.copy()
+                        df_consistency_styled['Draft_Consistency'] = df_consistency_styled['Draft_Consistency'].apply(lambda x: f"{x:.1f}")
+            
+                        
+                        st.dataframe(
+                            df_consistency_styled,
+                            column_config={
+                                "Manager": "👨‍💼 Manager",
+                                "Draft_Consistency": st.column_config.ProgressColumn(
+                                    "🎯 Consistency Score",
+                                    format="%.1f",
+                                    min_value=0,
+                                    max_value=100,
+                                    help="Prozentualer Anteil an guten/durchschnittlichen Picks."
+                                ),
+                                "Total_Picks": st.column_config.NumberColumn("📊 Picks")
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+            
+            
+                    # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
+                    with table_col_right:
+                        # FIX: SyntaxError behoben: Innere Anführungszeichen auf einfache Anführungszeichen geändert
+                        st.markdown("##### 💎 Kumulierter Draft Value ('Big Hits')")
+                        
+                        # Sortiert nach Total Draft Value (Positiv = Besser)
+                        df_value = qualified_managers.sort_values(
+                            'Total_Draft_Value',
+                            ascending=False
+                        )
+                        
+                        # Nur relevante Spalten für diese Tabelle
+                        df_value_display = df_value[['Manager', 'Total_Draft_Value', 'Total_Picks']].copy()
+                        
+                        # Funktion zum Hinzufügen des Emojis (Visualisierungshilfe)
+                        def add_value_icon(row):
+                            value = row['Total_Draft_Value']
+                            # Anpassung der Thresholds, um mit HoF/HoS konsistent zu sein, z.B. bei Total Value
+                            if value > 50: 
+                                return '🟢 ' # Positiv: Steals überwiegen stark
+                            elif value > -50:
+                                return '⚪ ' # Neutral: Im Durchschnitt gut/schlecht
+                            else:
+                                return '🔴 ' # Negativ: Busts überwiegen stark
+                        
+                        # Neue Spalte mit dem Icon + Wert erstellen
+                        df_value_styled = df_value_display.copy()
+                        df_value_styled['Total_Value_Icon'] = df_value_styled.apply(add_value_icon, axis=1) + df_value_styled['Total_Draft_Value'].astype(int).astype(str)
+                        
+                        # Nur die neue Icon-Spalte anzeigen und die Original-Spalte ausblenden
+                        st.dataframe(
+                            df_value_styled,
+                            column_config={
+                                "Manager": "👨‍💼 Manager",
+                                "Total_Value_Icon": st.column_config.TextColumn(
+                                    "💎 Total Value",
+                                    help="Summe aller Draft Values. Grün = stark positiv, Rot = stark negativ."
+                                ),
+                                "Total_Draft_Value": None, # Originalspalte ausblenden
+                                "Total_Picks": st.column_config.NumberColumn("📊 Picks")
+                            },
+                            hide_index=True,
+                            use_container_width=True
+                        )
+            
+            
+                # --- Erklärung (unterhalb der Tabellen) ---
+                with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
+                    st.markdown("""
+                **🎯 Draft Consistency (Progress Bar):**
+                - Ein einfacher Prozentsatz der Picks, die entweder "Steals" oder "Average" sind (d.h. die nicht als extreme Busts eingestuft wurden).
+                - **Höher = konsistenter** (weniger extreme Busts).
+                
+                **💎 Total Draft Value:**
+                - Die **Summe** aller individuellen Draft Values (`Fantasy_Rank - Pick` oder `Pick - Fantasy_Rank`, je nach Definition in der Funktion `calculate_draft_values`).
+                - **Positiv = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
+                - **Negativ = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
+                """)
+            
+            else: # Muss mit 'if not consistency_df.empty:' ausgerichtet sein.
+            # Dies ist das "else" für if not consistency_df.empty:
+                st.info("Keine Consistency-Daten verfügbar. Überprüfen Sie, ob Manager mit genügend Picks vorhanden sind.")
+
             
         # Tab 3: Value Analysis
         with tab3:
