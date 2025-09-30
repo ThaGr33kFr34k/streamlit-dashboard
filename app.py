@@ -3373,7 +3373,6 @@ def main():
         
         # Daten verarbeiten und Draft Values berechnen
         try:
-            st.info("🔄 Verknüpfe Draft-Daten mit Fantasy Rankings...")
             
             # Abhängigkeit: calculate_draft_values muss definiert sein
             merged_data = calculate_draft_values(draft_data, ranks_df)
