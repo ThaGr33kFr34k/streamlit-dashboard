@@ -3524,33 +3524,6 @@ def main():
                 # Sortiere nach Consistency Score
                 consistency_df_sorted = consistency_df.sort_values('Draft_Consistency', ascending=False)
                 
-                # Top Manager Metrics
-                col1, col2, col3 = st.columns(3)
-                
-                if len(consistency_df_sorted) > 0:
-                    top_manager = consistency_df_sorted.iloc[0]
-                    with col1:
-                        st.metric(
-                            "🥇 Beste Consistency",
-                            f"{top_manager['Manager']}",
-                            f"{top_manager['Draft_Consistency']:.1f} Score"
-                        )
-                    
-                    with col2:
-                        avg_score = consistency_df_sorted['Draft_Consistency'].mean()
-                        st.metric(
-                            "📊 Liga Durchschnitt",
-                            f"{avg_score:.1f}",
-                            "Consistency Score"
-                        )
-                    
-                    with col3:
-                        total_picks = consistency_df_sorted['Total_Picks'].sum()
-                        st.metric(
-                            "📈 Analysierte Picks",
-                            f"{total_picks:,}",
-                            "Gesamt"
-                        )
                 
                 # Consistency Tabelle - nur Manager mit mindestens 30 Picks
                 st.markdown("#### 📋 Manager Rankings (Min. 30 Picks)")
