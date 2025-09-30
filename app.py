@@ -1179,6 +1179,35 @@ def create_draft_value_scatter(draft_data_with_values):
     
     return fig
 
+def create_consistency_radar(consistency_df):
+    """
+    Erstellt Radar Chart für Draft Consistency
+    """
+    top_managers = consistency_df.nlargest(8, 'Draft_Consistency')
+    
+    fig = go.Figure()
+    
+    for _, manager in top_managers.iterrows():
+        fig.add_trace(go.Scatterpolar(
+            r=[manager['Draft_Consistency'], manager['Good_Picks']*10, 
+               100-manager['Bad_Picks']*5, manager['Total_Picks']],
+            theta=['Draft Consistency', 'Good Picks (x10)', 'Avoid Busts', 'Experience'],
+            fill='toself',
+            name=manager['Manager']
+        ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]
+            )
+        ),
+        title="🎯 Draft Consistency Radar",
+        template='plotly_dark'
+    )
+    
+    return fig
 
 def create_manager_draft_heatmap(draft_data_with_values):
     """
@@ -3571,6 +3600,15 @@ def main():
                         # Nur relevante Spalten für diese Tabelle
                         df_consistency_display = df_consistency[['Manager', 'Draft_Consistency', 'Total_Picks']].copy()
                         
+                        # Styling anwenden
+                        styled_consistency = df_consistency_display.style.applymap(
+                            lambda x: style_manager_metrics(df_consistency_display)._translate_to_dict()['Draft_Consistency']['style'].get(x, ''), # Muss anders angewendet werden, da pandas styling komplex ist
+                            subset=['Draft_Consistency']
+                        )
+        
+                        # Workaround: Um das Styling korrekt anzuwenden, muss die Funktion angepasst werden.
+                        # Hier vereinfachen wir das Styling für Streamlit.
+                        
                         # Vorbereitung für Streamlit-interne Styling-Methode
                         df_consistency_styled = df_consistency_display.copy()
                         df_consistency_styled['Draft_Consistency'] = df_consistency_styled['Draft_Consistency'].apply(lambda x: f"{x:.1f}")
@@ -3595,14 +3633,12 @@ def main():
         
         
                     # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
-                    
-                    # Die Range-Berechnung für Bar/Progress Bar wird nicht mehr benötigt
-        
                     with table_col_right:
-                        # FIX: SyntaxError behoben: Innere Anführungszeichen auf einfache Anführungszeichen geändert
-                        st.markdown("##### 💎 Kumulierter Draft Value ('Big Hits')")
+                        # *** ÄNDERUNG 1: Titel geändert, um positive Werte als "besser" zu kennzeichnen ***
+                        st.markdown("##### 💎 Kumulierter Draft Value ("Big Hits")")
                         
-                        # Sortiert nach Total Draft Value (Positiv = Besser)
+                        # Sortiert nach Total Draft Value
+                        # *** ÄNDERUNG 2: Sortierung auf absteigend (ascending=False) geändert, damit positive/höhere Werte zuerst kommen ***
                         df_value = qualified_managers.sort_values(
                             'Total_Draft_Value', 
                             ascending=False
@@ -3611,50 +3647,42 @@ def main():
                         # Nur relevante Spalten für diese Tabelle
                         df_value_display = df_value[['Manager', 'Total_Draft_Value', 'Total_Picks']].copy()
                         
-                        # Funktion zum Hinzufügen des Emojis (Visualisierungshilfe)
-                        def add_value_icon(row):
-                            value = row['Total_Draft_Value']
-                            if value > 50:
-                                return '🟢 ' # Positiv: Steals überwiegen stark
-                            elif value > -50:
-                                return '⚪ ' # Neutral: Im Durchschnitt gut/schlecht
-                            else:
-                                return '🔴 ' # Negativ: Busts überwiegen stark
-        
-                        # Neue Spalte mit dem Icon + Wert erstellen
+                        # Vorbereitung für Streamlit-interne Styling-Methode
                         df_value_styled = df_value_display.copy()
-                        df_value_styled['Total_Value_Icon'] = df_value_styled.apply(add_value_icon, axis=1) + df_value_styled['Total_Draft_Value'].astype(int).astype(str)
-                        
-                        # Nur die neue Icon-Spalte anzeigen und die Original-Spalte ausblenden
+        
+        
                         st.dataframe(
                             df_value_styled,
                             column_config={
                                 "Manager": "👨‍💼 Manager",
-                                "Total_Value_Icon": st.column_config.TextColumn(
+                                "Total_Draft_Value": st.column_config.NumberColumn(
                                     "💎 Total Value", 
-                                    help="Summe aller Draft Values. Grün = stark positiv, Rot = stark negativ."
+                                    format="%d",
+                                    # *** ÄNDERUNG 3: Help-Text geändert ***
+                                    help="Summe aller Draft Values (Pick - Rank). Je positiver, desto besser."
                                 ),
-                                "Total_Draft_Value": None, # Originalspalte ausblenden
                                 "Total_Picks": st.column_config.NumberColumn("📊 Picks")
                             },
                             hide_index=True,
                             use_container_width=True
                         )
-
-
-            # --- Erklärung (unterhalb der Tabellen) ---
-            with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
-                st.markdown("""
-                **🎯 Draft Consistency (Progress Bar):**
-                - Ein einfacher Prozentsatz der Picks, die entweder "Steals" oder "Average" sind.
-                - **Höher = konsistenter** (weniger extreme Busts).
-                
-                **💎 Total Draft Value:**
-                - Die **Summe** aller individuellen Draft Values (`Pick - Fantasy_Rank`).
-                - **Negativ = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
-                - **Positiv = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
-                """)
-
+        
+        
+                    # --- Erklärung (unterhalb der Tabellen) ---
+                    with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
+                        st.markdown("""
+                        **🎯 Draft Consistency (Progress Bar):**
+                        - Ein einfacher Prozentsatz der Picks, die entweder "Steals" oder "Average" sind.
+                        - **Höher = konsistenter** (weniger extreme Busts).
+                        
+                        **💎 Total Draft Value:**
+                        - Die **Summe** aller individuellen Draft Values (`Pick - Fantasy_Rank`).
+                        - **Negativ = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
+                        - **Positiv = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
+                        """)
+                        
+            else:
+                st.info("Keine Consistency-Daten verfügbar")
             
             # Erklärung des Scoring-Systems
             with st.expander("ℹ️ Wie funktioniert der Consistency Score?"):
@@ -3673,9 +3701,6 @@ def main():
                 - Runde 5: Top 60 Fantasy Rank
                 - Runde 6+: Top 100 Fantasy Rank
                 """)
-
-    else:
-        st.info("Keine Consistency-Daten verfügbar")
         
         # Tab 3: Value Analysis
         with tab3:
