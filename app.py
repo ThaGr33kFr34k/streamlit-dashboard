@@ -3517,7 +3517,7 @@ def main():
         
         # Tab 2: Draft Consistency
         with tab2:
-            st.subheader("🎯 Draft Consistency & Value")
+            st.subheader("🎯 Draft Consistency + Value")
             st.markdown("*Wer draftet über die Jahre am verlässlichsten und wer hat den besten Gesamtwert?*")
             
             if not consistency_df.empty:
