@@ -3355,22 +3355,6 @@ def main():
                 st.write("**Fehlerdetails:**", str(e))
             st.stop()
         
-        # Debug: Datenvorschau
-        with st.expander("🔍 Datenvorschau", expanded=False):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Fantasy Rankings (ranks_df):**")
-                st.dataframe(ranks_df.head(10))
-                st.write(f"Shape: {ranks_df.shape}")
-                st.write(f"Columns: {list(ranks_df.columns)}")
-            
-            with col2:
-                st.markdown("**Draft Data (drafts_df):**")
-                st.dataframe(draft_data.head(10))
-                st.write(f"Shape: {draft_data.shape}")
-                st.write(f"Columns: {list(draft_data.columns)}")
-        
         # Daten verarbeiten und Draft Values berechnen
         try:
             
