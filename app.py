@@ -3635,7 +3635,7 @@ def main():
                     # --- 2. KUMULIERTER DRAFT VALUE (RECHTS) ---
                     with table_col_right:
                         # *** ÄNDERUNG 1: Titel geändert, um positive Werte als "besser" zu kennzeichnen ***
-                        st.markdown("##### 💎 Kumulierter Draft Value (Positiv = Besser)")
+                        st.markdown("##### 💎 Kumulierter Draft Value ("Big Hits")")
                         
                         # Sortiert nach Total Draft Value
                         # *** ÄNDERUNG 2: Sortierung auf absteigend (ascending=False) geändert, damit positive/höhere Werte zuerst kommen ***
@@ -3680,14 +3680,6 @@ def main():
                         - **Negativ = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
                         - **Positiv = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
                         """)
-                    
-                    # Optional: Radar Chart
-                    if len(qualified_managers) >= 3:
-                        st.markdown("#### 🕸️ Top Manager Consistency Radar (Min. 30 Picks)")
-                        # Stelle sicher, dass create_consistency_radar definiert und verfügbar ist
-                        # radar_fig = create_consistency_radar(qualified_managers)
-                        # st.plotly_chart(radar_fig, use_container_width=True)
-                        st.info("Radar Chart hier...")
                         
             else:
                 st.info("Keine Consistency-Daten verfügbar")
