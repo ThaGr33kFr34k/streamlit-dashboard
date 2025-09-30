@@ -3674,8 +3674,8 @@ def main():
                 - Runde 6+: Top 100 Fantasy Rank
                 """)
 
-            else:
-                st.info("Keine Consistency-Daten verfügbar")
+    else:
+        st.info("Keine Consistency-Daten verfügbar")
         
         # Tab 3: Value Analysis
         with tab3:
