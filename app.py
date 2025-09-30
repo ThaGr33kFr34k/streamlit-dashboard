@@ -3342,41 +3342,41 @@ def main():
                 draft_data, ranks_df, success_count = load_all_draft_data()
             
             st.success(f"✅ Daten erfolgreich geladen: {len(ranks_df)} Fantasy Rankings aus {success_count} Saisons, {len(draft_data)} Draft Picks")
+
             
-            # Cache-Info für User
-            if st.checkbox("ℹ️ Cache-Info anzeigen", value=False):
-                st.info("📦 Daten sind für 1 Stunde gecacht. Bei Änderungen im Google Sheet verwende den Button unten zum manuellen Refresh.")
-                if st.button("🔄 Cache leeren & neu laden"):
-                    st.cache_data.clear()
-                    st.rerun()
+# #            # Cache-Info für User
+# #            if st.checkbox("ℹ️ Cache-Info anzeigen", value=False):
+# #                st.info("📦 Daten sind für 1 Stunde gecacht. Bei Änderungen im Google Sheet verwende den Button unten zum manuellen Refresh.")
+# #                if st.button("🔄 Cache leeren & neu laden"):
+# #                    st.cache_data.clear()
+# #                    st.rerun()
             
-        except Exception as e:
-            st.error(f"❌ Fehler beim Laden der Daten: {e}")
-            
-            # Debug Info bei Fehlern
-            with st.expander("🐛 Debug Information"):
-                st.write("**Fehlerdetails:**", str(e))
-            st.stop()
+# #        except Exception as e:
+# #            st.error(f"❌ Fehler beim Laden der Daten: {e}")
+# #            # Debug Info bei Fehlern
+# #            with st.expander("🐛 Debug Information"):
+# #                st.write("**Fehlerdetails:**", str(e))
+# #            st.stop()
+
         
-        # Debug: Datenvorschau
-        with st.expander("🔍 Datenvorschau", expanded=False):
-            col1, col2 = st.columns(2)
+# #        # Debug: Datenvorschau
+# #        with st.expander("🔍 Datenvorschau", expanded=False):
+# #            col1, col2 = st.columns(2)
             
-            with col1:
-                st.markdown("**Fantasy Rankings (ranks_df):**")
-                st.dataframe(ranks_df.head(10))
-                st.write(f"Shape: {ranks_df.shape}")
-                st.write(f"Columns: {list(ranks_df.columns)}")
+# #           with col1:
+# #                st.markdown("**Fantasy Rankings (ranks_df):**")
+# #                st.dataframe(ranks_df.head(10))
+# #                st.write(f"Shape: {ranks_df.shape}")
+# #                st.write(f"Columns: {list(ranks_df.columns)}")
             
-            with col2:
-                st.markdown("**Draft Data (drafts_df):**")
-                st.dataframe(draft_data.head(10))
-                st.write(f"Shape: {draft_data.shape}")
-                st.write(f"Columns: {list(draft_data.columns)}")
+# #            with col2:
+# #                st.markdown("**Draft Data (drafts_df):**")
+# #                st.dataframe(draft_data.head(10))
+# #                st.write(f"Shape: {draft_data.shape}")
+# #                st.write(f"Columns: {list(draft_data.columns)}")
         
         # Daten verarbeiten und Draft Values berechnen
         try:
-            st.info("🔄 Verknüpfe Draft-Daten mit Fantasy Rankings...")
             
             # Einmalig: calculate_draft_values aufrufen
             merged_data = calculate_draft_values(draft_data, ranks_df)
@@ -3433,7 +3433,6 @@ def main():
         
         # Tab 1: Hall of Fame & Shame
         with tab1:
-            st.subheader("🏆 Hall of Fame & Hall of Shame")
             
             col1, col2 = st.columns(2)
             
@@ -3517,7 +3516,6 @@ def main():
                 consistency_df_sorted = consistency_df.sort_values('Draft_Consistency', ascending=False) 
                 
                 # Consistency Tabelle - nur Manager mit mindestens 30 Picks
-                st.markdown("#### 📋 Manager Rankings (Min. 30 Picks)")
                 
                 # Filtere Manager mit mindestens 30 Picks
                 qualified_managers = consistency_df_sorted[consistency_df_sorted['Total_Picks'] >= 30].copy()
@@ -3532,7 +3530,7 @@ def main():
                     
                     # --- 1. DRAFT CONSISTENCY (LINKS) ---
                     with table_col_left:
-                        st.markdown("##### 🎯 Zuverlässigste Drafter (Keine Busts)")
+                        st.markdown("##### 🎯 Zuverlässigste Drafter (wenig Busts)")
                         
                         # Sortiert nach Consistency
                         df_consistency = qualified_managers.sort_values(
@@ -3572,7 +3570,7 @@ def main():
         
                     with table_col_right:
                         # FIX: SyntaxError behoben: Innere Anführungszeichen auf einfache Anführungszeichen geändert
-                        st.markdown("##### 💎 Kumulierter Draft Value ('Big Hits')")
+                        st.markdown("##### 💎 Kumulierter Draft Value ('Big Hits/Misses')")
                         
                         # Sortiert nach Total Draft Value (Positiv = Besser)
                         df_value = qualified_managers.sort_values(
@@ -3625,25 +3623,6 @@ def main():
                 - Die **Summe** aller individuellen Draft Values (`Pick - Fantasy_Rank`).
                 - **Negativ = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
                 - **Positiv = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
-                """)
-
-            
-            # Erklärung des Scoring-Systems
-            with st.expander("ℹ️ Wie funktioniert der Consistency Score?"):
-                st.markdown("""
-                **Scoring pro Pick:**
-                - **+2 Punkte**: Spieler übertrifft Erwartungen für seine Runde
-                - **+1 Punkt**: Spieler erfüllt Erwartungen  
-                - **-1 Punkt**: Spieler enttäuscht (frühe Runden werden härter bestraft)
-                - **0 Punkte**: Späte Runden-Picks die enttäuschen
-                
-                **Erwartungen pro Runde:**
-                - Runde 1: Top 12 Fantasy Rank
-                - Runde 2: Top 24 Fantasy Rank  
-                - Runde 3: Top 36 Fantasy Rank
-                - Runde 4: Top 48 Fantasy Rank
-                - Runde 5: Top 60 Fantasy Rank
-                - Runde 6+: Top 100 Fantasy Rank
                 """)
 
     else:
