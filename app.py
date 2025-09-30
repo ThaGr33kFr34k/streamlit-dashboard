@@ -3654,29 +3654,7 @@ def main():
                 - **Negativ = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
                 - **Positiv = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
                 """)
-            
-            # Der Code für den Radar Chart wurde hier entfernt.
-                
-    else:
-        st.info("Keine Consistency-Daten verfügbar")
 
-        
-        
-                    # --- Erklärung (unterhalb der Tabellen) ---
-                    with st.expander("ℹ️ Wie werden die Metriken berechnet?"):
-                        st.markdown("""
-                        **🎯 Draft Consistency (Progress Bar):**
-                        - Ein einfacher Prozentsatz der Picks, die entweder "Steals" oder "Average" sind.
-                        - **Höher = konsistenter** (weniger extreme Busts).
-                        
-                        **💎 Total Draft Value:**
-                        - Die **Summe** aller individuellen Draft Values (`Pick - Fantasy_Rank`).
-                        - **Negativ = gut** (die Picks waren im Durchschnitt besser als ihr Draft-Platz).
-                        - **Positiv = schlecht** (die Picks waren im Durchschnitt schlechter als ihr Draft-Platz).
-                        """)
-                        
-            else:
-                st.info("Keine Consistency-Daten verfügbar")
             
             # Erklärung des Scoring-Systems
             with st.expander("ℹ️ Wie funktioniert der Consistency Score?"):
@@ -3695,6 +3673,9 @@ def main():
                 - Runde 5: Top 60 Fantasy Rank
                 - Runde 6+: Top 100 Fantasy Rank
                 """)
+
+            else:
+            st.info("Keine Consistency-Daten verfügbar")
         
         # Tab 3: Value Analysis
         with tab3:
